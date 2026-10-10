@@ -19,8 +19,23 @@ const dateLabel = value => dateFormat.format(new Date(value));
 const timeLabel = value => timeFormat.format(new Date(value));
 const nameOf = c => species[c.species_id]?.[0] || c.recorded_label || c.species_id;
 function fishImage(id, large=false) {
-  return species[id] ? `<img class="${large?'fish-portrait':'fish-thumb'}" src="fish/${id}.png" alt="${esc(species[id][0])} illustration" loading="${large?'eager':'lazy'}" decoding="async" width="${large?320:64}" height="${large?220:46}">` : '';
+  return species[id] ? `<img class="${large?'fish-portrait':'fish-thumb'}" src="fish/${id}.png?v=6" alt="${esc(species[id][0])} illustration" loading="eager" width="${large?320:64}" height="${large?220:46}">` : '';
 }
+// Image failures must remain visible and recoverable, including in installed Safari.
+document.addEventListener('error', event => {
+  const image = event.target;
+  if (!(image instanceof HTMLImageElement) || !image.matches('.fish-thumb,.fish-portrait')) return;
+  if (image.nextElementSibling?.classList.contains('fish-retry')) return;
+  const retry = document.createElement('button');
+  retry.type = 'button'; retry.className = 'quiet fish-retry';
+  retry.textContent = 'Reload fish image';
+  retry.onclick = () => {
+    retry.remove();
+    const url = new URL(image.src); url.searchParams.set('retry', Date.now());
+    image.src = url.href;
+  };
+  image.after(retry);
+}, true);
 let client, session, catches = [], trips = [], map, markers, visible = [], loadGeneration = 0, conditionsGeneration = 0, mapFitted = false, lastRefreshAt = 0;
 let dayPalette = new Map();
 function message(text, error = false) { $('status').textContent = text; $('status').classList.toggle('error', error); }
