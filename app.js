@@ -137,12 +137,12 @@ function renderTrips() {
   });
   const totals=rows.reduce((sum,{metrics:m})=>({total:sum.total+m.total,fishing:sum.fishing+m.fishing,travelling:sum.travelling+m.travelling,count:sum.count+m.count}),{total:0,fishing:0,travelling:0,count:0});
   $('trip-summary').innerHTML=[['Trips',rows.length],['Total trip time',durationLabel(totals.total)],['Fishing time',durationLabel(totals.fishing)],['Travelling time',durationLabel(totals.travelling)],['Catches',totals.count]].map(([label,value])=>`<div><span>${label}</span><strong>${value}</strong></div>`).join('');
-  $('trip-rows').innerHTML=rows.map(({trip:t,metrics:m})=>`<tr><td>${esc(dateLabel(t.started_at))}<br><span class="small muted">${esc(timeLabel(t.started_at))}</span></td><td>${durationLabel(m.total)}</td><td>${durationLabel(m.fishing)}</td><td>${durationLabel(m.travelling)}</td><td>${durationLabel(m.unclassified)}</td><td>${m.count}</td><td>${m.rate===null?'—':m.rate.toFixed(1)}</td><td>${m.distance===null?'—':m.distance.toFixed(2)+' km total<br><span class="small muted">'+m.averageDistance.toFixed(2)+' km average</span>'}</td></tr>`).join('') || '<tr><td colspan="8">No completed trips match these filters.</td></tr>';
+  $('trip-rows').innerHTML=rows.map(({trip:t,metrics:m})=>`<tr><td data-label="Trip started">${esc(dateLabel(t.started_at))}<br><span class="small muted">${esc(timeLabel(t.started_at))}</span></td><td data-label="Total time">${durationLabel(m.total)}</td><td data-label="Fishing">${durationLabel(m.fishing)}</td><td data-label="Travelling">${durationLabel(m.travelling)}</td><td data-label="Unclassified">${durationLabel(m.unclassified)}</td><td data-label="Catches">${m.count}</td><td data-label="Fishing catches/hour">${m.rate===null?'—':m.rate.toFixed(1)}</td><td data-label="Between catches">${m.distance===null?'—':m.distance.toFixed(2)+' km total<br><span class="small muted">'+m.averageDistance.toFixed(2)+' km average</span>'}</td></tr>`).join('') || '<tr><td colspan="8">No completed trips match these filters.</td></tr>';
 }
 function initMap() {
   if (map || $('map-page').hidden) return;
   if (!window.L || !L.markerClusterGroup) { $('map').textContent = 'The map could not load. Your catches are still available in Species and Days.'; return; }
-  map = L.map('map').setView([-34.08,22.97],8);
+  map = L.map('map', {doubleClickZoom:false, scrollWheelZoom:false, bounceAtZoomLimits:false, touchZoom:'center'}).setView([-34.08,22.97],8);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
   markers = L.markerClusterGroup({maxClusterRadius:40,spiderfyOnMaxZoom:true,showCoverageOnHover:false}).addTo(map);
   map.on('zoomend', updateLabels);
@@ -237,7 +237,7 @@ $('fit').onclick = fitMap;
 $('refresh').onclick = loadCatches;
 $('close-detail').onclick = () => $('details').close();
 $('details').addEventListener('close',() => { conditionsGeneration++; });
-window.addEventListener('hashchange',route);
+window.addEventListener('hashchange',() => { route(); window.scrollTo({top:0,behavior:'instant'}); });
 window.addEventListener('online',() => { if (session) loadCatches(); });
 function refreshWhenVisible() { if (session && !document.hidden && !$('refresh').disabled && Date.now()-lastRefreshAt>15000) loadCatches(); }
 window.addEventListener('focus',refreshWhenVisible);
