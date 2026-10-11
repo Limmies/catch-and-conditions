@@ -1,47 +1,44 @@
-# Catch and Conditions — phone journal
+# Phone journal
 
-A static, read-only Supabase journal for GitHub Pages. Map, species totals, daily catches and completed trips share date/species filters. All dates use Africa/Johannesburg. Labels appear at zoom 13; tapping opens details. Nearby markers cluster and overlapping catches spread out when the cluster is opened. Day colours remain stable while changing filters, and repeat after eight days.
+The live read-only journal is https://limmies.github.io/catch-and-conditions/. Its deployment repository is `Limmies/catch-and-conditions`; this folder is the maintained source. Publish only its contents, with `index.html` at the repository root. Keep `vendor/`, `fish/mobile/`, licenses and `.nojekyll` together.
 
-## 1. Connect Supabase
+## Source
 
-The supplied public key is already configured in `config.js`. To replace it later, open your existing project in the Supabase dashboard. Under **Settings → API Keys**, copy the **publishable** key (`sb_publishable_…`). A legacy `anon` key is also supported. Put it in `config.js` as `publishableKey`. It is intentionally public: database row-level security protects the catches. Never use a service-role/secret key, the watch upload token or your password here.
+- `app.js`: owner login, one shared paginated refresh path, filters, map, totals, days, trips and catch details. The marked fish-preview block is generated.
+- `style.css`: base styles and one mobile layout with safe-area spacing and bottom navigation.
+- `sw.js`: public shell and illustration cache only; never authentication, database or map requests.
+- `config.js`: public project URL, publishable key, owner UUID and display timezone. Never put a password, watch token or service-role key here.
+- `fish/mobile/`: small JPEGs for sharper catch details. All eleven thumbnails are embedded in `app.js`, so individual image-download failures cannot hide the fish.
 
-Under **Authentication → Users**, find the existing user whose UUID matches `ownerId` in `config.js`. This is the account that owns your archived catches. Use that user's email and set its password directly in Supabase. If you want a different email, update this same user through Supabase's user management. Creating a separate user will not make the existing catches visible. Do not change the catches' ownership or watch function secrets just to log into the journal.
+Map, Species, Days and Trips share species/date filters. Dates use Africa/Johannesburg. Clear the species filter to see zero-catch trips. Fishing/travel totals come from the Supabase trip record; catch rates use recorded fishing intervals. Distances are straight-line totals between catch locations. Setup tests are excluded at the database query.
 
-The login form does not create accounts. For a single-owner project, disable **Allow new users to sign up** in Supabase's Auth configuration. Confirm the live tables retain the owner-only policies from `supabase/migrations/202610070001_fishing_archive.sql`. The site never uses administrator credentials or writes catches.
+## Local preview and verification
 
-## 2. Check locally
-
-From this folder:
+From the project root:
 
 ```sh
-python3 -m http.server 8766 --bind 127.0.0.1
+python3 -m http.server 8766 --bind 127.0.0.1 --directory phone-journal
+python3 tools/package_phone_journal.py
+python3 tools/check_connections.py
+swift tools/check_phone_journal.swift "$PWD/phone-journal"
 ```
 
-Open `http://127.0.0.1:8766`. Sign in. Compare a real catch against the Supabase table, then check Map, Species and Days. Setup-test records must not appear. Test a date/species filter and sign out. Unsigned visitors should only see the login form. A second account must not be able to read the owner's catches through the database API; the existing SQL migration enforces this with RLS. The owner-ID check in the browser is an additional usability guard, not a security boundary.
+Open `http://127.0.0.1:8766`. The WebKit check uses synthetic fixtures in an isolated browser, not the real owner session. Packaging validates the public assets and rejects the private watch token. Extract the resulting ZIP before uploading; uploading the ZIP itself does not publish a site.
 
-## 3. Publish to GitHub Pages
+## Images and updates
 
-Create a dedicated repository such as `catch-and-conditions`. Upload **only the contents of this `phone-journal` folder**, with `index.html` at the repository root. Retain the `vendor/images` folder and `.nojekyll`. Do not upload the parent watch project, `.private`, configured watch binaries or watch resource settings.
+Original artwork is retained outside the public folder in `resources/phone-fish-originals/`. After changing it, run `python3 tools/prepare_phone_images.py`. This regenerates 640-pixel JPEGs and 160-pixel embedded previews. Do not hand-edit the generated preview block.
 
-In the repository's **Settings → Pages**, choose **Deploy from a branch**, branch `main`, folder `/(root)`, then Save. Open the URL GitHub supplies after deployment. Pages supports public repositories on GitHub Free; private-repository publishing requires an eligible paid plan. A public site repository contains only the app code and public configuration; the fishing data stays in Supabase behind its login and row-level policies.
+After changing CSS or JS, update their URL versions in both `index.html` and `sw.js`, and increment the shell cache version. Deploy the complete folder. Close and reopen the installed app online to receive an update; it reloads when a new worker takes control.
 
-If you prefer to upload an archive, extract `catch-and-conditions-github.zip` before uploading; uploading the zip itself will not publish the site.
+## Login and iPhone
 
-## 4. Add to iPhone
+Use the existing Supabase journal owner account. A different account does not inherit those records. Database row-level security enforces ownership; the browser owner-ID check is only a usability guard. Set passwords directly in Supabase, not in source or chat.
 
-Open the HTTPS website in **Safari**. Use **Share → Add to Home Screen** and name it **Catch and Conditions**. Open the new green C&C icon and sign in. Safari and the installed app may have separate sessions. A session persists on the device until sign-out or expiry; the password is not saved by the app. Safari's password manager is your choice.
+On iPhone, open the live site in Safari → Share → Add to Home Screen. Safari and the installed app may have separate login sessions. Login persists until sign-out or expiry. The app does not store the password.
 
-## Limits
+The journal refreshes on returning, reconnecting and every minute while visible. Catches and trips refresh independently; a failed request retains previously loaded records and displays an error. Sign-out clears in-memory private data. Internet is required for sign-in, archive reads and map tiles. Only the public shell and illustrations are cached offline.
 
-- An internet connection is needed to load catches, sign in and display map tiles. Only the public app shell is cached offline; catches, conditions and authentication responses are never cached by the service worker.
-- The journal refreshes automatically every minute while visible, when you return after 15 seconds, and when connectivity returns. It loads catches and completed trips; the Refresh button is also available. There is no continuous realtime subscription.
-- The Trips page includes completed zero-catch trips after the new trip migration/function are deployed. Fishing/travel time is explicitly recorded on the watch, and unclassified time is retained. Catch-only historical records cannot reconstruct trip duration. Condition enrichment is not implemented in Supabase yet.
-- Detail panels show saved scalar condition fields with their recorded units when present. No live weather is substituted for historical catch conditions. Provider formats not yet understood are explicitly marked as undisplayed.
-- Live login/data access must be checked after adding the public key and configuring the existing owner's login. Local fixture checks do not prove the deployed database policies.
+Condition details show saved fields and units if present. Historical weather enrichment is not yet implemented in Supabase; the journal never substitutes live weather for a past catch.
 
-Pinned libraries are included locally: Supabase JS 2.57.4 (MIT), Leaflet 1.9.4 (BSD-2-Clause), Leaflet.markercluster 1.5.3 (MIT). Licenses are in `vendor`. Map tiles are from OpenStreetMap with attribution.
-
-References: [Supabase API keys](https://supabase.com/docs/guides/getting-started/api-keys), [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), [GitHub Pages publishing](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site).
-
-Fish illustrations reuse the existing darker watch artwork for all eleven species. Images load lazily in species/history rows and display larger in catch details. They are journal illustrations, not identification guides. Keep the `fish/` folder when publishing.
+Pinned local libraries: Supabase JS 2.57.4 (MIT), Leaflet 1.9.4 (BSD-2-Clause), Leaflet.markercluster 1.5.3 (MIT). Licenses are in `vendor/`. Map attribution: © OpenStreetMap contributors.
