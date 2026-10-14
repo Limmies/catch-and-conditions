@@ -7,12 +7,12 @@ const species = {
   red_steenbras: ['Red Steenbras', '#9e396c'],
   miss_lucy: ['Miss Lucy', '#7c4fa3'],
   geelbek: ['Geelbek', '#9b7014'],
-  haai: ['Shark', '#546474'],
+  haai: ['Blacktip Reef Shark', '#546474'],
   carpenter: ['Carpenter', '#297a88'],
   santer: ['Santer', '#ce6130'],
   yellowbelly: ['Yellowbelly', '#88781a'],
-  musselcracker: ['Musselcracker', '#3459a0'],
-  hake: ['Hake', '#666743'],
+  musselcracker: ['Black Musselcracker', '#3459a0'],
+  hake: ['South African Hake', '#666743'],
 };
 const dayColours = [
   '#176a47',
@@ -515,18 +515,14 @@ const speciesScientific = {
   red_steenbras: 'Petrus rupestris',
   miss_lucy: 'Chrysoblephus gibbiceps',
   geelbek: 'Atractoscion aequidens',
-  haai: 'Selachimorpha',
+  haai: 'Carcharhinus melanopterus',
   carpenter: 'Argyrozona argyrozona',
   santer: 'Cheimerius nufar',
   yellowbelly: 'Epinephelus marginatus',
-  musselcracker: 'Sparodon durbanensis / Cymatoceps nasutus',
-  hake: 'Merluccius spp.',
+  musselcracker: 'Cymatoceps nasutus',
+  hake: 'Merluccius capensis',
 };
-const speciesTaxonomyNotes = {
-  haai: 'Shark group · species not identified',
-  musselcracker: 'White / black · species not identified',
-  hake: 'Hake group · species not identified',
-};
+const speciesTaxonomyNotes = {};
 function scientificCaption(id) {
   if (!speciesScientific[id]) return '';
   return `<span class="species-scientific">${esc(speciesScientific[id])}</span>${speciesTaxonomyNotes[id] ? `<span class="species-taxonomy-note">${esc(speciesTaxonomyNotes[id])}</span>` : ''}`;

@@ -50,9 +50,8 @@ Species rows use full-width count bars scaled against the most-caught species, i
 The field-guide theme uses local Georgia/Times serif typography, small-cap headings and italic captions. Faded Kabeljou, Red Steenbras and Red Stumpnose illustrations decorate page backgrounds; the three public images are included in the offline shell. The artwork is decorative and does not represent catch data.
 
 Scientific captions cover all eleven journal categories in Species and catch details.
-Broad Shark, Hake and Musselcracker categories retain group/candidate names and
-explicit identification notes; they do not assert a species for an archived catch.
+Owner-specified categories: Black Musselcracker (Cymatoceps nasutus), Blacktip Reef Shark (Carcharhinus melanopterus), and South African Hake interpreted as shallow-water Cape hake (Merluccius capensis). Existing upload IDs remain unchanged. Location alone cannot distinguish the two Cape hake species.
 References: [DFFE species guide](https://www.dffe.gov.za/sites/default/files/docs/publications/marinerecreationalactivity_informationbrochure2016to2017.pdf),
 [SASAA records](https://kznsaa.co.za/wp-content/uploads/2023/01/2022-Ladies-Records-July-2022.pdf),
 [ORI black musselcracker factsheet](https://www.saambr.org.za/wp-content/uploads/2023/07/ORI-Fish-Fact-Black-musselcracker-ZC-LB-2.pdf),
-and [ITIS shark taxonomy](https://www.itis.gov/servlet/SingleRpt/SingleRpt?search_topic=TSN&search_value=563987).
+and [South African shark checklist](https://sharksunderattackcampaign.co.za/wp-content/uploads/2022/03/2-Ebert-et-al-SA-Checklist-2021_E1342.pdf), and [Cape hake identification](https://www.fishbase.se/summary/Merluccius-capensis.html).
