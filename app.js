@@ -520,11 +520,11 @@ function renderTotals() {
   );
   const max = Math.max(1, ...rows.map((row) => row[1]));
   $('totals').innerHTML = rows.map(([id, count]) =>
-    `<tr><td><span class="species-cell">${fishImage(id)}<span>${
+    `<tr class="species-row" style="--species-colour:${species[id]?.[1] || '#11543e'}"><td><span class="species-cell">${fishImage(id)}<span>${
       esc(species[id]?.[0] || id)
-    }</span></span></td><td><span class="count-cell"><span class="count-track"><span style="width:${count / max * 100}%"></span></span><strong>${count}</strong></span></td><td>${
+    }</span></span></td><td><strong>${count}</strong></td><td>${
       visible.length ? Math.round(count / visible.length * 100) : 0
-    }%</td></tr>`
+    }%</td></tr><tr class="species-bar-row" aria-hidden="true" style="--species-colour:${species[id]?.[1] || '#11543e'}"><td colspan="3"><span class="species-visual-track"><span style="width:${count / max * 100}%"></span></span></td></tr>`
   ).join('');
 }
 function renderDays() {
@@ -636,11 +636,15 @@ function fishingScore(p) {
     + (Math.abs(p.pressure_change_3h) <= 2 ? 1 : 0);
   return Math.round(total / 4 * 100);
 }
+function fishingRating(score) {
+  return score === null ? null : Math.min(3, Math.floor(score / 25));
+}
 function fishingScoreCard(p) {
   if (!p.bite_estimate) return '';
   const score = fishingScore(p);
+  const rating = fishingRating(score);
   const fish = `<svg class="score-fish-art" viewBox="0 0 140 90" aria-hidden="true"><path d="M100 44 131 23 125 46 131 68 100 52" fill="#537e70"/><path d="m48 33 22-22 17 25M48 59l22 17 10-15" fill="#789c87"/><path d="M11 46C34 16 82 15 112 46 82 77 34 76 11 46Z" fill="#245c48"/><path d="M13 47c33 6 64 7 94 0-24 25-69 29-94 0" fill="#89af94"/><path d="M44 29c10 11 10 23 0 34" fill="none" stroke="#d7e4cd" stroke-width="2"/><path d="m59 46 19-5-9 14" fill="#bdd0ad"/><circle cx="29" cy="40" r="4" fill="#ecdcab"/><circle cx="29" cy="40" r="2" fill="#123a2c"/><path d="m14 48 9 2M84 32l9 6m-17-9 9 6" stroke="#c4d7bd" stroke-width="1.5" stroke-linecap="round"/></svg>`;
-  return `<section class="fishing-score" aria-label="Fishing conditions score"><div class="score-fish-badge">${fish}</div><div class="score-content"><div class="score-heading"><span class="score-caption">Fishing conditions</span><strong class="score-value">${score === null ? '—' : score+'<small>%</small>'}</strong></div><span class="score-verdict">${esc(p.bite_estimate.label || 'Conditions estimate')}</span>${score === null ? '<p class="small muted">Score unavailable: missing saved inputs.</p>' : `<div class="score-track" role="meter" aria-label="Conditions score" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${score}"><span style="width:${score}%"></span></div>`}</div></section><p class="score-note">Conditions index · estimated, not a catch probability.</p>`;
+  return `<section class="fishing-score" aria-label="Fishing conditions score"><div class="score-school" aria-label="${rating === null ? 'Fish rating unavailable' : rating+' out of 3 fish'}"><div class="score-fish-icons" aria-hidden="true">${[1,2,3].map(n=>`<span class="score-fish-slot${rating === null || n > rating ? ' is-inactive' : ''}">${fish}</span>`).join('')}</div><span class="score-rating">${rating === null ? '— / 3' : rating+' / 3'}</span></div><div class="score-content"><div class="score-heading"><span class="score-caption">Fishing conditions</span><strong class="score-value">${score === null ? '—' : score+'<small>%</small>'}</strong></div><span class="score-verdict">${esc(p.bite_estimate.label || 'Conditions estimate')}</span>${score === null ? '<p class="small muted">Score unavailable: missing saved inputs.</p>' : `<div class="score-track" role="meter" aria-label="Conditions score" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${score}"><span style="width:${score}%"></span></div>`}</div></section><p class="score-note">Conditions index · estimated, not a catch probability.</p>`;
 }
 
 function conditionsHTML(data) {
