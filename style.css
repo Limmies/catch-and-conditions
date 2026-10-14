@@ -1017,7 +1017,7 @@ dialog {
  --display-font:Georgia,'Times New Roman',serif;
 }
 body { background:var(--paper); font-family:var(--display-font); position:relative; isolation:isolate; }
-body::before { content:""; position:fixed; inset:0; z-index:-1; pointer-events:none; background-image:url('fish/mobile/kabeljo.jpg'),url('fish/mobile/red_steenbras.jpg'),url('fish/mobile/miss_lucy.jpg'); background-repeat:no-repeat; background-size:min(70vw,1000px) auto,min(52vw,700px) auto,min(46vw,620px) auto; background-position:right -90px top 12vh,left -180px top 53vh,right -120px bottom -70px; opacity:.085; mix-blend-mode:multiply; }
+body::before { content:""; position:fixed; inset:0; z-index:-1; pointer-events:none; background-image:url('fish/mobile/kabeljo.jpg'),url('fish/mobile/red_steenbras.jpg'),url('fish/mobile/miss_lucy.jpg'); background-repeat:no-repeat; background-size:min(58vw,68vh,780px) auto,min(48vw,56vh,650px) auto,min(42vw,50vh,580px) auto; background-position:right 24px top 8vh,left 24px top 55%,right 24px bottom 24px; background-blend-mode:multiply; opacity:.085; mix-blend-mode:multiply; }
 h1,h2,h3,.brand,.monogram { font-family:var(--display-font); font-weight:400; }
 h1 { font-variant:small-caps; letter-spacing:.025em; font-size:clamp(34px,5vw,52px); }
 h2 { letter-spacing:.015em; font-size:27px; }
@@ -1094,7 +1094,7 @@ footer { font-style:italic; }
  #totals-page td strong { font-size:19px; }
  .species-scientific { font-size:11px; line-height:1.25; }
  .day-header h3 { font-size:19px; }
- body::before { background-size:580px auto,480px auto,420px auto; background-position:right -260px top 17vh,left -260px top 55vh,right -230px bottom 30px; opacity:.07; }
+ body::before { background-size:min(92vw,58vh) auto,min(88vw,52vh) auto,min(84vw,48vh) auto; background-position:right 12px top 16vh,left 12px top 53%,right 12px bottom 76px; opacity:.07; }
  .login-panel h1 { font-size:42px; }
  .login-panel::before { inset:-35px -15px auto; height:230px; }
 }
