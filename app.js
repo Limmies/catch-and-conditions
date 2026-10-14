@@ -511,11 +511,25 @@ function fitMap() {
 }
 const speciesScientific = {
   kabeljo: 'Argyrosomus japonicus',
+  red_roman: 'Chrysoblephus laticeps',
   red_steenbras: 'Petrus rupestris',
   miss_lucy: 'Chrysoblephus gibbiceps',
+  geelbek: 'Atractoscion aequidens',
+  haai: 'Selachimorpha',
+  carpenter: 'Argyrozona argyrozona',
+  santer: 'Cheimerius nufar',
+  yellowbelly: 'Epinephelus marginatus',
+  musselcracker: 'Sparodon durbanensis / Cymatoceps nasutus',
+  hake: 'Merluccius spp.',
+};
+const speciesTaxonomyNotes = {
+  haai: 'Shark group · species not identified',
+  musselcracker: 'White / black · species not identified',
+  hake: 'Hake group · species not identified',
 };
 function scientificCaption(id) {
-  return speciesScientific[id] ? `<span class="species-scientific">${esc(speciesScientific[id])}</span>` : '';
+  if (!speciesScientific[id]) return '';
+  return `<span class="species-scientific">${esc(speciesScientific[id])}</span>${speciesTaxonomyNotes[id] ? `<span class="species-taxonomy-note">${esc(speciesTaxonomyNotes[id])}</span>` : ''}`;
 }
 function renderTotals() {
   const counts = new Map(Object.keys(species).map((id) => [id, 0]));
@@ -715,7 +729,7 @@ async function showDetail(c) {
   );
   $('detail-body').innerHTML = `${fishImage(c.species_id, true)}<h2>${
     esc(nameOf(c))
-  }</h2><p class="muted">${esc(dateLabel(c.caught_at))} · ${
+  }</h2>${scientificCaption(c.species_id)}<p class="muted">${esc(dateLabel(c.caught_at))} · ${
     esc(timeLabel(c.caught_at))
   }</p><dl class="detail-grid">${field('Latitude', c.latitude.toFixed(6))}${
     field('Longitude', c.longitude.toFixed(6))

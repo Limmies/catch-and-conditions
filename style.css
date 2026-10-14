@@ -1098,3 +1098,7 @@ footer { font-style:italic; }
  .login-panel h1 { font-size:42px; }
  .login-panel::before { inset:-35px -15px auto; height:230px; }
 }
+
+.species-scientific { overflow-wrap:anywhere; }
+.species-taxonomy-note { display:block; margin-top:4px; font-size:11px; line-height:1.35; font-style:normal; font-weight:400; color:var(--muted); white-space:normal; }
+#detail-body > .species-scientific { font-size:17px; margin:0 0 6px; }

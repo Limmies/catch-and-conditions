@@ -48,3 +48,11 @@ Catch and day conditions include an illustrated moon, estimated sky conditions f
 Species rows use full-width count bars scaled against the most-caught species, in the same colour as map markers, alongside counts and share percentages. The conditions card shows three custom fish with 0–3 active: percentage bands below 25%, 25–49%, 50–74%, and 75–100%. The percentage is derived from the saved model inputs; missing inputs show an unavailable rating.
 
 The field-guide theme uses local Georgia/Times serif typography, small-cap headings and italic captions. Faded Kabeljou, Red Steenbras and Red Stumpnose illustrations decorate page backgrounds; the three public images are included in the offline shell. The artwork is decorative and does not represent catch data.
+
+Scientific captions cover all eleven journal categories in Species and catch details.
+Broad Shark, Hake and Musselcracker categories retain group/candidate names and
+explicit identification notes; they do not assert a species for an archived catch.
+References: [DFFE species guide](https://www.dffe.gov.za/sites/default/files/docs/publications/marinerecreationalactivity_informationbrochure2016to2017.pdf),
+[SASAA records](https://kznsaa.co.za/wp-content/uploads/2023/01/2022-Ladies-Records-July-2022.pdf),
+[ORI black musselcracker factsheet](https://www.saambr.org.za/wp-content/uploads/2023/07/ORI-Fish-Fact-Black-musselcracker-ZC-LB-2.pdf),
+and [ITIS shark taxonomy](https://www.itis.gov/servlet/SingleRpt/SingleRpt?search_topic=TSN&search_value=563987).
