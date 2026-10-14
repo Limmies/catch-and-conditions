@@ -509,6 +509,14 @@ function fitMap() {
   map.invalidateSize();
   map.fitBounds(markers.getBounds(), { padding: [45, 45], maxZoom: 14 });
 }
+const speciesScientific = {
+  kabeljo: 'Argyrosomus japonicus',
+  red_steenbras: 'Petrus rupestris',
+  miss_lucy: 'Chrysoblephus gibbiceps',
+};
+function scientificCaption(id) {
+  return speciesScientific[id] ? `<span class="species-scientific">${esc(speciesScientific[id])}</span>` : '';
+}
 function renderTotals() {
   const counts = new Map(Object.keys(species).map((id) => [id, 0]));
   for (const c of visible) {
@@ -522,7 +530,7 @@ function renderTotals() {
   $('totals').innerHTML = rows.map(([id, count]) =>
     `<tr class="species-row" style="--species-colour:${species[id]?.[1] || '#11543e'}"><td><span class="species-cell">${fishImage(id)}<span>${
       esc(species[id]?.[0] || id)
-    }</span></span></td><td><strong>${count}</strong></td><td>${
+    }${scientificCaption(id)}</span></span></td><td><strong>${count}</strong></td><td>${
       visible.length ? Math.round(count / visible.length * 100) : 0
     }%</td></tr><tr class="species-bar-row" aria-hidden="true" style="--species-colour:${species[id]?.[1] || '#11543e'}"><td colspan="3"><span class="species-visual-track"><span style="width:${count / max * 100}%"></span></span></td></tr>`
   ).join('');
@@ -752,6 +760,8 @@ function route() {
       page === key ? 'page' : 'false',
     );
   }
+  document.body.dataset.page = page;
+  $('page-caption').textContent = {map:'A record of fish, place & time.',totals:'The species that tell your story.',days:'Notes from days on the water.',trips:'Every journey, faithfully recorded.'}[page];
   $('page-title').textContent = {
     map: 'Catch map',
     totals: 'Species totals',

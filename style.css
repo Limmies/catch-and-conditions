@@ -1010,3 +1010,91 @@ dialog {
 #totals-page .species-bar-row:last-child td { border-bottom:0; }
 .species-visual-track { position:static; width:100%; }
 @media(max-width:600px) { #totals-page .species-bar-row td { padding:6px 12px 14px; } }
+
+/* Natural-history plate typography and faded fish illustrations. */
+:root {
+ --paper:#f8f7f2; --ink:#353f39; --muted:#70746c; --line:#deded3;
+ --display-font:Georgia,'Times New Roman',serif;
+}
+body { background:var(--paper); font-family:var(--display-font); position:relative; isolation:isolate; }
+body::before { content:""; position:fixed; inset:0; z-index:-1; pointer-events:none; background-image:url('fish/mobile/kabeljo.jpg'),url('fish/mobile/red_steenbras.jpg'),url('fish/mobile/miss_lucy.jpg'); background-repeat:no-repeat; background-size:min(70vw,1000px) auto,min(52vw,700px) auto,min(46vw,620px) auto; background-position:right -90px top 12vh,left -180px top 53vh,right -120px bottom -70px; opacity:.085; mix-blend-mode:multiply; }
+h1,h2,h3,.brand,.monogram { font-family:var(--display-font); font-weight:400; }
+h1 { font-variant:small-caps; letter-spacing:.025em; font-size:clamp(34px,5vw,52px); }
+h2 { letter-spacing:.015em; font-size:27px; }
+h3 { letter-spacing:.015em; }
+.masthead { background:#faf9f4eF; color:var(--ink); border-bottom:1px solid #d8d9ce; padding-top:20px; padding-bottom:20px; }
+.brand { gap:16px; }
+.brand > span:last-child { font-size:20px; line-height:1.13; font-variant:small-caps; letter-spacing:.065em; }
+.brand b { font-weight:400; }
+.monogram { border-color:#a4ac9a; border-radius:0; font-size:25px; padding:12px 10px; color:#53634e; letter-spacing:-.05em; }
+.masthead .quiet { color:#53634e; border-color:#cdd3c3; }
+.eyebrow { font-family:var(--display-font); font-size:12px; letter-spacing:.19em; font-weight:400; }
+.heading { position:relative; isolation:isolate; min-height:150px; margin-bottom:10px; }
+.heading::before { content:""; position:absolute; z-index:-1; right:60px; top:-12px; bottom:-5px; width:min(55%,530px); background:url('fish/mobile/kabeljo.jpg') center/contain no-repeat; opacity:.13; mix-blend-mode:multiply; pointer-events:none; }
+body[data-page=totals] .heading::before { background-image:url('fish/mobile/red_steenbras.jpg'); }
+body[data-page=days] .heading::before { background-image:url('fish/mobile/miss_lucy.jpg'); }
+body[data-page=trips] .heading::before { background-image:url('fish/mobile/kabeljo.jpg'); }
+.heading h1 { margin-bottom:6px; }
+.page-caption { font-size:16px; font-style:italic; color:var(--muted); margin:7px 0 20px; }
+.tabs { border-bottom-color:#cdd2c5; gap:12px; }
+.tabs a { font-family:var(--display-font); font-size:18px; font-weight:400; letter-spacing:.02em; }
+.tabs a[aria-current=page] { color:#39563e; border-color:#6c8060; }
+button,input,select,textarea { font-family:var(--display-font); }
+.quiet { background:#fafaf5db; font-weight:400; border-radius:7px; }
+.primary { background:#405b43; font-weight:400; letter-spacing:.02em; border-radius:7px; }
+.filter-panel,.overview,.day-card,.trip-summary > div,.table-wrap { background:#fffefbee; border-color:#deded3; border-radius:10px; box-shadow:0 5px 25px #4c4d3604; }
+.filter-panel summary { font-weight:400; }
+.filter-panel summary span { font-style:italic; }
+.overview span { font-style:italic; }
+.overview strong { font-family:var(--display-font); font-weight:400; letter-spacing:-.025em; }
+.section-heading h2 { font-variant:small-caps; }
+th { font-weight:400; font-variant:small-caps; letter-spacing:.055em; color:#66715f; }
+#totals-page .species-cell { font-weight:400; font-size:18px; }
+.species-scientific { display:block; margin-top:4px; font-size:13px; font-weight:400; font-style:italic; color:var(--muted); letter-spacing:.01em; }
+#totals-page .species-cell .fish-thumb { background:transparent; mix-blend-mode:multiply; }
+#totals-page td strong { font-weight:400; font-size:20px; }
+.species-visual-track { background:#eaece2; height:8px; }
+.day-header h3 { font-size:21px; }
+.day-total { background:#e9ecdf; color:#46583d; }
+.day-summary { font-style:italic; }
+.fish-thumb { mix-blend-mode:multiply; }
+dialog { background:#fdfcf7; border:1px solid #deded3; border-radius:12px; }
+.dialog-heading .eyebrow { letter-spacing:.14em; }
+.fish-portrait { background:transparent; mix-blend-mode:multiply; border-radius:0; }
+#detail-body > h2 { font-variant:small-caps; font-size:30px; margin-bottom:8px; }
+#detail-body > p.muted { font-style:italic; }
+.detail-grid dd { font-weight:400; }
+.condition > h3 { font-variant:small-caps; font-size:24px; }
+.condition-visuals strong,.score-value,.score-verdict { font-family:var(--display-font); font-weight:400; }
+.moon-card,.weather-card,.temperature-card { border-radius:12px; }
+.weather-card { background:linear-gradient(155deg,#f0f3ed,#fbf7eb); }
+.temperature-card { background:#fffefb; }
+.fishing-score { background:#edf0e6; border-color:#dbe0d1; border-radius:12px; }
+.score-caption,.score-note,.visual-label { font-weight:400; }
+.condition-measurements { background:#f5f5ed; border-radius:8px; }
+.condition-measurements summary { font-weight:400; }
+.login-panel { position:relative; isolation:isolate; }
+.login-panel::before { content:""; position:absolute; z-index:-1; inset:-70px -90px auto -90px; height:310px; background:url('fish/mobile/kabeljo.jpg') center/contain no-repeat; opacity:.11; mix-blend-mode:multiply; pointer-events:none; }
+.login-panel h1 { font-size:52px; }
+.login-panel > p:first-of-type { font-style:italic; }
+footer { font-style:italic; }
+@media(max-width:600px) {
+ .masthead { padding-top:max(15px,env(safe-area-inset-top)); padding-bottom:15px; }
+ .brand > span:last-child { font-size:18px; }
+ .monogram { font-size:22px; padding:9px 8px; border-radius:0; }
+ .heading { min-height:150px; margin-top:4px; }
+ .heading h1 { font-size:35px; }
+ .heading::before { width:72%; right:12px; top:0; bottom:-8px; opacity:.11; }
+ .page-caption { font-size:14px; max-width:230px; margin-bottom:12px; }
+ .tabs { background:#faf9f3f5; border-color:#d8d9ce; backdrop-filter:blur(12px); }
+ .tabs a { font-size:16px; font-weight:400; }
+ .tabs a[aria-current=page] { background:#e7ebdf; }
+ .section-heading h2 { font-size:24px; }
+ #totals-page .species-cell { font-size:16px; }
+ #totals-page td strong { font-size:19px; }
+ .species-scientific { font-size:11px; line-height:1.25; }
+ .day-header h3 { font-size:19px; }
+ body::before { background-size:580px auto,480px auto,420px auto; background-position:right -260px top 17vh,left -260px top 55vh,right -230px bottom 30px; opacity:.07; }
+ .login-panel h1 { font-size:42px; }
+ .login-panel::before { inset:-35px -15px auto; height:230px; }
+}

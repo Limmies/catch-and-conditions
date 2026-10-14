@@ -1,13 +1,16 @@
 // Cache the public app shell only. Never cache Auth, database requests or maps.
-const CACHE = 'catch-conditions-shell-v12';
+const CACHE = 'catch-conditions-shell-v13';
 const IMAGE_CACHE = 'catch-conditions-fish-mobile-v1';
-// Illustrations cache when viewed; do not download the entire gallery on install.
+// Three background illustrations cache with the shell; other fish load on demand.
 const FILES = [
   './',
   './index.html',
-  './style.css?v=12',
-  './app.js?v=12',
+  './style.css?v=13',
+  './app.js?v=13',
   './config.js',
+  './fish/mobile/kabeljo.jpg',
+  './fish/mobile/red_steenbras.jpg',
+  './fish/mobile/miss_lucy.jpg',
   './icon.svg',
   './icon-192.png',
   './icon-512.png',

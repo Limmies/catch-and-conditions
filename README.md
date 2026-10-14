@@ -46,3 +46,5 @@ Pinned local libraries: Supabase JS 2.57.4 (MIT), Leaflet 1.9.4 (BSD-2-Clause), 
 Catch and day conditions include an illustrated moon, estimated sky conditions from saved rain/cloud/visibility data, and a Celsius temperature gauge when units are recorded. Full measurements expand below the visuals. Species uses one table with images, count bars, totals and share.
 
 Species rows use full-width count bars scaled against the most-caught species, in the same colour as map markers, alongside counts and share percentages. The conditions card shows three custom fish with 0–3 active: percentage bands below 25%, 25–49%, 50–74%, and 75–100%. The percentage is derived from the saved model inputs; missing inputs show an unavailable rating.
+
+The field-guide theme uses local Georgia/Times serif typography, small-cap headings and italic captions. Faded Kabeljou, Red Steenbras and Red Stumpnose illustrations decorate page backgrounds; the three public images are included in the offline shell. The artwork is decorative and does not represent catch data.
