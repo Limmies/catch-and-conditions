@@ -922,3 +922,37 @@ dialog {
 .observation-form textarea { font:inherit; width:100%; border:1px solid #bfcec4; border-radius:10px; padding:9px 12px; resize:vertical; }
 .filter-panel summary::after { content:"▾"; margin-left:auto; color:var(--green); }
 .filter-panel[open] summary::after { content:"▴"; }
+/* Illustrated catch conditions. */
+.condition-visuals { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:18px 0; }
+.moon-card,.weather-card,.temperature-card { border:1px solid var(--line); border-radius:20px; padding:18px; display:flex; flex-direction:column; align-items:center; text-align:center; min-width:0; }
+.moon-card { background:#152a3b; color:#f6edce; border-color:#152a3b; }
+.weather-card { background:linear-gradient(155deg,#eef6f8,#fff9ed); }
+.moon-art,.weather-art { width:124px; height:124px; max-width:100%; margin-bottom:8px; }
+.visual-label { font-size:12px; font-weight:600; letter-spacing:.025em; }
+.condition-visuals strong { font-size:20px; letter-spacing:-.035em; margin:4px 0; }
+.condition-visuals small { font-size:11px; opacity:.75; }
+.temperature-card { grid-column:1/-1; align-items:stretch; text-align:left; background:#fff; }
+.condition-visuals .temperature-value { font-size:38px; line-height:1.2; margin:8px 0 18px; }
+.temperature-value small { font-size:21px; margin-left:4px; font-weight:400; }
+.temperature-scale { position:relative; height:9px; border-radius:8px; background:linear-gradient(90deg,#6b9dbd,#8fbfbd 30%,#d4d796 56%,#e9b36e 78%,#c96d55); margin:0 5px; }
+.temperature-scale > span { position:absolute; top:50%; width:17px; height:17px; border:3px solid white; border-radius:50%; background:var(--ink); box-shadow:0 1px 6px #142d2440; transform:translate(-50%,-50%); }
+.temperature-range { display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:8px; }
+.condition-measurements { margin:16px 0; border:1px solid var(--line); border-radius:14px; padding:12px 14px; background:#fbfcfa; }
+.condition-measurements summary { cursor:pointer; font-size:14px; font-weight:600; min-height:24px; }
+.condition-measurements .detail-grid { margin:20px 0 4px; }
+.bite-summary { display:flex; gap:12px; align-items:center; padding:12px 16px; border-radius:14px; background:#eaf2eb; font-weight:600; }
+.count-cell { justify-content:flex-end; }
+#totals-page .table-wrap { box-shadow:0 8px 28px #142d2405; }
+#totals-page td { padding-top:17px; padding-bottom:17px; }
+#totals-page td:last-child { color:var(--muted); font-variant-numeric:tabular-nums; }
+#totals-page .section-heading > span { display:none; }
+.overview { box-shadow:0 5px 20px #142d2404; }
+.day-card { box-shadow:0 5px 20px #142d2404; }
+.fish-portrait { border-radius:18px; background:linear-gradient(150deg,#f5f8f3,#ffffff); }
+@media(max-width:360px) {
+ .condition-visuals { gap:8px; }
+ .moon-card,.weather-card { padding:12px 8px; }
+ .condition-visuals strong { font-size:17px; }
+ .count-track { width:32px; }
+ .count-cell { gap:7px; }
+}

@@ -584,17 +584,58 @@ const conditionLabels = {
   ocean_current_velocity:'Current speed',ocean_current_direction:'Current direction',wave_height:'Wave height',wave_period:'Wave period',sea_level_height_msl:'Sea level including tides',
   tidal_stage:'Tidal stage',lunar_tidal_cycle:'Lunar tidal cycle',water_clarity:'Water clarity',water_temperature:'Measured water temperature',current_strength:'Observed current',notes:'Notes'
 };
+function moonGraphic(phase, southern = false) {
+  const fraction = ((phase % 1) + 1) % 1;
+  const edge = [], terminator = [], direction = fraction <= .5 ? 1 : -1;
+  for (let step = 0; step <= 48; step++) {
+    const y = -1 + step / 24, radius = Math.sqrt(Math.max(0, 1 - y*y));
+    edge.push(`${(60 + direction*radius*44).toFixed(2)},${(60+y*44).toFixed(2)}`);
+    terminator.unshift(`${(60 + direction*Math.cos(fraction*2*Math.PI)*radius*44).toFixed(2)},${(60+y*44).toFixed(2)}`);
+  }
+  return `<svg class="moon-art" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="53" fill="#ffffff08"/><g${southern ? ' transform="rotate(180 60 60)"' : ''}><circle cx="60" cy="60" r="44" fill="#293b4c"/><polygon points="${edge.concat(terminator).join(' ')}" fill="#f6edce"/><circle cx="60" cy="60" r="44" fill="none" stroke="#fff" stroke-opacity=".18"/></g><circle cx="12" cy="25" r="1.5" fill="#f6edce"/><circle cx="106" cy="91" r="2" fill="#f6edce"/><path d="M101 18v8m-4-4h8" stroke="#f6edce" stroke-width="1.5"/></svg>`;
+}
+function skyFor(p) {
+  if (typeof p.precipitation === 'number' && p.precipitation > 0) return {kind:'rain',label:'Raining',note:`${p.precipitation} mm precipitation`};
+  if (typeof p.visibility === 'number' && p.visibility < 1000) return {kind:'mist',label:'Foggy',note:'Visibility below 1 km'};
+  if (typeof p.visibility === 'number' && p.visibility < 5000 && p.relative_humidity_2m >= 90) return {kind:'mist',label:'Misty',note:'Low visibility and high humidity'};
+  if (typeof p.cloud_cover !== 'number') return null;
+  const night = p.sources?.weather?.values?.is_day === 0 || p.is_day === 0;
+  return {kind:p.cloud_cover >= 80?'cloud':p.cloud_cover>=20?'partly':night?'night':'sun', label:p.cloud_cover>=80?'Overcast':p.cloud_cover>=20?'Partly cloudy':night?'Clear night':'Clear sky', note:`${p.cloud_cover}% cloud cover`};
+}
+function weatherGraphic(kind) {
+  const sun = '<circle cx="46" cy="43" r="18" fill="#efbd55"/><g stroke="#efbd55" stroke-width="3.5" stroke-linecap="round"><path d="M46 12v-5m0 72v-5M15 43h-5m72 0h-5M24 21l-4-4m48 48 4 4M24 65l-4 4m48-48 4-4"/></g>';
+  const cloud = '<path d="M29 76c-14 0-19-18-8-26 1-18 27-24 36-9 14-8 29 1 29 13 22 0 25 31 3 31H34" fill="#c7d9df"/><path d="M29 76h60" stroke="#b3cbd3" stroke-width="3" stroke-linecap="round"/>';
+  const rain = '<g stroke="#5793b4" stroke-width="4" stroke-linecap="round"><path d="m37 94-4 9m25-9-4 9m25-9-4 9"/></g>';
+  const mist = '<g stroke="#8ca9b2" stroke-width="4" stroke-linecap="round"><path d="M20 90h66M32 101h69M14 110h60"/></g>';
+  return `<svg class="weather-art" viewBox="0 0 120 120" aria-hidden="true">${kind==='night'?'<path d="M73 23a32 32 0 1 0 22 51A34 34 0 0 1 73 23" fill="#7c92b9"/>':kind==='sun'?sun:kind==='partly'?sun+cloud:cloud}${kind==='rain'?rain:kind==='mist'?mist:''}</svg>`;
+}
+function temperatureCard(p, units) {
+  const key = typeof p.water_temperature === 'number' ? 'water_temperature' : typeof p.temperature_2m === 'number' ? 'temperature_2m' : 'sea_surface_temperature';
+  const value = p[key], unit = units?.[key];
+  if (typeof value !== 'number' || !Number.isFinite(value)) return '';
+  const label = {temperature_2m:'Air temperature',water_temperature:'Measured water',sea_surface_temperature:'Sea surface'}[key];
+  const celsius = unit === '°C' || unit === 'C';
+  const position = Math.max(0,Math.min(100,(value+10)/50*100));
+  return `<div class="temperature-card"><span class="visual-label">${label}</span><strong class="temperature-value">${esc(value)}<small>${esc(unit || '')}</small></strong>${celsius?`<div class="temperature-scale" aria-label="${esc(label)} ${esc(value)} degrees Celsius"><span style="left:${position}%"></span></div><div class="temperature-range"><span>−10°</span><span>15°</span><span>40°</span></div>`:''}</div>`;
+}
+function conditionVisuals(p, units) {
+  const phase = p.moon_phase_fraction, sky = skyFor(p);
+  const moon = typeof phase==='number' && Number.isFinite(phase) ? `<div class="moon-card">${moonGraphic(phase,p.catch_location?.latitude<0)}<span class="visual-label">${esc(p.moon_phase)}</span><strong>${esc(p.moon_illumination)}% illuminated</strong><small>Calculated moon phase</small></div>` : '';
+  const weather = sky ? `<div class="weather-card">${weatherGraphic(sky.kind)}<span class="visual-label">Weather at catch</span><strong>${sky.label}</strong><small>${esc(sky.note)} · estimated</small></div>` : '';
+  const temperature = temperatureCard(p,units);
+  return moon || weather || temperature ? `<div class="condition-visuals">${moon}${weather}${temperature}</div>` : '';
+}
+
 function conditionsHTML(data) {
   if(!data?.length) return '<p class="muted">Conditions are awaiting collection. Use Collect conditions to try now.</p>';
   return data.map(snapshot => {
     const p = snapshot.raw_payload || {}, phase = p.moon_phase_fraction;
-    const icons = ['🌑','🌒','🌓','🌔','🌕','🌖','🌗','🌘'];
-    const moon = typeof phase === 'number' ? `<div class="moon-summary"><span class="moon-icon" aria-hidden="true">${icons[Math.round(phase*8)%8]}</span><span>${esc(p.moon_phase)}<br><strong>${esc(p.moon_illumination)}% illuminated</strong><br><small>Calculated approximation</small></span></div>` : '';
+    const visuals = conditionVisuals(p, snapshot.units);
     const bite = p.bite_estimate;
-    const fish = bite && Number.isInteger(bite.fish) && bite.fish>=1 && bite.fish<=3 ? `<p><span class="bite-fish" aria-label="${bite.fish} of 3 fish">${[1,2,3].map(n=>`<span class="${n>bite.fish?'inactive':''}" aria-hidden="true">🐟</span>`).join('')}</span> ${esc(bite.label)}</p><p class="small muted">${esc(bite.explanation)}</p>` : '';
+    const fish = bite && Number.isInteger(bite.fish) && bite.fish>=1 && bite.fish<=3 ? `<p class="bite-summary"><span class="bite-fish" aria-label="${bite.fish} of 3 fish">${[1,2,3].map(n=>`<span class="${n>bite.fish?'inactive':''}" aria-hidden="true">🐟</span>`).join('')}</span> ${esc(bite.label)}</p><p class="small muted">${esc(bite.explanation)}</p>` : '';
     const fields = Object.entries(conditionLabels).filter(([key]) => typeof p[key]==='string' || (typeof p[key]==='number' && Number.isFinite(p[key])));
     const missing = snapshot.model_version === 'fishing-context-v1' ? ['sea_surface_temperature','ocean_current_velocity','tidal_stage'].filter(key => !(key in p)).map(key=>field(conditionLabels[key], 'Unavailable at this location / time')).join('') : '';
-    return `<p class="small muted">${esc(snapshot.provider)}${snapshot.sample_at ? ' · '+esc(dateLabel(snapshot.sample_at))+' '+esc(timeLabel(snapshot.sample_at)):''}</p>${moon}${fish}<dl class="detail-grid">${fields.map(([key,label])=>field(label,typeof p[key]==='number' ? `${p[key]} ${snapshot.units?.[key] || '(unit not recorded)'}` : p[key])).join('')}${missing}</dl>${p.status==='partial'?'<p class="small muted">Some provider data is unavailable. Collection will retry automatically.</p>':''}`;
+    return `<p class="small muted">${esc(snapshot.provider)}${snapshot.sample_at ? ' · '+esc(dateLabel(snapshot.sample_at))+' '+esc(timeLabel(snapshot.sample_at)):''}</p>${visuals}${fish}<details class="condition-measurements"><summary>All conditions & measurements</summary><dl class="detail-grid">${fields.map(([key,label])=>field(label,typeof p[key]==='number' ? `${p[key]} ${snapshot.units?.[key] || '(unit not recorded)'}` : p[key])).join('')}${missing}</dl></details>${p.status==='partial'?'<p class="small muted">Some provider data is unavailable. Collection will retry automatically.</p>':''}`;
   }).join('') + '<p class="small muted">Weather and marine estimates: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>, DWD and other contributing models. Sea temperature is at the surface. Modelled tides and currents may differ locally. Spring/neap tendency is calculated from the moon; local tide times require marine data. Unavailable measurements are left blank.</p>';
 }
 function addConditionActions(c, generation) {
