@@ -8,7 +8,7 @@ The live private journal is https://limmies.github.io/catch-and-conditions/. Its
 - `style.css`: base styles and one mobile layout with safe-area spacing and bottom navigation.
 - `sw.js`: public shell and illustration cache only; never authentication, database or map requests.
 - `config.js`: public project URL, publishable key, owner UUID and display timezone. Never put a password, watch token or service-role key here.
-- `fish/mobile/`: small JPEGs for sharper catch details. All eleven thumbnails are embedded in `app.js`, so individual image-download failures cannot hide the fish.
+- `fish/mobile/`: small JPEGs for sharper catch details. All twelve thumbnails are embedded in `app.js`, so individual image-download failures cannot hide the fish.
 
 Map, Species, Days and Trips share species/date filters. Dates use Africa/Johannesburg. Clear the species filter to see zero-catch trips. Fishing/travel totals come from the Supabase trip record; catch rates use recorded fishing intervals. Distances are straight-line totals between catch locations. Setup tests are excluded at the database query.
 
@@ -49,9 +49,11 @@ Species rows use full-width count bars scaled against the most-caught species, i
 
 The field-guide theme uses local Georgia/Times serif typography, small-cap headings and italic captions. Faded Kabeljou, Red Steenbras and Red Stumpnose illustrations decorate page backgrounds; the three public images are included in the offline shell. The artwork is decorative and does not represent catch data.
 
-Scientific captions cover all eleven journal categories in Species and catch details.
+Scientific captions cover all twelve journal categories in Species and catch details.
 Owner-specified categories: Black Musselcracker (Cymatoceps nasutus), Blacktip Reef Shark (Carcharhinus melanopterus), and South African Hake interpreted as shallow-water Cape hake (Merluccius capensis). Existing upload IDs remain unchanged. Location alone cannot distinguish the two Cape hake species.
 References: [DFFE species guide](https://www.dffe.gov.za/sites/default/files/docs/publications/marinerecreationalactivity_informationbrochure2016to2017.pdf),
 [SASAA records](https://kznsaa.co.za/wp-content/uploads/2023/01/2022-Ladies-Records-July-2022.pdf),
 [ORI black musselcracker factsheet](https://www.saambr.org.za/wp-content/uploads/2023/07/ORI-Fish-Fact-Black-musselcracker-ZC-LB-2.pdf),
 and [South African shark checklist](https://sharksunderattackcampaign.co.za/wp-content/uploads/2022/03/2-Ebert-et-al-SA-Checklist-2021_E1342.pdf), and [Cape hake identification](https://www.fishbase.se/summary/Merluccius-capensis.html).
+
+Cape Yellowtail / Kaapse Geelstert (*Seriola lalandi*) uses stable ID `yellowtail`, appended after the original eleven species. Its gold colour, thumbnail, portrait, scientific caption, filters, summaries and condition collection use the shared journal paths.
