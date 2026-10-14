@@ -901,3 +901,24 @@ dialog {
     scroll-behavior: auto!important;
   }
 }
+/* Compact shared filters and one species table. */
+.filter-panel { padding: 8px 12px; }
+.filter-panel[open] summary { margin-bottom: 10px; }
+.filters { gap: 8px; }
+.filters input, .filters select { min-height: 36px; padding: 7px 9px; }
+.count-cell { display:flex; align-items:center; gap:10px; }
+.count-track { display:block; width:clamp(35px,12vw,180px); height:7px; background:#edf2ee; border-radius:5px; overflow:hidden; }
+.count-track > span { display:block; height:100%; background:var(--green); }
+.day-weather { margin:4px 14px 10px; font-size:13px; }
+.moon-summary { display:flex; align-items:center; gap:12px; margin:12px 0; }
+.moon-icon { font-size:36px; line-height:1; }
+.bite-fish { font-size:23px; letter-spacing:4px; color:var(--green); }
+.bite-fish .inactive { opacity:.2; }
+.condition-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.observation-form { display:grid; gap:10px; margin-top:12px; }
+.observation-form label { display:grid; gap:4px; }
+.day-condition-entry { border-top:1px solid var(--line); padding:12px 0; }
+
+.observation-form textarea { font:inherit; width:100%; border:1px solid #bfcec4; border-radius:10px; padding:9px 12px; resize:vertical; }
+.filter-panel summary::after { content:"▾"; margin-left:auto; color:var(--green); }
+.filter-panel[open] summary::after { content:"▴"; }

@@ -143,7 +143,6 @@ function resetPrivateView() {
   $('map').replaceChildren();
   for (
     const id of [
-      'bars',
       'totals',
       'days',
       'detail-body',
@@ -520,21 +519,10 @@ function renderTotals() {
     (species[a[0]]?.[0] || a[0]).localeCompare(species[b[0]]?.[0] || b[0])
   );
   const max = Math.max(1, ...rows.map((row) => row[1]));
-  $('bars').innerHTML =
-    rows.filter(([, count]) => count > 0).map(([id, count]) =>
-      `<div class="bar-row"><span class="bar-species">${fishImage(id)}<span>${
-        esc(species[id]?.[0] || id)
-      }</span></span><div class="bar-track"><div class="bar-fill" style="background:${
-        species[id]?.[1] || '#11543e'
-      };width:${
-        count / max * 100
-      }%"></div></div><strong>${count}</strong></div>`
-    ).join('') ||
-    '<p class="muted">Your species chart will appear after your first catch.</p>';
   $('totals').innerHTML = rows.map(([id, count]) =>
     `<tr><td><span class="species-cell">${fishImage(id)}<span>${
       esc(species[id]?.[0] || id)
-    }</span></span></td><td>${count}</td><td>${
+    }</span></span></td><td><span class="count-cell"><span class="count-track"><span style="width:${count / max * 100}%"></span></span><strong>${count}</strong></span></td><td>${
       visible.length ? Math.round(count / visible.length * 100) : 0
     }%</td></tr>`
   ).join('');
@@ -562,6 +550,11 @@ function renderDays() {
       [...totals].map(([name, count]) => `<span>${esc(name)} · ${count}</span>`)
         .join('')
     }</div>`;
+    const weather = document.createElement('button');
+    weather.className = 'quiet day-weather';
+    weather.textContent = 'View day conditions';
+    weather.onclick = () => showDayConditions(rows);
+    section.append(weather);
     for (const c of rows) {
       const button = document.createElement('button');
       button.className = 'catch-row';
@@ -583,6 +576,69 @@ function field(label, value) {
     esc(value ?? 'Not recorded')
   }</dd></div>`;
 }
+const conditionLabels = {
+  sea_surface_temperature:'Sea surface temperature', temperature_2m:'Air temperature',
+  wind_speed_10m:'Wind speed',wind_direction_10m:'Wind direction',wind_gusts_10m:'Wind gusts',
+  pressure_msl:'Barometric pressure (sea level)',pressure_change_3h:'Pressure change over 3 hours',
+  cloud_cover:'Cloud cover',precipitation:'Rain',relative_humidity_2m:'Humidity',visibility:'Visibility',
+  ocean_current_velocity:'Current speed',ocean_current_direction:'Current direction',wave_height:'Wave height',wave_period:'Wave period',sea_level_height_msl:'Sea level including tides',
+  tidal_stage:'Tidal stage',lunar_tidal_cycle:'Lunar tidal cycle',water_clarity:'Water clarity',water_temperature:'Measured water temperature',current_strength:'Observed current',notes:'Notes'
+};
+function conditionsHTML(data) {
+  if(!data?.length) return '<p class="muted">Conditions are awaiting collection. Use Collect conditions to try now.</p>';
+  return data.map(snapshot => {
+    const p = snapshot.raw_payload || {}, phase = p.moon_phase_fraction;
+    const icons = ['🌑','🌒','🌓','🌔','🌕','🌖','🌗','🌘'];
+    const moon = typeof phase === 'number' ? `<div class="moon-summary"><span class="moon-icon" aria-hidden="true">${icons[Math.round(phase*8)%8]}</span><span>${esc(p.moon_phase)}<br><strong>${esc(p.moon_illumination)}% illuminated</strong><br><small>Calculated approximation</small></span></div>` : '';
+    const bite = p.bite_estimate;
+    const fish = bite && Number.isInteger(bite.fish) && bite.fish>=1 && bite.fish<=3 ? `<p><span class="bite-fish" aria-label="${bite.fish} of 3 fish">${[1,2,3].map(n=>`<span class="${n>bite.fish?'inactive':''}" aria-hidden="true">🐟</span>`).join('')}</span> ${esc(bite.label)}</p><p class="small muted">${esc(bite.explanation)}</p>` : '';
+    const fields = Object.entries(conditionLabels).filter(([key]) => typeof p[key]==='string' || (typeof p[key]==='number' && Number.isFinite(p[key])));
+    const missing = snapshot.model_version === 'fishing-context-v1' ? ['sea_surface_temperature','ocean_current_velocity','tidal_stage'].filter(key => !(key in p)).map(key=>field(conditionLabels[key], 'Unavailable at this location / time')).join('') : '';
+    return `<p class="small muted">${esc(snapshot.provider)}${snapshot.sample_at ? ' · '+esc(dateLabel(snapshot.sample_at))+' '+esc(timeLabel(snapshot.sample_at)):''}</p>${moon}${fish}<dl class="detail-grid">${fields.map(([key,label])=>field(label,typeof p[key]==='number' ? `${p[key]} ${snapshot.units?.[key] || '(unit not recorded)'}` : p[key])).join('')}${missing}</dl>${p.status==='partial'?'<p class="small muted">Some provider data is unavailable. Collection will retry automatically.</p>':''}`;
+  }).join('') + '<p class="small muted">Weather and marine estimates: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>, DWD and other contributing models. Sea temperature is at the surface. Modelled tides and currents may differ locally. Spring/neap tendency is calculated from the moon; local tide times require marine data. Unavailable measurements are left blank.</p>';
+}
+function addConditionActions(c, generation) {
+  const container = $('conditions');
+  container.insertAdjacentHTML('beforeend','<div class="condition-actions"><button id="collect-conditions" class="quiet">Collect conditions</button><button id="record-observations" class="quiet">Record observations</button></div><p id="condition-status" role="status" class="small muted"></p>');
+  $('collect-conditions').onclick = async () => {
+    const button=$('collect-conditions');button.disabled=true;
+    $('condition-status').textContent='Collecting weather for this catch…';
+    try {
+      const {data,error}=await client.functions.invoke('fishing-conditions',{body:{catch_archive_id:c.archive_id}});
+      if(error || !data?.stored) throw Error('Collection unavailable');
+      if(generation===conditionsGeneration && session && $('details').open) await showDetail(c);
+    } catch { if(generation===conditionsGeneration && $('condition-status')) { $('condition-status').textContent='Could not collect conditions. Automatic collection will retry.'; button.disabled=false; } }
+  };
+  $('record-observations').onclick = () => observationForm(c,generation);
+}
+function observationForm(c,generation) {
+  if($('observation-form')) return;
+  $('conditions').insertAdjacentHTML('beforeend',`<form id="observation-form" class="observation-form"><label>Water clarity<select name="water_clarity"><option value="">Not observed</option><option>Clear</option><option>Slightly cloudy</option><option>Murky</option></select></label><label>Measured water temperature (°C)<input name="water_temperature" type="number" min="-3" max="45" step="0.1"></label><label>Observed current<select name="current_strength"><option value="">Not observed</option><option>Still</option><option>Weak</option><option>Moderate</option><option>Strong</option></select></label><label>Observed tide<select name="tidal_stage"><option value="">Not observed</option><option>Incoming / rising</option><option>Outgoing / falling</option><option>High water</option><option>Low water</option><option>Slack water</option></select></label><label>Notes<textarea name="notes" maxlength="1000" rows="3"></textarea></label><button type="submit" class="primary">Save observations</button><p class="small muted">Record observations from the catch time. These are stored separately from provider estimates.</p></form>`);
+  $('observation-form').onsubmit = async event => {
+    event.preventDefault();const form=event.currentTarget,button=form.querySelector('button');button.disabled=true;
+    const payload={};for(const [key,value] of new FormData(form)) if(value.toString().trim()) payload[key]=key==='water_temperature'?Number(value):value.toString().trim();
+    if(!Object.keys(payload).length){$('condition-status').textContent='Enter at least one observation.';button.disabled=false;return;}
+    try {
+      const {error}=await client.from('fishing_condition_snapshots').insert({catch_archive_id:c.archive_id,provider:'Angler observation',sample_at:c.caught_at,units:{water_temperature:'°C'},raw_payload:payload});
+      if(error)throw error;
+      if(generation===conditionsGeneration && session && $('details').open)await showDetail(c);
+    }catch{if(generation===conditionsGeneration){$('condition-status').textContent='Observations could not be saved. Try again.';button.disabled=false;}}
+  };
+}
+async function showDayConditions(rows) {
+  const generation=++conditionsGeneration;
+  $('detail-body').innerHTML=`<h2>${esc(dateLabel(rows[0].caught_at))}</h2><p class="muted">Conditions at each catch location and time.</p><div id="day-conditions">Loading saved conditions…</div>`;
+  if(!$('details').open)$('details').showModal();
+  try {
+    const snapshots=[];
+    // Bound requests for long days; preserve each catch's location and timestamp.
+    for(let start=0;start<rows.length;start+=50){const {data,error}=await client.from('fishing_condition_snapshots').select('catch_archive_id,provider,model_version,sample_at,retrieved_at,units,raw_payload').in('catch_archive_id',rows.slice(start,start+50).map(c=>c.archive_id)).order('retrieved_at',{ascending:false});if(error)throw error;snapshots.push(...data);}
+    if(generation!==conditionsGeneration || !session || !$('details').open)return;
+    $('day-conditions').replaceChildren();
+    for(const c of rows){const entry=document.createElement('section');entry.className='day-condition-entry';entry.innerHTML=`<h3>${esc(timeLabel(c.caught_at))} · ${esc(nameOf(c))}</h3>${conditionsHTML(snapshots.filter(s=>s.catch_archive_id===c.archive_id))}`;const button=document.createElement('button');button.className='quiet';button.textContent='Open catch / record conditions';button.onclick=()=>showDetail(c);entry.append(button);$('day-conditions').append(entry);}
+  }catch{if(generation===conditionsGeneration && $('day-conditions'))$('day-conditions').textContent='Day conditions could not be loaded. Try again.';}
+}
+
 async function showDetail(c) {
   const generation = ++conditionsGeneration;
   const gpsDelay = Math.round(
@@ -605,7 +661,7 @@ async function showDetail(c) {
   if (!$('details').open) $('details').showModal();
   try {
     const { data, error } = await client.from('fishing_condition_snapshots')
-      .select('provider,sample_at,retrieved_at,units,raw_payload').eq(
+      .select('provider,model_version,sample_at,retrieved_at,units,raw_payload').eq(
         'catch_archive_id',
         c.archive_id,
       ).order('retrieved_at', { ascending: false }).limit(10);
@@ -613,52 +669,13 @@ async function showDetail(c) {
       return;
     }
     if (error) throw error;
-    // Provider schemas are not standardized yet. Show only explicitly named
-    // scalar fields with their saved units; never invent weather or units.
-    const supported = {
-      sea_surface_temperature: 'Sea surface temperature',
-      temperature_2m: 'Air temperature',
-      wind_speed_10m: 'Wind speed',
-      wind_direction_10m: 'Wind direction',
-      pressure_msl: 'Sea-level pressure',
-      wave_height: 'Wave height',
-    };
-    const blocks = data.map((snapshot) => {
-      const fields = Object.entries(supported).filter(([key]) =>
-        typeof snapshot.raw_payload?.[key] === 'number' &&
-        Number.isFinite(snapshot.raw_payload[key])
-      );
-      if (!fields.length) return '';
-      return `<p class="small muted">${esc(snapshot.provider)}${
-        snapshot.sample_at
-          ? ' · ' + esc(dateLabel(snapshot.sample_at)) + ' ' +
-            esc(timeLabel(snapshot.sample_at))
-          : ''
-      }</p><dl class="detail-grid">${
-        fields.map(([key, label]) =>
-          field(
-            label,
-            `${snapshot.raw_payload[key]} ${
-              snapshot.units?.[key] || '(unit not recorded)'
-            }`,
-          )
-        ).join('')
-      }</dl>`;
-    }).filter(Boolean);
-    $('conditions').innerHTML = '<h3>Conditions</h3>' + (blocks.length
-      ? blocks.join('')
-      : `<p class="muted">${
-        data.length
-          ? 'Saved provider data exists; this format is not displayed yet.'
-          : 'No conditions saved for this catch yet.'
-      }</p>`) +
-      (blocks.length
-        ? '<p class="small muted">Saved provider estimates. Sea surface temperature is not temperature at your hook.</p>'
-        : '');
+    $('conditions').innerHTML = '<h3>Conditions</h3>' + conditionsHTML(data);
+    addConditionActions(c, generation);
   } catch {
     if (generation === conditionsGeneration && $('conditions')) {
       $('conditions').innerHTML =
         '<h3>Conditions</h3><p class="muted">Conditions could not be loaded. Your catch is still saved.</p>';
+      addConditionActions(c, generation);
     }
   }
 }
@@ -754,7 +771,7 @@ $('login-form').onsubmit = async (event) => {
   }
 };
 async function start() {
-  $('filter-panel').open = window.innerWidth > 600;
+  $('filter-panel').open = false;
   if (!window.supabase) {
     loginMessage(
       'The sign-in library could not load. Refresh and try again.',

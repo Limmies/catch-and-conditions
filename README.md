@@ -1,6 +1,6 @@
 # Phone journal
 
-The live read-only journal is https://limmies.github.io/catch-and-conditions/. Its deployment repository is `Limmies/catch-and-conditions`; this folder is the maintained source. Publish only its contents, with `index.html` at the repository root. Keep `vendor/`, `fish/mobile/`, licenses and `.nojekyll` together.
+The live private journal is https://limmies.github.io/catch-and-conditions/. Its deployment repository is `Limmies/catch-and-conditions`; this folder is the maintained source. Publish only its contents, with `index.html` at the repository root. Keep `vendor/`, `fish/mobile/`, licenses and `.nojekyll` together.
 
 ## Source
 
@@ -39,6 +39,6 @@ On iPhone, open the live site in Safari → Share → Add to Home Screen. Safari
 
 The journal refreshes on returning, reconnecting and every minute while visible. Catches and trips refresh independently; a failed request retains previously loaded records and displays an error. Sign-out clears in-memory private data. Internet is required for sign-in, archive reads and map tiles. Only the public shell and illustrations are cached offline.
 
-Condition details show saved fields and units if present. Historical weather enrichment is not yet implemented in Supabase; the journal never substitutes live weather for a past catch.
+Conditions are collected automatically in Supabase every five minutes, in batches of five catches. The collector backfills older catches and retries provider failures. Catch details and Days show weather at the catch time and location, moon illumination, available marine estimates and a versioned three-fish heuristic. The heuristic is uncalibrated and is not Windy’s score or a bite probability. Missing marine measurements stay unavailable. Record observations to save clarity, measured temperature, local tide/current and notes separately from estimates. Owner-only insertion policies restrict observations; automatic provider snapshots are writable only by the server.
 
 Pinned local libraries: Supabase JS 2.57.4 (MIT), Leaflet 1.9.4 (BSD-2-Clause), Leaflet.markercluster 1.5.3 (MIT). Licenses are in `vendor/`. Map attribution: © OpenStreetMap contributors.
