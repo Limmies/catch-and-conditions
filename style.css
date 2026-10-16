@@ -1102,3 +1102,16 @@ footer { font-style:italic; }
 .species-scientific { overflow-wrap:anywhere; }
 .species-taxonomy-note { display:block; margin-top:4px; font-size:11px; line-height:1.35; font-style:normal; font-weight:400; color:var(--muted); white-space:normal; }
 #detail-body > .species-scientific { font-size:17px; margin:0 0 6px; }
+
+/* Fish reference profiles share the field-guide typography. */
+.species-profile-button { display: block; width: 100%; padding: 0; border: 0; background: transparent; color: inherit; text-align: left; font: inherit; cursor: pointer; }
+.species-profile-button:hover { background: rgba(23,106,71,.06); }
+.species-profile-button:focus-visible { outline: 2px solid #176a47; outline-offset: 4px; border-radius: 4px; }
+.fish-profile { margin: 1.25rem 0; padding: 1rem; border: 1px solid rgba(23,106,71,.2); border-radius: 12px; background: rgba(23,106,71,.035); }
+.fish-profile h3 { margin: .35rem 0 .75rem; }
+.fish-profile p { line-height: 1.6; }
+.fish-profile a { text-underline-offset: 3px; }
+
+.fish-name-link { color: inherit; font: inherit; border: 0; background: transparent; padding: .2rem; cursor: pointer; text-align: left; text-decoration: underline; text-decoration-color: rgba(23,106,71,.3); text-underline-offset: 3px; }
+.fish-name-link:hover { color: #176a47; }
+.fish-name-link:focus-visible { outline: 2px solid #176a47; outline-offset: 2px; }

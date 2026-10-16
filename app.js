@@ -487,7 +487,9 @@ function renderMap() {
     );
   }
   $('legend').innerHTML = [...legend].map(([name, colour]) =>
-    `<span><i class="dot" style="background:${colour}"></i>${esc(name)}</span>`
+    $('colour').value === 'species'
+      ? `<button type="button" class="fish-name-link" data-profile="${esc(visible.find(c => nameOf(c) === name)?.species_id || '')}"><i class="dot" style="background:${colour}"></i>${esc(name)}</button>`
+      : `<span><i class="dot" style="background:${colour}"></i>${esc(name)}</span>`
   ).join('');
   updateLabels();
   if (!mapFitted && visible.length) {
@@ -514,6 +516,108 @@ const speciesScientific = {
   hake: 'Merluccius capensis',
   yellowtail: 'Seriola lalandi',
 };
+// Editorial reference profiles; independent of catch records and recommendation rules.
+const fishProfiles = {
+  "kabeljo": [
+    "Estuary beginnings",
+    "Dusky kob use estuaries as juvenile nurseries before moving into coastal waters. Some mature fish migrate towards KwaZulu-Natal to breed, gathering around offshore structure, often at night.",
+    "Males typically mature around five years and females around six: a large kob has spent years growing before joining the breeding population.",
+    "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Sheet-Dusky-Kob.pdf",
+    "ORI species factsheet"
+  ],
+  "red_roman": [
+    "A reef with a resident",
+    "Red Roman feed on reef invertebrates and usually occupy small home ranges. Their behaviour changes through life: females are more social, while males become territorial and often shelter in caves.",
+    "Roman begin adult life as females; some change to males around seven to nine years old. Their eggs and larvae drift in the water before young fish settle onto reefs.",
+    "https://speciesstatus.sanbi.org/taxa/detail/2905/",
+    "SANBI species account"
+  ],
+  "red_steenbras": [
+    "A lifetime beneath the reef",
+    "This giant South African seabream has a much longer life than early studies suggested. Researchers re-examined its ear stones, whose growth layers preserve a record of its life.",
+    "Radiocarbon evidence supported an age of about 55 years. One tagged fish was recaptured after 22 years, helping confirm just how long these fish can live.",
+    "https://doi.org/10.2989/1814232X.2018.1520148",
+    "Andrews and colleagues, 2018"
+  ],
+  "miss_lucy": [
+    "Miss Lucy, the red stumpnose",
+    "A strongly resident reef seabream, Miss Lucy feeds on bottom-dwelling invertebrates. Juveniles use shallower reefs; adults occupy offshore reefs and can also form shoals.",
+    "Individuals have been aged to 48 years. Its small eggs drift in the sea, linking a life spent close to one reef with an early stage carried by the water.",
+    "https://speciesstatus.sanbi.org/taxa/detail/02954/",
+    "SANBI species account"
+  ],
+  "geelbek": [
+    "A travelling shoal",
+    "Geelbek chase baitfish over sand and reef. Adults migrate from the Western Cape towards KwaZulu-Natal to spawn in spring, then return south and spread across the Agulhas Bank in summer.",
+    "Their name refers to the conspicuous yellow inside the mouth. At breeding time, large groups gather over offshore reefs at night; maturity is reached at roughly five years.",
+    "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Sheet-Geelbek.pdf",
+    "ORI species factsheet"
+  ],
+  "haai": [
+    "A shark born swimming",
+    "Blacktip reef sharks are live-bearing sharks: developing pups receive nourishment through a yolk-sac placenta. Litters usually contain two to four pups, and reproductive timing varies between regions.",
+    "This species was scientifically described in 1824. Despite the similar names, it is a different species from the blacktip shark, Carcharhinus limbatus.",
+    "https://www.floridamuseum.ufl.edu/discover-fish/species-profiles/blacktip-reef-shark/",
+    "Florida Museum species profile"
+  ],
+  "carpenter": [
+    "Colour above the reef",
+    "Carpenter live above prominent reefs, with juveniles generally shallower than adults. Their diet shifts from small crustaceans and worms towards baitfish and squid as they grow.",
+    "The red and iridescent blue stripes fade after death. These South African endemic seabreams spawn in summer and autumn, and have been aged to 30 years.",
+    "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Carpenter-ZC-LB.pdf",
+    "ORI species factsheet"
+  ],
+  "santer": [
+    "A roaming reef hunter",
+    "Santer gather in loose shoals over deeper reefs and nearby sand. Tagging shows that they move between reef complexes, sometimes more than ten kilometres, and may enter shallower water after cold upwelling.",
+    "During breeding, large males defend reef territories and court females with elaborate displays. They mature around three to four years and have been aged to 22 years.",
+    "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Sheet-Santer.pdf",
+    "ORI species factsheet"
+  ],
+  "yellowbelly": [
+    "A familiar reef resident",
+    "Yellowbelly rockcod are highly resident reef predators that eat fish, squid and crustaceans. Larger fish tend to occupy deeper reefs; breeding in southern Africa is associated with KwaZulu-Natal and southern Mozambique.",
+    "They change from female to male during life. Females mature at roughly six and a half years; small spawning gatherings show that a resident fish is not always a solitary one.",
+    "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Sheet-Yellowbelly-Rockcod.pdf",
+    "ORI species factsheet"
+  ],
+  "musselcracker": [
+    "Built to crack shells",
+    "Black musselcracker use powerful teeth to crush hard-shelled reef prey. Juveniles occupy rocky shallows, while adults use prominent deeper reefs; some adults move north along the coast, probably to breed.",
+    "This slow-growing seabream can live about 45 years. Females mature around ten years, and fish change to males later in life, often around eighteen years.",
+    "https://saambr.org.za/wp-content/uploads/2023/07/ORI-Fish-Fact-Black-musselcracker-ZC-LB-2.pdf",
+    "ORI species factsheet"
+  ],
+  "hake": [
+    "The night shift",
+    "Shallow-water Cape hake feed over rocky and sandy seabeds, generally moving deeper as they grow. At night they rise into the water column to hunt, switching from small crustaceans towards fish as they develop.",
+    "Despite the name, this species commonly lives at 50–400 metres. Females mature later than males, and spawning takes place through the year, with a spring peak.",
+    "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Sheet-Shallow-Water-Hake-FINAL.pdf",
+    "ORI species factsheet"
+  ],
+  "yellowtail": [
+    "Life on the move",
+    "Cape yellowtail are mobile, shoaling predators of baitfish and squid. They move between offshore reefs and some follow sardines up the east coast in winter.",
+    "Young yellowtail often shelter around floating objects and drifting kelp. They mature around two to three years, with South African spawning mainly from November to February.",
+    "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Cape-Yellowtail-ZC-LB.pdf",
+    "ORI species factsheet"
+  ]
+};
+function fishProfileHTML(id) {
+  const p = fishProfiles[id];
+  if (!p) return '';
+  const note = id === 'hake' ? 'This profile describes shallow-water Cape hake. The journal label alone does not distinguish the two Cape hake species.' : id === 'haai' ? 'This profile describes the journal’s Blacktip Reef Shark category; it does not identify other sharks logged under that label.' : '';
+  return `<section class="fish-profile"><span class="eyebrow">FUN FACTS</span><h3>${esc(p[0])}</h3><p>${esc(p[1])}</p><p><strong>Life &amp; a little wonder.</strong> ${esc(p[2])}</p>${note ? `<p class="small muted">${esc(note)}</p>` : ''}<a class="small" href="${esc(p[3])}" target="_blank" rel="noopener noreferrer">${esc(p[4])} ↗</a></section>`;
+}
+function showSpeciesProfile(id) {
+  if (!fishProfiles[id]) return;
+  conditionsGeneration++;
+  $('detail-body').innerHTML = `${fishImage(id, true)}<h2>${esc(species[id][0])}</h2>${scientificCaption(id)}${fishProfileHTML(id)}`;
+  upgradeFishPortrait(id);
+  if (!$('details').open) $('details').showModal();
+  $('details').scrollTop = 0;
+  $('detail-body').scrollTop = 0;
+}
 const speciesTaxonomyNotes = {};
 function scientificCaption(id) {
   if (!speciesScientific[id]) return '';
@@ -530,9 +634,9 @@ function renderTotals() {
   );
   const max = Math.max(1, ...rows.map((row) => row[1]));
   $('totals').innerHTML = rows.map(([id, count]) =>
-    `<tr class="species-row" style="--species-colour:${species[id]?.[1] || '#11543e'}"><td><span class="species-cell">${fishImage(id)}<span>${
+    `<tr class="species-row" style="--species-colour:${species[id]?.[1] || '#11543e'}"><td><button type="button" class="species-profile-button" data-profile="${esc(id)}" aria-label="Read about ${esc(species[id]?.[0] || id)}"><span class="species-cell">${fishImage(id)}<span>${
       esc(species[id]?.[0] || id)
-    }${scientificCaption(id)}</span></span></td><td><strong>${count}</strong></td><td>${
+    }${scientificCaption(id)}</span></span></button></td><td><strong>${count}</strong></td><td>${
       visible.length ? Math.round(count / visible.length * 100) : 0
     }%</td></tr><tr class="species-bar-row" aria-hidden="true" style="--species-colour:${species[id]?.[1] || '#11543e'}"><td colspan="3"><span class="species-visual-track"><span style="width:${count / max * 100}%"></span></span></td></tr>`
   ).join('');
@@ -557,7 +661,7 @@ function renderDays() {
     }</h3><span class="day-total">${rows.length} ${
       rows.length === 1 ? 'catch' : 'catches'
     }</span></div><div class="day-summary">${
-      [...totals].map(([name, count]) => `<span>${esc(name)} · ${count}</span>`)
+      [...totals].map(([name, count]) => `<button type="button" class="fish-name-link" data-profile="${esc(rows.find(c => nameOf(c) === name)?.species_id || '')}">${esc(name)} · ${count}</button>`)
         .join('')
     }</div>`;
     const weather = document.createElement('button');
@@ -706,7 +810,7 @@ async function showDayConditions(rows) {
     for(let start=0;start<rows.length;start+=50){const {data,error}=await client.from('fishing_condition_snapshots').select('catch_archive_id,provider,model_version,sample_at,retrieved_at,units,raw_payload').in('catch_archive_id',rows.slice(start,start+50).map(c=>c.archive_id)).order('retrieved_at',{ascending:false});if(error)throw error;snapshots.push(...data);}
     if(generation!==conditionsGeneration || !session || !$('details').open)return;
     $('day-conditions').replaceChildren();
-    for(const c of rows){const entry=document.createElement('section');entry.className='day-condition-entry';entry.innerHTML=`<h3>${esc(timeLabel(c.caught_at))} · ${esc(nameOf(c))}</h3>${conditionsHTML(snapshots.filter(s=>s.catch_archive_id===c.archive_id))}`;const button=document.createElement('button');button.className='quiet';button.textContent='Open catch / record conditions';button.onclick=()=>showDetail(c);entry.append(button);$('day-conditions').append(entry);}
+    for(const c of rows){const entry=document.createElement('section');entry.className='day-condition-entry';entry.innerHTML=`<h3>${esc(timeLabel(c.caught_at))} · <button type="button" class="fish-name-link" data-profile="${esc(c.species_id)}">${esc(nameOf(c))}</button></h3>${conditionsHTML(snapshots.filter(s=>s.catch_archive_id===c.archive_id))}`;const button=document.createElement('button');button.className='quiet';button.textContent='Open catch / record conditions';button.onclick=()=>showDetail(c);entry.append(button);$('day-conditions').append(entry);}
   }catch{if(generation===conditionsGeneration && $('day-conditions'))$('day-conditions').textContent='Day conditions could not be loaded. Try again.';}
 }
 
@@ -717,7 +821,7 @@ async function showDetail(c) {
   );
   $('detail-body').innerHTML = `${fishImage(c.species_id, true)}<h2>${
     esc(nameOf(c))
-  }</h2>${scientificCaption(c.species_id)}<p class="muted">${esc(dateLabel(c.caught_at))} · ${
+  }</h2>${scientificCaption(c.species_id)}${fishProfileHTML(c.species_id)}<p class="muted">${esc(dateLabel(c.caught_at))} · ${
     esc(timeLabel(c.caught_at))
   }</p><dl class="detail-grid">${field('Latitude', c.latitude.toFixed(6))}${
     field('Longitude', c.longitude.toFixed(6))
@@ -730,6 +834,8 @@ async function showDetail(c) {
   }</p><div id="conditions" class="condition"><h3>Conditions</h3><p class="muted">Checking saved conditions…</p></div>`;
   upgradeFishPortrait(c.species_id);
   if (!$('details').open) $('details').showModal();
+  $('details').scrollTop = 0;
+  $('detail-body').scrollTop = 0;
   try {
     const { data, error } = await client.from('fishing_condition_snapshots')
       .select('provider,model_version,sample_at,retrieved_at,units,raw_payload').eq(
@@ -782,12 +888,19 @@ for (const [id, [name]] of Object.entries(species)) {
 for (const id of ['species', 'from', 'to', 'colour']) {
   $(id).addEventListener('change', render);
 }
+$('species').addEventListener('change', () => {
+  if ($('species').value) showSpeciesProfile($('species').value);
+});
 $('clear').onclick = () => {
   for (const id of ['species', 'from', 'to']) $(id).value = '';
   render();
 };
 $('fit').onclick = fitMap;
 $('refresh').onclick = refreshJournal;
+document.addEventListener('click', event => {
+  const button = event.target.closest('[data-profile]');
+  if (button) showSpeciesProfile(button.dataset.profile);
+});
 $('close-detail').onclick = () => $('details').close();
 $('details').addEventListener('close', () => {
   conditionsGeneration++;

@@ -57,3 +57,5 @@ References: [DFFE species guide](https://www.dffe.gov.za/sites/default/files/doc
 and [South African shark checklist](https://sharksunderattackcampaign.co.za/wp-content/uploads/2022/03/2-Ebert-et-al-SA-Checklist-2021_E1342.pdf), and [Cape hake identification](https://www.fishbase.se/summary/Merluccius-capensis.html).
 
 Cape Yellowtail / Kaapse Geelstert (*Seriola lalandi*) uses stable ID `yellowtail`, appended after the original eleven species. Its gold colour, thumbnail, portrait, scientific caption, filters, summaries and condition collection use the shared journal paths.
+
+Fish profiles are available from Species buttons, species filter selection and catch details. Short editorial summaries cover behaviour, life history and an interesting fact, with per-species source links to ORI/SAAMBR, SANBI, Florida Museum or the red steenbras longevity study. They are reference content, separate from catch records and fishing predictions. Hake and shark profiles clarify category identification limits.
