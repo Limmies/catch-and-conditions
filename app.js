@@ -559,86 +559,74 @@ const speciesScientific = {
 // Editorial reference profiles; independent of catch records and recommendation rules.
 const fishProfiles = {
   "kabeljo": [
-    "Estuary beginnings",
-    "Dusky kob use estuaries as juvenile nurseries before moving into coastal waters. Some mature fish migrate towards KwaZulu-Natal to breed, gathering around offshore structure, often at night.",
-    "Males typically mature around five years and females around six: a large kob has spent years growing before joining the breeding population.",
+    "A night-time gathering",
+    "Some dusky kob leave the Cape and migrate to KwaZulu-Natal to breed. Adults gather around reefs, pinnacles and wrecks, mainly at night—while youngsters can remain remarkably faithful to a particular estuary and its neighbouring surf zone. A kob’s movements can change dramatically as it grows up.",
     "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Sheet-Dusky-Kob.pdf",
     "ORI species factsheet"
   ],
   "red_roman": [
-    "A reef with a resident",
-    "Red Roman feed on reef invertebrates and usually occupy small home ranges. Their behaviour changes through life: females are more social, while males become territorial and often shelter in caves.",
-    "Roman begin adult life as females; some change to males around seven to nine years old. Their eggs and larvae drift in the water before young fish settle onto reefs.",
+    "A change of sex—and personality",
+    "A Red Roman can change from a social female on the open reef into a solitary, cave-dwelling male that defends a territory. This transition typically happens around seven to nine years old. The familiar territorial reef resident is one stage of a much more changeable life.",
     "https://speciesstatus.sanbi.org/taxa/detail/2905/",
     "SANBI species account"
   ],
   "red_steenbras": [
-    "A lifetime beneath the reef",
-    "This giant South African seabream has a much longer life than early studies suggested. Researchers re-examined its ear stones, whose growth layers preserve a record of its life.",
-    "Radiocarbon evidence supported an age of about 55 years. One tagged fish was recaptured after 22 years, helping confirm just how long these fish can live.",
+    "The atomic clock inside a fish",
+    "Red steenbras turned out to live decades longer than early estimates suggested. Scientists used the radiocarbon signature left by nuclear testing to check growth layers in their ear stones, supporting an age of about 55 years. One tagged fish also reappeared after 22 years at liberty.",
     "https://doi.org/10.2989/1814232X.2018.1520148",
     "Andrews and colleagues, 2018"
   ],
   "miss_lucy": [
-    "Miss Lucy, the red stumpnose",
-    "A strongly resident reef seabream, Miss Lucy feeds on bottom-dwelling invertebrates. Juveniles use shallower reefs; adults occupy offshore reefs and can also form shoals.",
-    "Individuals have been aged to 48 years. Its small eggs drift in the sea, linking a life spent close to one reef with an early stage carried by the water.",
+    "A menu that changes with age",
+    "Young Miss Lucy favour softer prey, but larger fish eat more hard-bodied food such as sea snails. Adults also hunt brittle stars and worms among the reef. Despite their resident habits, red stumpnose can form shoals—finding a pair does not mean the species always lives in twos.",
     "https://speciesstatus.sanbi.org/taxa/detail/02954/",
     "SANBI species account"
   ],
   "geelbek": [
-    "A travelling shoal",
-    "Geelbek chase baitfish over sand and reef. Adults migrate from the Western Cape towards KwaZulu-Natal to spawn in spring, then return south and spread across the Agulhas Bank in summer.",
-    "Their name refers to the conspicuous yellow inside the mouth. At breeding time, large groups gather over offshore reefs at night; maturity is reached at roughly five years.",
+    "The night shift has a return ticket",
+    "Geelbek make a seasonal round trip: adults travel from the Western Cape towards KwaZulu-Natal, form large night-time spawning gatherings over offshore reefs in spring, then head back south in summer. Their conspicuous yellow colour is inside the mouth and gill covers, rather than along the body.",
     "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Sheet-Geelbek.pdf",
     "ORI species factsheet"
   ],
   "haai": [
-    "A shark born swimming",
-    "Blacktip reef sharks are live-bearing sharks: developing pups receive nourishment through a yolk-sac placenta. Litters usually contain two to four pups, and reproductive timing varies between regions.",
-    "This species was scientifically described in 1824. Despite the similar names, it is a different species from the blacktip shark, Carcharhinus limbatus.",
+    "An unexpected taste for snakes",
+    "Blacktip reef sharks have been recorded eating both sea snakes and terrestrial snakes, alongside their usual fish, squid and crustaceans. Even their skin has teeth of a sort: tiny tooth-like scales called dermal denticles. These details belong to the blacktip reef shark specifically, rather than every shark with dark fin tips.",
     "https://www.floridamuseum.ufl.edu/discover-fish/species-profiles/blacktip-reef-shark/",
     "Florida Museum species profile"
   ],
   "carpenter": [
-    "Colour above the reef",
-    "Carpenter live above prominent reefs, with juveniles generally shallower than adults. Their diet shifts from small crustaceans and worms towards baitfish and squid as they grow.",
-    "The red and iridescent blue stripes fade after death. These South African endemic seabreams spawn in summer and autumn, and have been aged to 30 years.",
+    "The colours that disappear",
+    "A living carpenter carries alternating red and iridescent blue stripes that fade after death, so a landed fish can look much plainer than it did underwater. Behind that delicate colour pattern sit four long canine teeth in each jaw: this reef fish is equipped to hunt baitfish and squid.",
     "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Carpenter-ZC-LB.pdf",
     "ORI species factsheet"
   ],
   "santer": [
-    "A roaming reef hunter",
-    "Santer gather in loose shoals over deeper reefs and nearby sand. Tagging shows that they move between reef complexes, sometimes more than ten kilometres, and may enter shallower water after cold upwelling.",
-    "During breeding, large males defend reef territories and court females with elaborate displays. They mature around three to four years and have been aged to 22 years.",
+    "A traveller becomes a landlord",
+    "Tagging shows santer travelling more than ten kilometres between reef complexes, yet breeding males switch to defending a patch of reef and performing elaborate courtship displays. Cold-water upwelling can also bring them into shallower water. A productive santer mark may host passing travellers, rather than permanent residents.",
     "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Sheet-Santer.pdf",
     "ORI species factsheet"
   ],
   "yellowbelly": [
-    "A familiar reef resident",
-    "Yellowbelly rockcod are highly resident reef predators that eat fish, squid and crustaceans. Larger fish tend to occupy deeper reefs; breeding in southern Africa is associated with KwaZulu-Natal and southern Mozambique.",
-    "They change from female to male during life. Females mature at roughly six and a half years; small spawning gatherings show that a resident fish is not always a solitary one.",
+    "A resident far from its breeding grounds",
+    "Yellowbelly rockcod caught in the Eastern and Western Cape are generally smaller and reproductively inactive. In southern Africa, breeding is associated with warmer reefs in KwaZulu-Natal and southern Mozambique; larger fish also tend to move deeper. A familiar Cape cave can hold residents without being where those fish reproduce.",
     "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Sheet-Yellowbelly-Rockcod.pdf",
     "ORI species factsheet"
   ],
   "musselcracker": [
-    "Built to crack shells",
-    "Black musselcracker use powerful teeth to crush hard-shelled reef prey. Juveniles occupy rocky shallows, while adults use prominent deeper reefs; some adults move north along the coast, probably to breed.",
-    "This slow-growing seabream can live about 45 years. Females mature around ten years, and fish change to males later in life, often around eighteen years.",
+    "A very slow change of life",
+    "Black musselcracker females take roughly ten years to mature, and a change to male often comes around eighteen years old. Some live about 45 years. Their powerful teeth crush hard-shelled reef prey, so the impressive jaw belongs to an animal whose adult life develops on a remarkably slow timetable.",
     "https://saambr.org.za/wp-content/uploads/2023/07/ORI-Fish-Fact-Black-musselcracker-ZC-LB-2.pdf",
     "ORI species factsheet"
   ],
   "hake": [
-    "The night shift",
-    "Shallow-water Cape hake feed over rocky and sandy seabeds, generally moving deeper as they grow. At night they rise into the water column to hunt, switching from small crustaceans towards fish as they develop.",
-    "Despite the name, this species commonly lives at 50–400 metres. Females mature later than males, and spawning takes place through the year, with a spring peak.",
+    "A nursery short of oxygen",
+    "Very young shallow-water Cape hake are sometimes found in oxygen-poor inshore water, including off the Orange River. Researchers suggest that tolerating these conditions may shelter them from predators. As they grow, their diet shifts towards fish—including small deep-water hake—and they rise through the water column at night to feed.",
     "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Sheet-Shallow-Water-Hake-FINAL.pdf",
     "ORI species factsheet"
   ],
   "yellowtail": [
-    "Life on the move",
-    "Cape yellowtail are mobile, shoaling predators of baitfish and squid. They move between offshore reefs and some follow sardines up the east coast in winter.",
-    "Young yellowtail often shelter around floating objects and drifting kelp. They mature around two to three years, with South African spawning mainly from November to February.",
+    "A floating childhood",
+    "Young Cape yellowtail often gather around floating objects and drifting kelp offshore. Adults become highly mobile hunters; some follow sardines up the east coast in winter. The same species that shelters beside a drifting raft when young can later range between offshore reefs in large, fast-moving shoals.",
     "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Cape-Yellowtail-ZC-LB.pdf",
     "ORI species factsheet"
   ]
@@ -647,7 +635,7 @@ function fishProfileHTML(id) {
   const p = fishProfiles[id];
   if (!p) return '';
   const note = id === 'hake' ? 'This profile describes shallow-water Cape hake. The journal label alone does not distinguish the two Cape hake species.' : id === 'haai' ? 'This profile describes the journal’s Blacktip Reef Shark category; it does not identify other sharks logged under that label.' : '';
-  return `<section class="fish-profile"><span class="eyebrow">FUN FACTS</span><h3>${esc(p[0])}</h3><p>${esc(p[1])}</p><p><strong>Life &amp; a little wonder.</strong> ${esc(p[2])}</p>${note ? `<p class="small muted">${esc(note)}</p>` : ''}<a class="small" href="${esc(p[3])}" target="_blank" rel="noopener noreferrer">${esc(p[4])} ↗</a></section>`;
+  return `<section class="fish-profile"><span class="eyebrow">FUN FACTS</span><h3>${esc(p[0])}</h3><p class="fish-fact-story">${esc(p[1])}</p>${note ? `<p class="small muted">${esc(note)}</p>` : ''}<a class="small" href="${esc(p[2])}" target="_blank" rel="noopener noreferrer">${esc(p[3])} ↗</a></section>`;
 }
 function showSpeciesProfile(id) {
   if (!fishProfiles[id]) return;
