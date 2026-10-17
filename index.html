@@ -17,12 +17,12 @@
     <link rel="stylesheet" href="vendor/leaflet.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.Default.css">
-    <link rel="stylesheet" href="style.css?v=19">
+    <link rel="stylesheet" href="style.css?v=20">
     <script defer src="vendor/supabase.js"></script>
     <script defer src="vendor/leaflet.js"></script>
     <script defer src="vendor/leaflet.markercluster.js"></script>
     <script defer src="config.js"></script>
-    <script defer src="app.js?v=19"></script>
+    <script defer src="app.js?v=20"></script>
   </head>
   <body>
     <header
@@ -52,8 +52,9 @@
         </div>
         <section id="map-page" aria-label="Catch map">
           <div
-            class="map-toolbar"><label>Colour by <select id="colour"><option value="species">Species</option><option value="day">Day</option></select></label><button id="fit" class="quiet">Show all spots</button></div>
+            class="map-toolbar"><label>Chart<select id="map-layer"><option value="data">My data only</option><option value="street" selected>Street map</option><option value="terrain">Land contours</option><option value="ocean">Ocean depths</option><option value="relief">Land &amp; seabed relief</option></select></label><label class="chart-style"><input id="chart-vintage" type="checkbox" checked>Old chart style</label><label>Colour by <select id="colour"><option value="species">Species</option><option value="day">Day</option></select></label><button id="fit" class="quiet">Show all spots</button></div>
           <div id="map" aria-label="Map of catch locations"></div>
+          <p id="map-layer-note" class="small muted" role="status"></p>
           <div id="legend" class="legend"></div>
           <p
             class="small muted">Zoom in for fish names and dates. Tap a catch for details. Grouped markers open to show nearby catches.</p>
