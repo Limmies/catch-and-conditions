@@ -415,24 +415,8 @@ function renderTrips() {
     ).join('') ||
     '<tr><td colspan="8">No completed trips match these filters.</td></tr>';
 }
-let chartLayers = {};
-let activeChartLayers = [];
-const chartNotes = {
-  data: 'Your recorded locations only. The blank background contains no coastline or depth information.',
-  street: 'OpenStreetMap coastlines, roads and place names. Your catch locations stay in their original positions.',
-  terrain: 'OpenTopoMap land elevation contours and relief. This layer does not show ocean depths.',
-  ocean: 'Ocean bathymetry and available depth labels in metres. Regional detail only; not a survey of individual reefs or pinnacles. Not for navigation.',
-  relief: 'GEBCO land elevation and seabed shaded relief. Colours show broad elevation/depth, not contour lines. Not for navigation.',
-};
-function applyChartLayer() {
-  if (!map) return;
-  const key = Object.hasOwn(chartNotes, $('map-layer').value) ? $('map-layer').value : 'street';
-  for (const layer of activeChartLayers) map.removeLayer(layer);
-  activeChartLayers = chartLayers[key] || [];
-  for (const layer of activeChartLayers) layer.addTo(map);
-  $('map').dataset.chart = key;
-  $('map').classList.toggle('vintage-chart', $('chart-vintage').checked);
-  $('map-layer-note').textContent = chartNotes[key];
+function applyChartStyle() {
+  if (map) $('map').classList.toggle('vintage-chart', $('chart-vintage').checked);
 }
 function initMap() {
   if (map || $('map-page').hidden) return;
@@ -448,31 +432,11 @@ function initMap() {
     touchZoom: 'center',
   }).setView([-34.08, 22.97], 8);
   const osmCredit = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-  const oceanCredit = 'Tiles © Esri · Garmin · GEBCO · NOAA NGDC and other contributors';
-  chartLayers = {
-    data: [],
-    street: [L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19, attribution:osmCredit})],
-    terrain: [L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-      maxNativeZoom:17, maxZoom:19,
-      attribution:osmCredit + ' · DEM: SRTM · <a href="https://opentopomap.org/about">OpenTopoMap</a> (CC-BY-SA)',
-    })],
-    ocean: ['Base', 'Reference'].map(name => L.tileLayer('https://services.arcgisonline.com/arcgis/rest/services/Ocean/World_Ocean_' + name + '/MapServer/tile/{z}/{y}/{x}', {
-      // Global coverage is dependable to level 10; overscaling adds no new detail.
-      maxNativeZoom:10, maxZoom:19, attribution:oceanCredit,
-    })),
-    relief: [L.tileLayer.wms('https://wms.gebco.net/mapserv', {
-      layers:'gebco_latest', format:'image/png', transparent:false, version:'1.1.1',
-      maxNativeZoom:10, maxZoom:19,
-      attribution:'<a href="https://www.gebco.net/data-products/gebco-web-services/web-map-service">GEBCO Grid</a> · GEBCO Compilation Group',
-    })],
-  };
-  for (const [key, layers] of Object.entries(chartLayers)) {
-    for (const layer of layers) layer.on('tileerror', () => {
-      if ($('map-layer').value === key) $('map-layer-note').textContent = chartNotes[key] + ' Some chart tiles could not load. Choose another chart; your catch markers remain available.';
-    });
-  }
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom:19, attribution:osmCredit,
+  }).addTo(map);
   L.control.scale({imperial:false, position:'bottomleft'}).addTo(map);
-  applyChartLayer();
+  applyChartStyle();
   markers = L.markerClusterGroup({
     maxClusterRadius: 40,
     spiderfyOnMaxZoom: true,
@@ -923,8 +887,7 @@ $('clear').onclick = () => {
   for (const id of ['species', 'from', 'to']) $(id).value = '';
   render();
 };
-$('map-layer').addEventListener('change', applyChartLayer);
-$('chart-vintage').addEventListener('change', applyChartLayer);
+$('chart-vintage').addEventListener('change', applyChartStyle);
 $('fit').onclick = fitMap;
 $('refresh').onclick = refreshJournal;
 document.addEventListener('click', event => {
