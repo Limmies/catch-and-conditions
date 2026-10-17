@@ -507,7 +507,7 @@ function fitMap() {
   map.fitBounds(markers.getBounds(), { padding: [45, 45], maxZoom: 14 });
 }
 const speciesScientific = {
-  kabeljo: 'Argyrosomus japonicus',
+  kabeljo: 'Argyrosomus inodorus',
   red_roman: 'Chrysoblephus laticeps',
   red_steenbras: 'Petrus rupestris',
   miss_lucy: 'Chrysoblephus gibbiceps',
@@ -523,10 +523,10 @@ const speciesScientific = {
 // Editorial reference profiles; independent of catch records and recommendation rules.
 const fishProfiles = {
   "kabeljo": [
-    "A night-time gathering",
-    "Some dusky kob leave the Cape and migrate to KwaZulu-Natal to breed. Adults gather around reefs, pinnacles and wrecks, mainly at night—while youngsters can remain remarkably faithful to a particular estuary and its neighbouring surf zone. A kob’s movements can change dramatically as it grows up.",
-    "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Sheet-Dusky-Kob.pdf",
-    "ORI species factsheet"
+    "A coastline split in two",
+    "Silver kob off Namibia are genetically separate from their South African relatives: the cold Benguela region forms a barrier between the populations. Their nursery is also different from what many anglers expect—young fish favour shallow sandy or muddy bays before moving offshore as they grow.",
+    "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Silver-Kob-ZC-LB.pdf",
+    "ORI Silver kob factsheet"
   ],
   "red_roman": [
     "A change of sex—and personality",

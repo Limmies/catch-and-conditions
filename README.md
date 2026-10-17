@@ -61,3 +61,5 @@ Cape Yellowtail / Kaapse Geelstert (*Seriola lalandi*) uses stable ID `yellowtai
 Fish profiles are available from Species buttons, species filter selection and catch details. Short editorial summaries cover behaviour, life history and an interesting fact, with per-species source links to ORI/SAAMBR, SANBI, Florida Museum or the red steenbras longevity study. They are reference content, separate from catch records and fishing predictions. Hake and shark profiles clarify category identification limits.
 
 Map uses the original OpenStreetMap street tiles with a metric scale. The Old chart style checkbox applies optional parchment colouring to the basemap only; catch colours remain unchanged. Alternative low-resolution layers have been removed.
+
+Silver kob correction (17 October 2026): `kabeljo` identifies Silver Kob (*Argyrosomus inodorus*). The legacy ID and original capture labels/payloads are preserved; watch and journal retain the familiar display name Kabeljou; scientific captions and facts describe Silver kob. Reference: https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Silver-Kob-ZC-LB.pdf
