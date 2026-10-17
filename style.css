@@ -1124,3 +1124,9 @@ footer { font-style:italic; }
 #map.vintage-chart { background-color: #eee5ce; border-color: #b1a486; box-shadow: inset 0 0 24px #7c674522; }
 #map.vintage-chart .leaflet-tile-pane { filter: sepia(.42) saturate(.65) contrast(.96); }
 #map .leaflet-control-attribution { background: rgba(255,253,245,.94); color: #373b32; }
+
+.fish-reference { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(23,106,71,.18); }
+.fish-reference-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1rem 1.4rem; margin: 0; }
+.fish-reference-grid dt { font-size: .85em; color: #646c60; }
+.fish-reference-grid dd { margin: .25rem 0 0; line-height: 1.5; }
+@media(max-width:600px) { .fish-reference-grid { grid-template-columns: 1fr; } }

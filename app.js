@@ -595,11 +595,102 @@ const fishProfiles = {
     "ORI species factsheet"
   ]
 };
+const fishReference = {
+  "kabeljo": [
+    "50 cm from a boat at sea between Cape Agulhas and the Umtamvuna River; 40 cm in KZN. Shore/estuaries east of Cape Agulhas: 60 cm. West of Cape Agulhas: 50 cm.",
+    "No reliable estimate verified at this length.",
+    "Small schooling fish, shrimp and squid.",
+    "Mobile; generally inshore in summer and farther offshore in winter. Juveniles use shallow sandy or muddy bays.",
+    "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Silver-Kob-ZC-LB.pdf"
+  ],
+  "red_roman": [
+    "30 cm",
+    "No reliable estimate verified at this length.",
+    "Brittle stars, basket stars, squid, cuttlefish, crustaceans and worms.",
+    "Strong reef residency, usually within a home range less than 100 m long. Males defend territories.",
+    "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Roman-ZC-LB.pdf"
+  ],
+  "red_steenbras": [
+    "60 cm. Closed season: 1 October–30 November; size alone does not make a catch legal.",
+    "No reliable estimate verified at this length.",
+    "Mainly smaller reef fish.",
+    "Young fish can remain on local reefs; older fish move offshore and may migrate along the coast.",
+    "https://www.oritag.org.za/Content/UserContent/documents/Southern_African_Marine_Linefish_Species_Profiles.pdf"
+  ],
+  "miss_lucy": [
+    "30 cm",
+    "No reliable estimate verified at this length.",
+    "Brittle stars, sea snails, worms, crabs, sea urchins and octopus.",
+    "Generally resident on reefs, with seasonal aggregations; juveniles are found shallower than adults.",
+    "https://speciesstatus.sanbi.org/taxa/detail/02954/"
+  ],
+  "geelbek": [
+    "60 cm",
+    "Approximately 2–3 years in the cited South African stock study; an estimate, not the age of your fish.",
+    "Adults: sardines, mackerel and horse mackerel. Juveniles: small shrimps and anchovies.",
+    "Seasonal shoaling migration from the Western Cape towards KZN to breed, returning south in summer.",
+    "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Sheet-Geelbek.pdf"
+  ],
+  "haai": [
+    "Species-specific South African minimum not verified here. Confirm identification and current shark rules.",
+    "Not applicable without a verified size limit.",
+    "Small bony fish, crustaceans, squid and other molluscs.",
+    "Often stays within a small reef-associated home range, rather than roaming the open ocean.",
+    "https://www.floridamuseum.ufl.edu/discover-fish/species-profiles/blacktip-reef-shark/"
+  ],
+  "carpenter": [
+    "35 cm",
+    "No reliable estimate verified at this length.",
+    "Adults: anchovies, sardines and squid. Young fish: crabs, small crustaceans and worms.",
+    "Mostly resident above prominent reefs; a minority disperse along the coast. Young fish occupy shallower reefs.",
+    "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Carpenter-ZC-LB.pdf"
+  ],
+  "santer": [
+    "30 cm",
+    "No reliable estimate verified at this length.",
+    "Small fish, squid, octopus, crabs and shrimps.",
+    "Loose shoals move between reef complexes, sometimes more than 10 km. Cold upwelling can bring fish shallower.",
+    "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Sheet-Santer.pdf"
+  ],
+  "yellowbelly": [
+    "60 cm",
+    "No reliable estimate verified at this length.",
+    "Crustaceans, fish and squid.",
+    "Highly resident reef fish. Larger fish tend to move deeper; breeding is associated with KZN and southern Mozambique.",
+    "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Sheet-Yellowbelly-Rockcod.pdf"
+  ],
+  "musselcracker": [
+    "50 cm",
+    "No reliable estimate verified at this length.",
+    "Hard-shelled reef animals, including molluscs, crustaceans and echinoderms.",
+    "Juveniles are strongly resident. Some adults move north towards the Transkei and KZN, probably to spawn.",
+    "https://saambr.org.za/wp-content/uploads/2023/07/ORI-Fish-Fact-Black-musselcracker-ZC-LB-2.pdf"
+  ],
+  "hake": [
+    "No minimum size listed for hake in the cited recreational summary.",
+    "Not applicable: no listed minimum size.",
+    "Small fish, including other hake; also squid and crustaceans. Young fish eat krill and amphipods.",
+    "Moves into deeper water with age and rises through the water column at night to feed.",
+    "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Sheet-Shallow-Water-Hake-FINAL.pdf"
+  ],
+  "yellowtail": [
+    "No minimum size listed in the cited recreational summary.",
+    "Not applicable: no listed minimum size.",
+    "Sardines, horse mackerel, anchovies, mackerel, squid and small crustaceans.",
+    "Highly mobile shoals move between offshore reefs. Some follow sardines up the east coast in winter; juveniles shelter around floating objects.",
+    "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Cape-Yellowtail-ZC-LB.pdf"
+  ]
+};
+function fishReferenceHTML(id) {
+  const r = fishReference[id];
+  if (!r) return '';
+  return `<div class="fish-reference"><dl class="fish-reference-grid">${field('Minimum legal size · SA recreational', r[0])}${field('Approximate age at minimum size', r[1])}${field('Diet', r[2])}${field('Typical movement', r[3])}</dl><p class="small muted">Lengths are total length (snout to tail tip). Growth varies by region and individual; breeding age is not age at legal size. Size is only one rule: bag limits, closed seasons, protected areas and permit conditions also apply.</p><p class="small"><a href="https://www.oritag.org.za/Content/UserContent/documents/Linefishing-regs-for-the-smart-phone-interactive.pdf" target="_blank" rel="noopener noreferrer">ORI recreational size reference</a> · <a href="${esc(r[4])}" target="_blank" rel="noopener noreferrer">Diet &amp; movement source</a>${id === 'geelbek' ? ' · <a href="https://central.bac-lac.gc.ca/.item?app=Library&amp;id=NQ56561&amp;oclc_number=1006983106&amp;op=pdf" target="_blank" rel="noopener noreferrer">Age estimate study</a>' : ''}</p><p class="small muted">References consulted 17 October 2026; check current rules before fishing.</p></div>`;
+}
 function fishProfileHTML(id) {
   const p = fishProfiles[id];
   if (!p) return '';
   const note = id === 'hake' ? 'This profile describes shallow-water Cape hake. The journal label alone does not distinguish the two Cape hake species.' : id === 'haai' ? 'This profile describes the journal’s Blacktip Reef Shark category; it does not identify other sharks logged under that label.' : '';
-  return `<section class="fish-profile"><span class="eyebrow">FUN FACTS</span><h3>${esc(p[0])}</h3><p class="fish-fact-story">${esc(p[1])}</p>${note ? `<p class="small muted">${esc(note)}</p>` : ''}<a class="small" href="${esc(p[2])}" target="_blank" rel="noopener noreferrer">${esc(p[3])} ↗</a></section>`;
+  return `<section class="fish-profile"><span class="eyebrow">FUN FACTS</span><h3>${esc(p[0])}</h3><p class="fish-fact-story">${esc(p[1])}</p>${fishReferenceHTML(id)}${note ? `<p class="small muted">${esc(note)}</p>` : ''}<a class="small" href="${esc(p[2])}" target="_blank" rel="noopener noreferrer">${esc(p[3])} ↗</a></section>`;
 }
 function showSpeciesProfile(id) {
   if (!fishProfiles[id]) return;
