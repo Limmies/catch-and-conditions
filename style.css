@@ -1126,7 +1126,22 @@ footer { font-style:italic; }
 #map .leaflet-control-attribution { background: rgba(255,253,245,.94); color: #373b32; }
 
 .fish-reference { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(23,106,71,.18); }
-.fish-reference-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1rem 1.4rem; margin: 0; }
-.fish-reference-grid dt { font-size: .85em; color: #646c60; }
-.fish-reference-grid dd { margin: .25rem 0 0; line-height: 1.5; }
-@media(max-width:600px) { .fish-reference-grid { grid-template-columns: 1fr; } }
+.fish-reference-cards { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1rem 1.4rem; margin: 0; }
+.fish-reference-cards dt { font-size: .85em; color: #646c60; }
+.fish-reference-cards dd { margin: .25rem 0 0; line-height: 1.5; }
+@media(max-width:600px) { .fish-reference-cards { grid-template-columns: 1fr; } }
+
+.fish-reference-cards { gap: 14px; }
+.fish-reference-card { position: relative; padding: 22px; border: 1px solid #d7d9c9; border-radius: 18px; background: #f0f0e6; overflow: hidden; }
+.fish-reference-card:nth-child(3) { background: #e6ece0; }
+.fish-reference-card:nth-child(4) { background: #e4ecea; }
+.fish-reference-card dt { font-variant: small-caps; font-size: 18px; letter-spacing: .04em; color: #42564c; margin: 10px 0; }
+.fish-reference-card dd { margin: 0; font-size: 19px; line-height: 1.5; }
+.fish-reference-icon { display: block; width: 60px; height: 60px; color: #6d8975; }
+.fish-reference-cards .fish-age-card { background: #172f3c; border-color: #294653; color: #f8edd1; }
+.fish-age-card dt, .fish-age-card .fish-reference-icon { color: #d7bf81; }
+.fish-age-card .fish-reference-icon { position: absolute; width: 128px; height: 128px; right: -15px; top: 6px; opacity: .17; }
+.fish-age-number { display: inline-block; font-size: clamp(64px,12vw,90px); font-weight: normal; line-height: 1.1; letter-spacing: -.06em; }
+.fish-age-unit { margin-left: 10px; font-size: 20px; }
+.fish-card-caption { display: block; font-size: 14px; line-height: 1.5; margin: 12px 0 0; opacity: .85; }
+@media(max-width:600px) { .fish-reference-card { padding: 20px; } }

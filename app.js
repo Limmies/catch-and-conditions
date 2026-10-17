@@ -598,93 +598,115 @@ const fishProfiles = {
 const fishReference = {
   "kabeljo": [
     "50 cm from a boat at sea between Cape Agulhas and the Umtamvuna River; 40 cm in KZN. Shore/estuaries east of Cape Agulhas: 60 cm. West of Cape Agulhas: 50 cm.",
-    "No reliable estimate verified at this length.",
+    "28",
     "Small schooling fish, shrimp and squid.",
     "Mobile; generally inshore in summer and farther offshore in winter. Juveniles use shallow sandy or muddy bays.",
     "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Silver-Kob-ZC-LB.pdf"
   ],
   "red_roman": [
     "30 cm",
-    "No reliable estimate verified at this length.",
+    "19",
     "Brittle stars, basket stars, squid, cuttlefish, crustaceans and worms.",
     "Strong reef residency, usually within a home range less than 100 m long. Males defend territories.",
     "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Roman-ZC-LB.pdf"
   ],
   "red_steenbras": [
     "60 cm. Closed season: 1 October–30 November; size alone does not make a catch legal.",
-    "No reliable estimate verified at this length.",
+    "55",
     "Mainly smaller reef fish.",
     "Young fish can remain on local reefs; older fish move offshore and may migrate along the coast.",
     "https://www.oritag.org.za/Content/UserContent/documents/Southern_African_Marine_Linefish_Species_Profiles.pdf"
   ],
   "miss_lucy": [
     "30 cm",
-    "No reliable estimate verified at this length.",
+    "48",
     "Brittle stars, sea snails, worms, crabs, sea urchins and octopus.",
     "Generally resident on reefs, with seasonal aggregations; juveniles are found shallower than adults.",
     "https://speciesstatus.sanbi.org/taxa/detail/02954/"
   ],
   "geelbek": [
     "60 cm",
-    "Approximately 2–3 years in the cited South African stock study; an estimate, not the age of your fish.",
+    "9",
     "Adults: sardines, mackerel and horse mackerel. Juveniles: small shrimps and anchovies.",
     "Seasonal shoaling migration from the Western Cape towards KZN to breed, returning south in summer.",
     "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Sheet-Geelbek.pdf"
   ],
   "haai": [
     "Species-specific South African minimum not verified here. Confirm identification and current shark rules.",
-    "Not applicable without a verified size limit.",
+    "25+",
     "Small bony fish, crustaceans, squid and other molluscs.",
     "Often stays within a small reef-associated home range, rather than roaming the open ocean.",
     "https://www.floridamuseum.ufl.edu/discover-fish/species-profiles/blacktip-reef-shark/"
   ],
   "carpenter": [
     "35 cm",
-    "No reliable estimate verified at this length.",
+    "30",
     "Adults: anchovies, sardines and squid. Young fish: crabs, small crustaceans and worms.",
     "Mostly resident above prominent reefs; a minority disperse along the coast. Young fish occupy shallower reefs.",
     "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Carpenter-ZC-LB.pdf"
   ],
   "santer": [
     "30 cm",
-    "No reliable estimate verified at this length.",
+    "22",
     "Small fish, squid, octopus, crabs and shrimps.",
     "Loose shoals move between reef complexes, sometimes more than 10 km. Cold upwelling can bring fish shallower.",
     "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Sheet-Santer.pdf"
   ],
   "yellowbelly": [
     "60 cm",
-    "No reliable estimate verified at this length.",
+    "16",
     "Crustaceans, fish and squid.",
     "Highly resident reef fish. Larger fish tend to move deeper; breeding is associated with KZN and southern Mozambique.",
     "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Sheet-Yellowbelly-Rockcod.pdf"
   ],
   "musselcracker": [
     "50 cm",
-    "No reliable estimate verified at this length.",
+    "45",
     "Hard-shelled reef animals, including molluscs, crustaceans and echinoderms.",
     "Juveniles are strongly resident. Some adults move north towards the Transkei and KZN, probably to spawn.",
     "https://saambr.org.za/wp-content/uploads/2023/07/ORI-Fish-Fact-Black-musselcracker-ZC-LB-2.pdf"
   ],
   "hake": [
     "No minimum size listed for hake in the cited recreational summary.",
-    "Not applicable: no listed minimum size.",
+    "13",
     "Small fish, including other hake; also squid and crustaceans. Young fish eat krill and amphipods.",
     "Moves into deeper water with age and rises through the water column at night to feed.",
     "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Sheet-Shallow-Water-Hake-FINAL.pdf"
   ],
   "yellowtail": [
     "No minimum size listed in the cited recreational summary.",
-    "Not applicable: no listed minimum size.",
+    "21",
     "Sardines, horse mackerel, anchovies, mackerel, squid and small crustaceans.",
     "Highly mobile shoals move between offshore reefs. Some follow sardines up the east coast in winter; juveniles shelter around floating objects.",
     "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Cape-Yellowtail-ZC-LB.pdf"
   ]
 };
+const fishAgeNotes = {
+  "kabeljo": "Namibian record; 25 years reported in South Africa.",
+  "red_roman": "Maximum reported in the SANBI species account.",
+  "red_steenbras": "Estimated using ear-stone growth layers, supported by radiocarbon dating.",
+  "miss_lucy": "Maximum reported for a male red stumpnose.",
+  "geelbek": "Maximum reported in the ORI species factsheet.",
+  "haai": "Captive animals; wild-caught specimens aged to an estimated 15 years.",
+  "carpenter": "Maximum reported in the ORI species factsheet.",
+  "santer": "Maximum reported in the ORI species factsheet.",
+  "yellowbelly": "South African aged specimens; a regional record, not a global maximum.",
+  "musselcracker": "Maximum reported in the ORI species factsheet.",
+  "hake": "Shallow-water Cape hake, as identified in this journal.",
+  "yellowtail": "Maximum reported by ORI; most do not reach this age."
+};
 function fishReferenceHTML(id) {
   const r = fishReference[id];
   if (!r) return '';
-  return `<div class="fish-reference"><dl class="fish-reference-grid">${field('Minimum legal size · SA recreational', r[0])}${field('Approximate age at minimum size', r[1])}${field('Diet', r[2])}${field('Typical movement', r[3])}</dl><p class="small muted">Lengths are total length (snout to tail tip). Growth varies by region and individual; breeding age is not age at legal size. Size is only one rule: bag limits, closed seasons, protected areas and permit conditions also apply.</p><p class="small"><a href="https://www.oritag.org.za/Content/UserContent/documents/Linefishing-regs-for-the-smart-phone-interactive.pdf" target="_blank" rel="noopener noreferrer">ORI recreational size reference</a> · <a href="${esc(r[4])}" target="_blank" rel="noopener noreferrer">Diet &amp; movement source</a>${id === 'geelbek' ? ' · <a href="https://central.bac-lac.gc.ca/.item?app=Library&amp;id=NQ56561&amp;oclc_number=1006983106&amp;op=pdf" target="_blank" rel="noopener noreferrer">Age estimate study</a>' : ''}</p><p class="small muted">References consulted 17 October 2026; check current rules before fishing.</p></div>`;
+  const icons = {
+    age:'<circle cx="32" cy="32" r="25"/><circle cx="32" cy="32" r="17"/><circle cx="32" cy="32" r="9"/><path d="M32 7v8m25 17h-8M32 57v-8M7 32h8"/>',
+    size:'<path d="M8 22h48v20H8zM16 22v10m8-10v6m8-6v10m8-10v6m8-6v10"/>',
+    diet:'<path d="M7 32c12-19 31-19 42 0-11 19-30 19-42 0Zm42 0 9-12v24z"/><circle cx="20" cy="29" r="2"/>',
+    movement:'<path d="M7 22h42m-9-9 9 9-9 9M57 44H15m9-9-9 9 9 9"/>',
+  };
+  const art = key => `<svg class="fish-reference-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[key]}</svg>`;
+  const ageSource = id === 'red_steenbras' ? fishProfiles[id][2] : id === 'red_roman' ? 'https://speciesstatus.sanbi.org/taxa/detail/2905/' : id === 'haai' ? 'https://www.fish.gov.au/docs/SharkReport/FRDC_Carcharhinus_melanopterus.pdf' : r[4];
+  return `<div class="fish-reference"><dl class="fish-reference-cards"><div class="fish-reference-card fish-age-card">${art('age')}<dt>Oldest recorded specimen</dt><dd><strong class="fish-age-number">${esc(r[1])}</strong><span class="fish-age-unit">years</span><p class="fish-card-caption">${esc(fishAgeNotes[id])}</p></dd></div><div class="fish-reference-card">${art('size')}<dt>Minimum legal size</dt><dd>${esc(r[0])}</dd><span class="fish-card-caption">South African recreational fishing · total length</span></div><div class="fish-reference-card">${art('diet')}<dt>On the menu</dt><dd>${esc(r[2])}</dd></div><div class="fish-reference-card">${art('movement')}<dt>Life on the move</dt><dd>${esc(r[3])}</dd></div></dl><p class="small muted">Ages are documented maxima in the cited sources, not typical lifespans or the age of your catch. Regional and captive records are labelled. Size is only one rule: seasons, bag limits, protected areas and permit conditions also apply.</p><p class="small"><a href="${esc(ageSource)}" target="_blank" rel="noopener noreferrer">Age source</a> · <a href="https://www.oritag.org.za/Content/UserContent/documents/Linefishing-regs-for-the-smart-phone-interactive.pdf" target="_blank" rel="noopener noreferrer">Size rules</a> · <a href="${esc(r[4])}" target="_blank" rel="noopener noreferrer">Diet &amp; movement</a></p><p class="small muted">References consulted 17 October 2026; check current rules before fishing.</p></div>`;
 }
 function fishProfileHTML(id) {
   const p = fishProfiles[id];
