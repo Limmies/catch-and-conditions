@@ -242,6 +242,15 @@ async function setSession(next) {
   route();
   await refreshJournal();
 }
+// Deduplicate by archive identity, never coordinates: several real catches may share a spot.
+function uniqueRecords(rows) {
+  const seen = new Set();
+  return rows.filter(row => {
+    const key = row.archive_id || (row.catch_id ? `${row.device_id}:${row.catch_id}` : row.watch_trip_id ? `${row.device_id}:${row.watch_trip_id}` : row);
+    if (seen.has(key)) return false;
+    seen.add(key); return true;
+  });
+}
 // Both record types share pagination and refresh lifecycle, but fail independently.
 async function readRecords(
   table,
@@ -263,7 +272,7 @@ async function readRecords(
     if (generation !== loadGeneration || !session) return null;
     if (error) throw error;
     all.push(...data);
-    if (data.length < pageSize) return all;
+    if (data.length < pageSize) return uniqueRecords(all);
   }
 }
 async function refreshJournal() {
@@ -493,9 +502,9 @@ function initMap() {
   }
   map = L.map('map', {
     doubleClickZoom: false,
-    scrollWheelZoom: false,
+    scrollWheelZoom: true,
     bounceAtZoomLimits: false,
-    touchZoom: 'center',
+    touchZoom: true,
   }).setView([-34.08, 22.97], 8);
   const osmCredit = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -505,51 +514,76 @@ function initMap() {
   applyChartStyle();
   markers = L.markerClusterGroup({
     maxClusterRadius: 40,
-    spiderfyOnMaxZoom: true,
+    spiderfyOnMaxZoom: false,
+    zoomToBoundsOnClick: false,
     showCoverageOnHover: false,
   }).addTo(map);
+  markers.on('clusterclick clusterkeypress', event => {
+    if (event.type === 'clusterkeypress' && event.originalEvent?.keyCode !== 13) return;
+    if (event.originalEvent) L.DomEvent.stopPropagation(event.originalEvent);
+    showMapCatchList(event.layer);
+  });
   map.on('zoomend', updateLabels);
+}
+function showMapCatchList(cluster) {
+  if (!map) return;
+  const rows = uniqueRecords(cluster.getAllChildMarkers().map(marker => marker.catchRecord))
+    .sort((a,b) => new Date(b.caught_at)-new Date(a.caught_at) || String(a.catch_id).localeCompare(String(b.catch_id)));
+  const panel = document.createElement('div'); panel.className = 'map-catch-list';
+  const heading = document.createElement('h3'); heading.textContent = `${rows.length} catches in this area`; panel.append(heading);
+  const hint = document.createElement('p'); hint.textContent = 'Choose a catch for its details and conditions.'; panel.append(hint);
+  const list = document.createElement('div'); list.className = 'map-catch-choices';
+  for (const c of rows) {
+    const button = document.createElement('button'); button.type = 'button'; button.className = 'map-catch-choice';
+    button.innerHTML = `${fishImage(c.species_id)}<span><strong>${esc(nameOf(c))}</strong><small>${esc(dateLabel(c.caught_at))} · ${esc(timeLabel(c.caught_at))}</small></span>`;
+    button.addEventListener('click', event => { L.DomEvent.stop(event); map.closePopup(); showDetail(c); });
+    list.append(button);
+  }
+  panel.append(list); L.DomEvent.disableClickPropagation(panel); L.DomEvent.disableScrollPropagation(panel);
+  L.popup({maxWidth:300, minWidth:220, autoPanPadding:[20,20]}).setLatLng(cluster.getLatLng()).setContent(panel).openOn(map);
 }
 function updateLabels() {
   if (!map || !markers) return;
   const show = map.getZoom() >= 13;
-  markers.eachLayer((marker) => {
-    marker.unbindTooltip();
-    if (show) {
-      marker.bindTooltip(marker.catchLabel, {
-        permanent: true,
-        direction: 'top',
-        offset: [0, -10],
-      });
-    }
+  markers.eachLayer(marker => {
+    if (show && !marker.getTooltip()) {
+      marker.bindTooltip(marker.catchLabel, {permanent:true, interactive:false, direction:'top', offset:[0,-14]});
+    } else if (!show && marker.getTooltip()) marker.unbindTooltip();
   });
 }
 function renderMap() {
   initMap();
   if (!markers) return;
+  map.closePopup();
   markers.clearLayers();
   const legend = new Map();
-  for (const c of visible) {
+  for (const c of uniqueRecords(visible)) {
     if (!Number.isFinite(c.latitude) || !Number.isFinite(c.longitude)) continue;
     const colour = colourOf(c);
-    const label = `${nameOf(c)} · ${dateLabel(c.caught_at)}`;
+    const label = `${nameOf(c)} · ${dateLabel(c.caught_at)} · ${timeLabel(c.caught_at)}`;
     const marker = L.marker([c.latitude, c.longitude], {
       title: label,
       alt: label,
+      bubblingMouseEvents: false,
+      keyboard: true,
       icon: L.divIcon({
         className: 'catch-pin',
         html: '',
-        iconSize: [20, 20],
-        iconAnchor: [10, 10],
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
       }),
     });
     marker.catchLabel = esc(label);
+    marker.catchRecord = c;
     marker.on('add', () => {
       if (marker.getElement()) {
         marker.getElement().style.backgroundColor = colour;
       }
     });
-    marker.on('click', () => showDetail(c));
+    marker.on('click', event => {
+      if (event.originalEvent) L.DomEvent.stopPropagation(event.originalEvent);
+      map.closePopup(); showDetail(c);
+    });
     markers.addLayer(marker);
     legend.set(
       $('colour').value === 'day' ? dateLabel(c.caught_at) : nameOf(c),
