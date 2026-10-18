@@ -1141,6 +1141,12 @@ function waterTemperatureCard(p, units) {
   if (finite(p[key])) return temperatureCard(p, units, key);
   return '<div class="temperature-card water-temperature-card"><span class="visual-label">Water temperature</span><strong class="temperature-value">—</strong><p class="small muted">Unavailable for this location and time. Add a measured observation if you recorded one.</p></div>';
 }
+function windDirectionCard(p) {
+  const valid = typeof p.wind_direction_10m === 'number' && Number.isFinite(p.wind_direction_10m);
+  const degrees = valid ? ((p.wind_direction_10m % 360) + 360) % 360 : null;
+  const compass = valid ? ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'][Math.round(degrees / 22.5) % 16] : '';
+  return `<div class="pressure-card wind-direction-card"><span class="visual-label">Wind direction</span><strong class="temperature-value">${valid ? `${compass}<small>${Math.round(degrees) % 360}°</small>` : '—'}</strong><p class="small muted">${valid ? 'Direction the wind is blowing from' : 'Unavailable for this location and time.'}</p></div>`;
+}
 function pressureCard(p, units) {
   const valid = value => typeof value === 'number' && Number.isFinite(value);
   const value = valid(p.pressure_msl) ? `${esc(p.pressure_msl)}<small>${esc(units?.pressure_msl || 'hPa')}</small>` : '—';
@@ -1151,7 +1157,7 @@ function conditionVisuals(p, units) {
   const phase = p.moon_phase_fraction, sky = skyFor(p);
   const moon = typeof phase==='number' && Number.isFinite(phase) ? `<div class="moon-card">${moonGraphic(phase,p.catch_location?.latitude<0)}<span class="visual-label">${esc(p.moon_phase)}</span><strong>${esc(p.moon_illumination)}% illuminated</strong><small>Calculated moon phase</small></div>` : '';
   const weather = sky ? `<div class="weather-card">${weatherGraphic(sky.kind)}<span class="visual-label">Weather at catch</span><strong>${sky.label}</strong><small>${esc(sky.note)} · estimated</small></div>` : '';
-  const temperature = temperatureCard(p,units) + waterTemperatureCard(p,units) + pressureCard(p,units);
+  const temperature = temperatureCard(p,units) + waterTemperatureCard(p,units) + pressureCard(p,units) + windDirectionCard(p);
   return moon || weather || temperature ? `<div class="condition-visuals">${moon}${weather}${temperature}</div>` : '';
 }
 
