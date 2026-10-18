@@ -71,3 +71,5 @@ Dageraad and Scotsman (17 October 2026): stable IDs `dageraad` and `scotsman` ar
 Water temperature is displayed beside air temperature in catch and day conditions. Saved measured observations are labelled separately from modelled sea-surface estimates; the air value cannot hide the water value. Unavailable water readings have an explicit empty-state card, not a guessed number.
 
 Shark category (18 October 2026): `haai` now displays Shark on the watch and journal and covers any shark species. Scientific grouping is Selachimorpha, which includes multiple families. General biology replaces blacktip-specific claims; lifespan and rules depend on species. Original records and IDs remain intact.
+
+See Baber (18 October 2026): `sea_barbel` is Galeichthys feliceps (white seacatfish / white seabarbel, Ariidae). Appended at watch index 15; all previous fish and No bite IDs unchanged. The journal now has fifteen fish categories including generic Shark, with artwork, facts and reference cards. The watch build is prepared for later installation, per owner request.
