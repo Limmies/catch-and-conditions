@@ -91,7 +91,7 @@ function fishImage(id, large = false) {
   return species[id]
     ? `<img class="${large ? 'fish-portrait' : 'fish-thumb'}" src="${
       fishPreviews[id]
-    }" alt="${esc(species[id][0])} illustration" loading="eager" width="${
+    }" alt="${esc(species[id][0])} illustration" data-species="${esc(id)}" loading="eager" width="${
       large ? 320 : 64
     }" height="${large ? 220 : 46}">`
     : '';

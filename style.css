@@ -1150,3 +1150,6 @@ footer { font-style:italic; }
 .water-temperature-card .temperature-scale { background: linear-gradient(90deg,#456d9a,#62a6b3,#a9cdb5,#dfcb8a,#cf8466); }
 
 .fish-age-number.fish-age-varies { font-size: 48px; letter-spacing: -.02em; }
+
+/* Lift the Santer illustration without changing other species or watch artwork. */
+img[data-species="santer"] { filter: brightness(1.18) contrast(.94); }
