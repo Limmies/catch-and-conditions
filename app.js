@@ -862,20 +862,27 @@ function weatherGraphic(kind) {
   const mist = '<g stroke="#8ca9b2" stroke-width="4" stroke-linecap="round"><path d="M20 90h66M32 101h69M14 110h60"/></g>';
   return `<svg class="weather-art" viewBox="0 0 120 120" aria-hidden="true">${kind==='night'?'<path d="M73 23a32 32 0 1 0 22 51A34 34 0 0 1 73 23" fill="#7c92b9"/>':kind==='sun'?sun:kind==='partly'?sun+cloud:cloud}${kind==='rain'?rain:kind==='mist'?mist:''}</svg>`;
 }
-function temperatureCard(p, units) {
-  const key = typeof p.water_temperature === 'number' ? 'water_temperature' : typeof p.temperature_2m === 'number' ? 'temperature_2m' : 'sea_surface_temperature';
+function temperatureCard(p, units, key = 'temperature_2m') {
   const value = p[key], unit = units?.[key];
   if (typeof value !== 'number' || !Number.isFinite(value)) return '';
-  const label = {temperature_2m:'Air temperature',water_temperature:'Measured water',sea_surface_temperature:'Sea surface'}[key];
+  const water = key !== 'temperature_2m';
+  const label = {temperature_2m:'Air temperature',water_temperature:'Water temperature · measured',sea_surface_temperature:'Water temperature · sea surface'}[key];
+  const note = key === 'sea_surface_temperature' ? 'Model estimate at the surface, not fishing depth' : key === 'water_temperature' ? 'Your recorded measurement' : '';
   const celsius = unit === '°C' || unit === 'C';
   const position = Math.max(0,Math.min(100,(value+10)/50*100));
-  return `<div class="temperature-card"><span class="visual-label">${label}</span><strong class="temperature-value">${esc(value)}<small>${esc(unit || '')}</small></strong>${celsius?`<div class="temperature-scale" aria-label="${esc(label)} ${esc(value)} degrees Celsius"><span style="left:${position}%"></span></div><div class="temperature-range"><span>−10°</span><span>15°</span><span>40°</span></div>`:''}</div>`;
+  return `<div class="temperature-card${water ? ' water-temperature-card' : ''}"><span class="visual-label">${label}</span><strong class="temperature-value">${esc(value)}<small>${esc(unit || '')}</small></strong>${celsius?`<div class="temperature-scale" aria-label="${esc(label)} ${esc(value)} degrees Celsius"><span style="left:${position}%"></span></div><div class="temperature-range"><span>−10°</span><span>15°</span><span>40°</span></div>`:''}${note ? `<p class="small muted">${note}</p>` : ''}</div>`;
+}
+function waterTemperatureCard(p, units) {
+  const finite = value => typeof value === 'number' && Number.isFinite(value);
+  const key = finite(p.water_temperature) ? 'water_temperature' : 'sea_surface_temperature';
+  if (finite(p[key])) return temperatureCard(p, units, key);
+  return '<div class="temperature-card water-temperature-card"><span class="visual-label">Water temperature</span><strong class="temperature-value">—</strong><p class="small muted">Unavailable for this location and time. Add a measured observation if you recorded one.</p></div>';
 }
 function conditionVisuals(p, units) {
   const phase = p.moon_phase_fraction, sky = skyFor(p);
   const moon = typeof phase==='number' && Number.isFinite(phase) ? `<div class="moon-card">${moonGraphic(phase,p.catch_location?.latitude<0)}<span class="visual-label">${esc(p.moon_phase)}</span><strong>${esc(p.moon_illumination)}% illuminated</strong><small>Calculated moon phase</small></div>` : '';
   const weather = sky ? `<div class="weather-card">${weatherGraphic(sky.kind)}<span class="visual-label">Weather at catch</span><strong>${sky.label}</strong><small>${esc(sky.note)} · estimated</small></div>` : '';
-  const temperature = temperatureCard(p,units);
+  const temperature = temperatureCard(p,units) + waterTemperatureCard(p,units);
   return moon || weather || temperature ? `<div class="condition-visuals">${moon}${weather}${temperature}</div>` : '';
 }
 
