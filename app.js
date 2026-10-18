@@ -1141,11 +1141,17 @@ function waterTemperatureCard(p, units) {
   if (finite(p[key])) return temperatureCard(p, units, key);
   return '<div class="temperature-card water-temperature-card"><span class="visual-label">Water temperature</span><strong class="temperature-value">—</strong><p class="small muted">Unavailable for this location and time. Add a measured observation if you recorded one.</p></div>';
 }
+function pressureCard(p, units) {
+  const valid = value => typeof value === 'number' && Number.isFinite(value);
+  const value = valid(p.pressure_msl) ? `${esc(p.pressure_msl)}<small>${esc(units?.pressure_msl || 'hPa')}</small>` : '—';
+  const change = valid(p.pressure_change_3h) ? ` · ${p.pressure_change_3h > 0 ? '+' : ''}${esc(p.pressure_change_3h)} ${esc(units?.pressure_change_3h || 'hPa')} over 3 hours` : '';
+  return `<div class="pressure-card"><span class="visual-label">Barometric pressure</span><strong class="temperature-value">${value}</strong><p class="small muted">${valid(p.pressure_msl) ? `Sea-level pressure${change}` : 'Unavailable for this location and time.'}</p></div>`;
+}
 function conditionVisuals(p, units) {
   const phase = p.moon_phase_fraction, sky = skyFor(p);
   const moon = typeof phase==='number' && Number.isFinite(phase) ? `<div class="moon-card">${moonGraphic(phase,p.catch_location?.latitude<0)}<span class="visual-label">${esc(p.moon_phase)}</span><strong>${esc(p.moon_illumination)}% illuminated</strong><small>Calculated moon phase</small></div>` : '';
   const weather = sky ? `<div class="weather-card">${weatherGraphic(sky.kind)}<span class="visual-label">Weather at catch</span><strong>${sky.label}</strong><small>${esc(sky.note)} · estimated</small></div>` : '';
-  const temperature = temperatureCard(p,units) + waterTemperatureCard(p,units);
+  const temperature = temperatureCard(p,units) + waterTemperatureCard(p,units) + pressureCard(p,units);
   return moon || weather || temperature ? `<div class="condition-visuals">${moon}${weather}${temperature}</div>` : '';
 }
 
@@ -1230,7 +1236,7 @@ async function showDetail(c) {
   );
   $('detail-body').innerHTML = `${fishImage(c.species_id, true)}<h2>${
     esc(nameOf(c))
-  }</h2>${scientificCaption(c.species_id)}${fishProfileHTML(c.species_id)}<p class="muted">${esc(dateLabel(c.caught_at))} · ${
+  }</h2>${scientificCaption(c.species_id)}<p class="muted">${esc(dateLabel(c.caught_at))} · ${
     esc(timeLabel(c.caught_at))
   }</p><dl class="detail-grid">${field('Latitude', c.latitude.toFixed(6))}${
     field('Longitude', c.longitude.toFixed(6))

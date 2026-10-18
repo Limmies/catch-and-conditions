@@ -95,3 +95,5 @@ White Musselcracker / Brusher (18 October 2026): `white_musselcracker`, Sparodon
 Map viewport: automatic fit and popup auto-pan removed; page scrolling no longer changes zoom. Only deliberate +/−, pinch and Show all spots change zoom. Refresh, filtering and rendering preserve the chosen viewport.
 
 Map controls simplified (18 October 2026): clicking a numbered cluster spider-spreads its catches at the current zoom; the temporary catch chooser has been removed. Mouse wheel, double-click, pinch and +/− provide ordinary zoom controls. Drag inertia and map/cluster animations are disabled. Unchanged background refreshes retain marker layers and open spider spreads, and map size checks do not pan. No automatic fitting occurs; Show all spots is the explicit fit action.
+
+Catch details now focus on conditions: species fun facts remain in species profiles. Barometric sea-level pressure and the saved three-hour pressure change appear in a dedicated card; missing readings are labelled unavailable. Shell v37.

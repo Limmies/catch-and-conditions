@@ -1168,3 +1168,5 @@ body[data-fishing-mode=shore]::before { background-image: url('fish/mobile/black
 body[data-fishing-mode=shore] .heading::before { background-image: url('fish/mobile/garrick.jpg'); }
 body[data-fishing-mode=shore][data-page=totals] .heading::before { background-image: url('fish/mobile/galjoen.jpg'); }
 body[data-fishing-mode=shore][data-page=days] .heading::before { background-image: url('fish/mobile/blacktail.jpg'); }
+
+.pressure-card { grid-column:1/-1; border:1px solid var(--line); border-radius:12px; padding:18px; background:#f5f3e9; min-width:0; display:flex; flex-direction:column; align-items:stretch; text-align:left; }
