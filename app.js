@@ -1182,9 +1182,13 @@ function fishingScoreCard(p) {
   return `<section class="fishing-score" aria-label="Fishing conditions score"><div class="score-school" aria-label="${rating === null ? 'Fish rating unavailable' : rating+' out of 3 fish'}"><div class="score-fish-icons" aria-hidden="true">${[1,2,3].map(n=>`<span class="score-fish-slot${rating === null || n > rating ? ' is-inactive' : ''}">${fish}</span>`).join('')}</div><span class="score-rating">${rating === null ? '— / 3' : rating+' / 3'}</span></div><div class="score-content"><div class="score-heading"><span class="score-caption">Fishing conditions</span><strong class="score-value">${score === null ? '—' : score+'<small>%</small>'}</strong></div><span class="score-verdict">${esc(p.bite_estimate.label || 'Conditions estimate')}</span>${score === null ? '<p class="small muted">Score unavailable: missing saved inputs.</p>' : `<div class="score-track" role="meter" aria-label="Conditions score" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${score}"><span style="width:${score}%"></span></div>`}</div></section><p class="score-note">Conditions index · estimated, not a catch probability.</p>`;
 }
 
+function waterClarityCard(data) {
+  const observation = data?.find(snapshot => snapshot.provider === 'Angler observation' && ['Clear','Slightly cloudy','Murky'].includes(snapshot.raw_payload?.water_clarity));
+  return `<div class="pressure-card water-clarity-card"><span class="visual-label">Water clarity</span><strong class="temperature-value">${observation ? esc(observation.raw_payload.water_clarity) : 'Not recorded'}</strong><p class="small muted">${observation ? 'Your observation at catch time' : 'Use Record observations to choose Clear, Slightly cloudy or Murky.'}</p></div>`;
+}
 function conditionsHTML(data) {
-  if(!data?.length) return '<p class="muted">Conditions are awaiting collection. Use Collect conditions to try now.</p>';
-  return data.map(snapshot => {
+  if(!data?.length) return waterClarityCard(data) + '<p class="muted">Conditions are awaiting collection. Use Collect conditions to try now.</p>';
+  return waterClarityCard(data) + data.map(snapshot => {
     const p = snapshot.raw_payload || {}, phase = p.moon_phase_fraction;
     const visuals = conditionVisuals(p, snapshot.units);
     const fish = fishingScoreCard(p);
