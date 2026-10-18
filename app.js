@@ -173,6 +173,7 @@ let client,
   trips = [],
   map,
   markers,
+  mapSignature = null,
   visible = [],
   loadGeneration = 0,
   conditionsGeneration = 0,
@@ -197,6 +198,7 @@ function resetPrivateView() {
   if (map) map.remove();
   map = null;
   markers = null;
+  mapSignature = null;
   $('map').replaceChildren();
   for (
     const id of [
@@ -500,8 +502,12 @@ function initMap() {
     return;
   }
   map = L.map('map', {
-    doubleClickZoom: false,
-    scrollWheelZoom: false,
+    doubleClickZoom: true,
+    scrollWheelZoom: true,
+    inertia: false,
+    zoomAnimation: false,
+    fadeAnimation: false,
+    markerZoomAnimation: false,
     bounceAtZoomLimits: false,
     touchZoom: true,
   }).setView([-34.08, 22.97], 8);
@@ -513,33 +519,13 @@ function initMap() {
   applyChartStyle();
   markers = L.markerClusterGroup({
     maxClusterRadius: 40,
-    spiderfyOnMaxZoom: false,
+    spiderfyOnMaxZoom: true,
+    spiderfyOnEveryZoom: true,
+    animate: false,
     zoomToBoundsOnClick: false,
     showCoverageOnHover: false,
   }).addTo(map);
-  markers.on('clusterclick clusterkeypress', event => {
-    if (event.type === 'clusterkeypress' && event.originalEvent?.keyCode !== 13) return;
-    if (event.originalEvent) L.DomEvent.stopPropagation(event.originalEvent);
-    showMapCatchList(event.layer);
-  });
   map.on('zoomend', updateLabels);
-}
-function showMapCatchList(cluster) {
-  if (!map) return;
-  const rows = uniqueRecords(cluster.getAllChildMarkers().map(marker => marker.catchRecord))
-    .sort((a,b) => new Date(b.caught_at)-new Date(a.caught_at) || String(a.catch_id).localeCompare(String(b.catch_id)));
-  const panel = document.createElement('div'); panel.className = 'map-catch-list';
-  const heading = document.createElement('h3'); heading.textContent = `${rows.length} catches in this area`; panel.append(heading);
-  const hint = document.createElement('p'); hint.textContent = 'Choose a catch for its details and conditions.'; panel.append(hint);
-  const list = document.createElement('div'); list.className = 'map-catch-choices';
-  for (const c of rows) {
-    const button = document.createElement('button'); button.type = 'button'; button.className = 'map-catch-choice';
-    button.innerHTML = `${fishImage(c.species_id)}<span><strong>${esc(nameOf(c))}</strong><small>${esc(dateLabel(c.caught_at))} · ${esc(timeLabel(c.caught_at))}</small></span>`;
-    button.addEventListener('click', event => { L.DomEvent.stop(event); map.closePopup(); showDetail(c); });
-    list.append(button);
-  }
-  panel.append(list); L.DomEvent.disableClickPropagation(panel); L.DomEvent.disableScrollPropagation(panel);
-  L.popup({maxWidth:300, minWidth:220, autoPan:false}).setLatLng(cluster.getLatLng()).setContent(panel).openOn(map);
 }
 function updateLabels() {
   if (!map || !markers) return;
@@ -553,10 +539,15 @@ function updateLabels() {
 function renderMap() {
   initMap();
   if (!markers) return;
+  const records = uniqueRecords(visible).filter(c => Number.isFinite(c.latitude) && Number.isFinite(c.longitude));
+  const signature = JSON.stringify([$('colour').value, records.map(c => [c.archive_id || c.catch_id,c.latitude,c.longitude,c.species_id,c.caught_at,colourOf(c)])]);
+  // Background refreshes must not rebuild an unchanged layer or collapse a spider spread.
+  if (signature === mapSignature) return;
+  mapSignature = signature;
   map.closePopup();
   markers.clearLayers();
   const legend = new Map();
-  for (const c of uniqueRecords(visible)) {
+  for (const c of records) {
     if (!Number.isFinite(c.latitude) || !Number.isFinite(c.longitude)) continue;
     const colour = colourOf(c);
     const label = `${nameOf(c)} · ${dateLabel(c.caught_at)} · ${timeLabel(c.caught_at)}`;
@@ -598,7 +589,7 @@ function renderMap() {
 }
 function fitMap() {
   if (!map || !markers || !markers.getLayers().length) return;
-  map.invalidateSize();
+  map.invalidateSize({pan:false});
   map.fitBounds(markers.getBounds(), { padding: [45, 45], maxZoom: 14 });
 }
 const speciesScientific = {
@@ -1297,7 +1288,7 @@ function route() {
   $('empty').hidden = page === 'trips' || visible.length > 0;
   if (page === 'map' && session) {
     renderMap();
-    requestAnimationFrame(() => map?.invalidateSize());
+    requestAnimationFrame(() => map?.invalidateSize({pan:false}));
   }
 }
 updateModeControls();
