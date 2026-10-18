@@ -286,7 +286,7 @@ async function refreshJournal() {
     const [catchResult, tripResult] = await Promise.allSettled([
       readRecords(
         'fishing_catches',
-        'archive_id,device_id,watch_trip_id,catch_id,species_id,recorded_label,caught_at,gps_at,latitude,longitude,gps_quality,position_method,tackle_method,received_at,fishing_mode',
+        'archive_id,device_id,watch_trip_id,catch_id,species_id,recorded_label,caught_at,gps_at,latitude,longitude,gps_quality,position_method,tackle_method,received_at,fishing_mode,raw_payload',
         'caught_at',
         'catch',
         owner,
@@ -1250,7 +1250,7 @@ async function showDetail(c) {
     esc(timeLabel(c.caught_at))
   }</p><dl class="detail-grid">${field('Latitude', c.latitude.toFixed(6))}${
     field('Longitude', c.longitude.toFixed(6))
-  }${field('Fishing style', fishingModeLabels[recordFishingMode(c)] || recordFishingMode(c))}${field('Position', c.position_method)}${field('Tackle', c.tackle_method)}${
+  }${field('Fish length', Number.isInteger(c.raw_payload?.length_cm) ? `${c.raw_payload.length_cm} cm` : null)}${field('Fishing style', fishingModeLabels[recordFishingMode(c)] || recordFishingMode(c))}${field('Position', c.position_method)}${field('Tackle', c.tackle_method)}${
     field('GPS fix', c.gps_quality === 4 ? 'Good' : 'Usable')
   }${
     field('Fix relative to catch', `${gpsDelay}s`)
