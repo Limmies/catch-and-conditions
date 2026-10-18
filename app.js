@@ -7,7 +7,7 @@ const species = {
   red_steenbras: ['Red Steenbras', '#9e396c'],
   miss_lucy: ['Miss Lucy', '#7c4fa3'],
   geelbek: ['Geelbek', '#9b7014'],
-  haai: ['Blacktip Reef Shark', '#546474'],
+  haai: ['Shark', '#546474'],
   carpenter: ['Carpenter', '#297a88'],
   santer: ['Santer', '#ce6130'],
   yellowbelly: ['Yellowbelly', '#88781a'],
@@ -516,7 +516,7 @@ const speciesScientific = {
   red_steenbras: 'Petrus rupestris',
   miss_lucy: 'Chrysoblephus gibbiceps',
   geelbek: 'Atractoscion aequidens',
-  haai: 'Carcharhinus melanopterus',
+  haai: 'Selachimorpha (sharks)',
   carpenter: 'Argyrozona argyrozona',
   santer: 'Cheimerius nufar',
   yellowbelly: 'Epinephelus marginatus',
@@ -559,10 +559,10 @@ const fishProfiles = {
     "ORI species factsheet"
   ],
   "haai": [
-    "An unexpected taste for snakes",
-    "Blacktip reef sharks have been recorded eating both sea snakes and terrestrial snakes, alongside their usual fish, squid and crustaceans. Even their skin has teeth of a sort: tiny tooth-like scales called dermal denticles. These details belong to the blacktip reef shark specifically, rather than every shark with dark fin tips.",
-    "https://www.floridamuseum.ufl.edu/discover-fish/species-profiles/blacktip-reef-shark/",
-    "Florida Museum species profile"
+    "Teeth that keep coming",
+    "Sharks have skeletons made of cartilage rather than bone, and replace teeth throughout their lives. Tiny tooth-like scales cover their skin. Their senses include detecting weak electrical fields from other animals. This group includes bottom-dwelling hunters, travelling predators and plankton feeders—not one shared way of life.",
+    "https://www.floridamuseum.ufl.edu/discover-fish/sharks/shark-biology/",
+    "Florida Museum shark biology"
   ],
   "carpenter": [
     "The colours that disappear",
@@ -650,11 +650,11 @@ const fishReference = {
     "https://saambr.org.za/wp-content/uploads/2023/03/ORI-Fish-Fact-Sheet-Geelbek.pdf"
   ],
   "haai": [
-    "Species-specific South African minimum not verified here. Confirm identification and current shark rules.",
-    "25+",
-    "Small bony fish, crustaceans, squid and other molluscs.",
-    "Often stays within a small reef-associated home range, rather than roaming the open ocean.",
-    "https://www.floridamuseum.ufl.edu/discover-fish/species-profiles/blacktip-reef-shark/"
+    "Varies by species and area. Identify the shark and check species-specific protection, size, bag and permit rules.",
+    "Varies",
+    "Depending on species: fish, squid, crustaceans, other animals or plankton.",
+    "Some remain around reefs or seabeds; others travel long distances offshore. Behaviour depends on species.",
+    "https://www.floridamuseum.ufl.edu/discover-fish/sharks/faq/"
   ],
   "carpenter": [
     "35 cm",
@@ -719,7 +719,7 @@ const fishAgeNotes = {
   "red_steenbras": "Estimated using ear-stone growth layers, supported by radiocarbon dating.",
   "miss_lucy": "Maximum reported for a male red stumpnose.",
   "geelbek": "Maximum reported in the ORI species factsheet.",
-  "haai": "Captive animals; wild-caught specimens aged to an estimated 15 years.",
+  "haai": "No single age applies to all sharks. Lifespan depends on species; this catch category does not identify one.",
   "carpenter": "Maximum reported in the ORI species factsheet.",
   "santer": "Maximum reported in the ORI species factsheet.",
   "yellowbelly": "South African aged specimens; a regional record, not a global maximum.",
@@ -739,13 +739,13 @@ function fishReferenceHTML(id) {
     movement:'<path d="M7 22h42m-9-9 9 9-9 9M57 44H15m9-9-9 9 9 9"/>',
   };
   const art = key => `<svg class="fish-reference-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[key]}</svg>`;
-  const ageSource = id === 'red_steenbras' ? fishProfiles[id][2] : id === 'red_roman' ? 'https://speciesstatus.sanbi.org/taxa/detail/2905/' : id === 'haai' ? 'https://www.fish.gov.au/docs/SharkReport/FRDC_Carcharhinus_melanopterus.pdf' : r[4];
-  return `<div class="fish-reference"><dl class="fish-reference-cards"><div class="fish-reference-card fish-age-card">${art('age')}<dt>Oldest recorded specimen</dt><dd><strong class="fish-age-number">${esc(r[1])}</strong><span class="fish-age-unit">years</span><p class="fish-card-caption">${esc(fishAgeNotes[id])}</p></dd></div><div class="fish-reference-card">${art('size')}<dt>Minimum legal size</dt><dd>${esc(r[0])}</dd><span class="fish-card-caption">South African recreational fishing · total length</span></div><div class="fish-reference-card">${art('diet')}<dt>On the menu</dt><dd>${esc(r[2])}</dd></div><div class="fish-reference-card">${art('movement')}<dt>Life on the move</dt><dd>${esc(r[3])}</dd></div></dl><p class="small muted">Ages are documented maxima in the cited sources, not typical lifespans or the age of your catch. Regional and captive records are labelled. Size is only one rule: seasons, bag limits, protected areas and permit conditions also apply.</p><p class="small"><a href="${esc(ageSource)}" target="_blank" rel="noopener noreferrer">Age source</a> · <a href="https://www.oritag.org.za/Content/UserContent/documents/Linefishing-regs-for-the-smart-phone-interactive.pdf" target="_blank" rel="noopener noreferrer">Size rules</a> · <a href="${esc(r[4])}" target="_blank" rel="noopener noreferrer">Diet &amp; movement</a></p><p class="small muted">References consulted 17 October 2026; check current rules before fishing.</p></div>`;
+  const ageSource = id === 'red_steenbras' ? fishProfiles[id][2] : id === 'red_roman' ? 'https://speciesstatus.sanbi.org/taxa/detail/2905/' : r[4];
+  return `<div class="fish-reference"><dl class="fish-reference-cards"><div class="fish-reference-card fish-age-card">${art('age')}<dt>${id === 'haai' ? 'Lifespan across sharks' : 'Oldest recorded specimen'}</dt><dd><strong class="fish-age-number${id === 'haai' ? ' fish-age-varies' : ''}">${esc(r[1])}</strong>${id === 'haai' ? '' : '<span class="fish-age-unit">years</span>'}<p class="fish-card-caption">${esc(fishAgeNotes[id])}</p></dd></div><div class="fish-reference-card">${art('size')}<dt>Minimum legal size</dt><dd>${esc(r[0])}</dd><span class="fish-card-caption">South African recreational fishing · total length</span></div><div class="fish-reference-card">${art('diet')}<dt>On the menu</dt><dd>${esc(r[2])}</dd></div><div class="fish-reference-card">${art('movement')}<dt>Life on the move</dt><dd>${esc(r[3])}</dd></div></dl><p class="small muted">Ages are documented maxima in the cited sources, not typical lifespans or the age of your catch. Regional and captive records are labelled. Size is only one rule: seasons, bag limits, protected areas and permit conditions also apply.</p><p class="small"><a href="${esc(ageSource)}" target="_blank" rel="noopener noreferrer">Age source</a> · <a href="https://www.oritag.org.za/Content/UserContent/documents/Linefishing-regs-for-the-smart-phone-interactive.pdf" target="_blank" rel="noopener noreferrer">Size rules</a> · <a href="${esc(r[4])}" target="_blank" rel="noopener noreferrer">Diet &amp; movement</a></p><p class="small muted">References consulted 17 October 2026; check current rules before fishing.</p></div>`;
 }
 function fishProfileHTML(id) {
   const p = fishProfiles[id];
   if (!p) return '';
-  const note = id === 'hake' ? 'This profile describes shallow-water Cape hake. The journal label alone does not distinguish the two Cape hake species.' : id === 'haai' ? 'This profile describes the journal’s Blacktip Reef Shark category; it does not identify other sharks logged under that label.' : '';
+  const note = id === 'hake' ? 'This profile describes shallow-water Cape hake. The journal label alone does not distinguish the two Cape hake species.' : id === 'haai' ? 'Shark is a broad catch category, not a species identification. Selachimorpha includes multiple families. The illustration is representative; it does not identify your catch.' : '';
   return `<section class="fish-profile"><span class="eyebrow">FUN FACTS</span><h3>${esc(p[0])}</h3><p class="fish-fact-story">${esc(p[1])}</p>${fishReferenceHTML(id)}${note ? `<p class="small muted">${esc(note)}</p>` : ''}<a class="small" href="${esc(p[2])}" target="_blank" rel="noopener noreferrer">${esc(p[3])} ↗</a></section>`;
 }
 function showSpeciesProfile(id) {

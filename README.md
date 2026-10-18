@@ -50,7 +50,7 @@ Species rows use full-width count bars scaled against the most-caught species, i
 The field-guide theme uses local Georgia/Times serif typography, small-cap headings and italic captions. Faded Kabeljou, Red Steenbras and Red Stumpnose illustrations decorate page backgrounds; the three public images are included in the offline shell. The artwork is decorative and does not represent catch data.
 
 Scientific captions cover all twelve journal categories in Species and catch details.
-Owner-specified categories: Black Musselcracker (Cymatoceps nasutus), Blacktip Reef Shark (Carcharhinus melanopterus), and South African Hake interpreted as shallow-water Cape hake (Merluccius capensis). Existing upload IDs remain unchanged. Location alone cannot distinguish the two Cape hake species.
+Owner-specified categories: Black Musselcracker (Cymatoceps nasutus), Shark (Selachimorpha; unspecified species), and South African Hake interpreted as shallow-water Cape hake (Merluccius capensis). Existing upload IDs remain unchanged. Location alone cannot distinguish the two Cape hake species.
 References: [DFFE species guide](https://www.dffe.gov.za/sites/default/files/docs/publications/marinerecreationalactivity_informationbrochure2016to2017.pdf),
 [SASAA records](https://kznsaa.co.za/wp-content/uploads/2023/01/2022-Ladies-Records-July-2022.pdf),
 [ORI black musselcracker factsheet](https://www.saambr.org.za/wp-content/uploads/2023/07/ORI-Fish-Fact-Black-musselcracker-ZC-LB-2.pdf),
@@ -69,3 +69,5 @@ Species profiles use illustrated cards beneath the fun-facts story: oldest docum
 Dageraad and Scotsman (17 October 2026): stable IDs `dageraad` and `scotsman` are appended. The watch has fourteen fish plus No bite; prior picker IDs are unchanged. Both have transparent watch artwork, journal previews/portraits, scientific captions, fun facts and reference cards. Dageraad: Chrysoblephus cristiceps, recorded age 22 years. Scotsman: Polysteganus praeorbitalis, recorded age 13 years in the cited account. Both have 40 cm recreational minimum sizes and one-fish daily bag limits in the ORI reference.
 
 Water temperature is displayed beside air temperature in catch and day conditions. Saved measured observations are labelled separately from modelled sea-surface estimates; the air value cannot hide the water value. Unavailable water readings have an explicit empty-state card, not a guessed number.
+
+Shark category (18 October 2026): `haai` now displays Shark on the watch and journal and covers any shark species. Scientific grouping is Selachimorpha, which includes multiple families. General biology replaces blacktip-specific claims; lifespan and rules depend on species. Original records and IDs remain intact.

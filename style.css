@@ -1148,3 +1148,5 @@ footer { font-style:italic; }
 
 .water-temperature-card { background: linear-gradient(145deg,#edf5f3,#f8faf5); border-color: #bfcfcb; }
 .water-temperature-card .temperature-scale { background: linear-gradient(90deg,#456d9a,#62a6b3,#a9cdb5,#dfcb8a,#cf8466); }
+
+.fish-age-number.fish-age-varies { font-size: 48px; letter-spacing: -.02em; }
