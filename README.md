@@ -73,3 +73,5 @@ Water temperature is displayed beside air temperature in catch and day condition
 Shark category (18 October 2026): `haai` now displays Shark on the watch and journal and covers any shark species. Scientific grouping is Selachimorpha, which includes multiple families. General biology replaces blacktip-specific claims; lifespan and rules depend on species. Original records and IDs remain intact.
 
 See Baber (18 October 2026): `sea_barbel` is Galeichthys feliceps (white seacatfish / white seabarbel, Ariidae). Appended at watch index 15; all previous fish and No bite IDs unchanged. The journal now has fifteen fish categories including generic Shark, with artwork, facts and reference cards. The watch build is prepared for later installation, per owner request.
+
+Mackerel / Makriel (18 October 2026): appended stable ID `mackerel`, watch index 16 / Fish15. Local taxonomy Scomber colias (SAIAB); older plate uses japonicus. Clean alpha artwork, profile, sourced study maximum age, diet and shoaling movement. Upload validation and species directory updated. Sixteen biological categories; watch build prepared for later installation.
