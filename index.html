@@ -17,12 +17,12 @@
     <link rel="stylesheet" href="vendor/leaflet.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.Default.css">
-    <link rel="stylesheet" href="style.css?v=31">
+    <link rel="stylesheet" href="style.css?v=32">
     <script defer src="vendor/supabase.js"></script>
     <script defer src="vendor/leaflet.js"></script>
     <script defer src="vendor/leaflet.markercluster.js"></script>
     <script defer src="config.js"></script>
-    <script defer src="app.js?v=31"></script>
+    <script defer src="app.js?v=32"></script>
   </head>
   <body>
     <header
@@ -37,6 +37,15 @@
       <section id="journal" hidden>
         <div
           class="heading"><div><span class="eyebrow">FISHING JOURNAL</span><h1 id="page-title">Catch map</h1><p id="page-caption" class="page-caption">A record of fish, place &amp; time.</p></div><button id="refresh" class="quiet">Refresh</button></div>
+        <div class="fishing-style-panel">
+          <span class="eyebrow">FISHING STYLE</span>
+          <div class="fishing-modes" role="group" aria-label="Fishing style">
+            <button type="button" data-fishing-mode="offshore" aria-pressed="true">Offshore</button>
+            <button type="button" data-fishing-mode="shore" aria-pressed="false">Shore</button>
+            <button type="button" data-fishing-mode="all" aria-pressed="false">All fishing</button>
+          </div>
+          <p id="mode-caption" class="small muted">From the boat, beyond the breakers.</p>
+        </div>
         <nav class="tabs"
           aria-label="Journal pages"><a href="#map" data-page="map">Map</a><a href="#totals" data-page="totals">Species</a><a href="#days" data-page="days">Days</a><a href="#trips" data-page="trips">Trips</a></nav>
         <details id="filter-panel" class="filter-panel">

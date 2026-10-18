@@ -1,16 +1,19 @@
 // Cache the public app shell only. Never cache Auth, database requests or maps.
-const CACHE = 'catch-conditions-shell-v31';
-const IMAGE_CACHE = 'catch-conditions-fish-mobile-v1';
-// Three background illustrations cache with the shell; other fish load on demand.
+const CACHE = 'catch-conditions-shell-v32';
+const IMAGE_CACHE = 'catch-conditions-fish-mobile-v2';
+// Both styles keep their background illustrations with the public shell.
 const FILES = [
   './',
   './index.html',
-  './style.css?v=31',
-  './app.js?v=31',
+  './style.css?v=32',
+  './app.js?v=32',
   './config.js',
   './fish/mobile/kabeljo.jpg',
   './fish/mobile/red_steenbras.jpg',
   './fish/mobile/miss_lucy.jpg',
+  './fish/mobile/blacktail.jpg',
+  './fish/mobile/galjoen.jpg',
+  './fish/mobile/garrick.jpg',
   './icon.svg',
   './icon-192.png',
   './icon-512.png',
@@ -39,7 +42,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keys) =>
       Promise.all(
         keys.filter((key) =>
-          key.startsWith('catch-conditions-shell-') && key !== CACHE
+          (key.startsWith('catch-conditions-shell-') && key !== CACHE) || (key.startsWith('catch-conditions-fish-mobile-') && key !== IMAGE_CACHE)
         ).map((key) => caches.delete(key)),
       )
     ).then(() => self.clients.claim()),

@@ -8,7 +8,7 @@ The live private journal is https://limmies.github.io/catch-and-conditions/. Its
 - `style.css`: base styles and one mobile layout with safe-area spacing and bottom navigation.
 - `sw.js`: public shell and illustration cache only; never authentication, database or map requests.
 - `config.js`: public project URL, publishable key, owner UUID and display timezone. Never put a password, watch token or service-role key here.
-- `fish/mobile/`: small JPEGs for sharper catch details. All twelve thumbnails are embedded in `app.js`, so individual image-download failures cannot hide the fish.
+- `fish/mobile/`: small JPEGs for sharper catch details. All twenty-five thumbnails are embedded in `app.js`, so individual image-download failures cannot hide the fish.
 
 Map, Species, Days and Trips share species/date filters. Dates use Africa/Johannesburg. Clear the species filter to see zero-catch trips. Fishing/travel totals come from the Supabase trip record; catch rates use recorded fishing intervals. Distances are straight-line totals between catch locations. Setup tests are excluded at the database query.
 
@@ -75,3 +75,13 @@ Shark category (18 October 2026): `haai` now displays Shark on the watch and jou
 See Baber (18 October 2026): `sea_barbel` is Galeichthys feliceps (white seacatfish / white seabarbel, Ariidae). Appended at watch index 15; all previous fish and No bite IDs unchanged. The journal now has fifteen fish categories including generic Shark, with artwork, facts and reference cards. The watch build is prepared for later installation, per owner request.
 
 Mackerel / Makriel (18 October 2026): appended stable ID `mackerel`, watch index 16 / Fish15. Local taxonomy Scomber colias (SAIAB); older plate uses japonicus. Clean alpha artwork, profile, sourced study maximum age, diet and shoaling movement. Upload validation and species directory updated. Sixteen biological categories; watch build prepared for later installation.
+
+## Shore and Offshore — 18 October 2026
+
+Use the Fishing style buttons above the tabs: **Offshore** (default), **Shore**, or **All fishing**. Map markers, species lists, totals, days, completed trips and catch rates follow the selected style and existing date/species filters. The preference stays in this browser. Each catch detail also shows its captured style.
+
+Offshore retains the existing sixteen species. Shore has Blacktail, Belman, Galjoen, Shad / Elf, Red Roman, Dusky Kob, Spotted Grunter, White Steenbras, Garrick / Leervis and Zebra / Wildeperd. Red Roman uses one shared species ID. Offshore Kabeljou remains silver kob (Argyrosomus inodorus); shore Dusky Kob has a separate ID and profile (Argyrosomus japonicus).
+
+Every new watch capture, including No bite, and every completed trip carries `fishing_mode`. Legacy raw payloads remain unchanged and are classified Offshore. The website filters the **captured mode**, never guesses the mode from the species or GPS location. A shared Red Roman catch can therefore belong to either style without mixing totals.
+
+The supplied PESCADO plates are retained as original labelled JPEGs in `resources/fish-originals/shore-pescado/` in the private development workspace, with source URLs. No AI-redrawn artwork is used for this section. `tools/prepare_shore_artwork.py` trims paper/captions and makes only connected outer white paper transparent; it verifies that every retained RGB pixel is unchanged. It does not change anatomy, colours, contrast or proportions. Original full plates retain the printed artist credit; the website also credits PESCADO below the species information. Rebuild mobile derivatives with `tools/prepare_phone_images.py`. The package checker verifies that both watch mode lists match the website.

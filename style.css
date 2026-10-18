@@ -1153,3 +1153,18 @@ footer { font-style:italic; }
 
 /* Lift the Santer illustration without changing other species or watch artwork. */
 img[data-species="santer"] { filter: brightness(1.18) contrast(.94); }
+
+/* Fishing style is visible on every journal page, independently of date filters. */
+.fishing-style-panel { margin: 0 0 1.4rem; }
+.fishing-style-panel > .eyebrow { display: block; margin-bottom: .6rem; }
+.fishing-modes { display: inline-flex; flex-wrap: wrap; gap: .3rem; padding: .3rem; border: 1px solid #cbd3c5; border-radius: 12px; background: #eeeee3; }
+.fishing-modes button { min-height: 44px; padding: .6rem 1rem; border: 1px solid transparent; border-radius: 8px; color: #335445; background: transparent; }
+.fishing-modes button[aria-pressed="true"] { color: #f8f4e4; background: #174d3e; border-color: #174d3e; }
+.fishing-modes button:focus-visible { outline: 3px solid #d8a43a; outline-offset: 2px; }
+.fishing-style-panel p { margin: .55rem 0 0; }
+@media (max-width: 400px) { .fishing-modes { display: flex; } .fishing-modes button { flex: 1; padding: .6rem .65rem; } }
+
+body[data-fishing-mode=shore]::before { background-image: url('fish/mobile/blacktail.jpg'),url('fish/mobile/galjoen.jpg'),url('fish/mobile/garrick.jpg'); }
+body[data-fishing-mode=shore] .heading::before { background-image: url('fish/mobile/garrick.jpg'); }
+body[data-fishing-mode=shore][data-page=totals] .heading::before { background-image: url('fish/mobile/galjoen.jpg'); }
+body[data-fishing-mode=shore][data-page=days] .heading::before { background-image: url('fish/mobile/blacktail.jpg'); }
