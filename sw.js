@@ -1,12 +1,12 @@
 // Cache the public app shell only. Never cache Auth, database requests or maps.
-const CACHE = 'catch-conditions-shell-v32';
-const IMAGE_CACHE = 'catch-conditions-fish-mobile-v2';
+const CACHE = 'catch-conditions-shell-v33';
+const IMAGE_CACHE = 'catch-conditions-fish-mobile-v3';
 // Both styles keep their background illustrations with the public shell.
 const FILES = [
   './',
   './index.html',
-  './style.css?v=32',
-  './app.js?v=32',
+  './style.css?v=33',
+  './app.js?v=33',
   './config.js',
   './fish/mobile/kabeljo.jpg',
   './fish/mobile/red_steenbras.jpg',
@@ -54,7 +54,7 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== ROOT.origin) return;
   if (
     url.pathname.startsWith(IMAGE_PATH) &&
-    /^[a-z_]+\.jpg$/.test(url.pathname.slice(IMAGE_PATH.length))
+    /^[a-z_]+\.(?:jpg|png)$/.test(url.pathname.slice(IMAGE_PATH.length))
   ) {
     // A saved illustration should never wait for a fresh network request.
     const key = new URL(url.pathname, ROOT).href;
