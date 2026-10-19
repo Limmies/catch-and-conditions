@@ -1097,7 +1097,7 @@ const conditionLabels = {
   wind_speed_10m:'Wind speed',wind_direction_10m:'Wind direction',wind_gusts_10m:'Wind gusts',
   pressure_msl:'Barometric pressure (sea level)',pressure_change_3h:'Pressure change over 3 hours',
   cloud_cover:'Cloud cover',precipitation:'Rain',relative_humidity_2m:'Humidity',visibility:'Visibility',
-  ocean_current_velocity:'Current speed',ocean_current_direction:'Current direction',wave_height:'Wave height',wave_period:'Wave period',sea_level_height_msl:'Sea level including tides',
+  ocean_current_velocity:'Current speed',ocean_current_direction:'Current direction',wave_height:'Significant wave height',wave_direction:'Wave direction',wave_period:'Wave period',wave_peak_period:'Wave peak period',swell_wave_height:'Swell height',swell_wave_direction:'Swell direction',swell_wave_period:'Swell period',swell_wave_peak_period:'Swell peak period',estimated_depth_m:'Estimated seabed depth (GEBCO; metres)',depth_source:'Estimated depth source',depth_resolution_arc_seconds:'Bathymetry grid spacing (arc seconds)',sea_level_height_msl:'Sea level including tides',
   tidal_stage:'Tidal stage',lunar_tidal_cycle:'Lunar tidal cycle',water_clarity:'Water clarity',water_temperature:'Measured water temperature',current_strength:'Observed current',notes:'Notes'
 };
 function moonGraphic(phase, southern = false) {
@@ -1188,7 +1188,8 @@ function waterClarityCard(data) {
 }
 function conditionsHTML(data) {
   if(!data?.length) return waterClarityCard(data) + '<p class="muted">Conditions are awaiting collection. Use Collect conditions to try now.</p>';
-  return waterClarityCard(data) + data.map(snapshot => {
+  const displayed=data.some(s=>s.model_version==='fishing-history-v2') ? data.filter(s=>s.model_version!=='fishing-context-v1') : data;
+  return waterClarityCard(data) + displayed.map(snapshot => {
     const p = snapshot.raw_payload || {}, phase = p.moon_phase_fraction;
     const visuals = conditionVisuals(p, snapshot.units);
     const fish = fishingScoreCard(p);
@@ -1196,6 +1197,15 @@ function conditionsHTML(data) {
     const missing = snapshot.model_version === 'fishing-context-v1' ? ['sea_surface_temperature','ocean_current_velocity','tidal_stage'].filter(key => !(key in p)).map(key=>field(conditionLabels[key], 'Unavailable at this location / time')).join('') : '';
     return `<p class="small muted">${esc(snapshot.provider)}${snapshot.sample_at ? ' · '+esc(dateLabel(snapshot.sample_at))+' '+esc(timeLabel(snapshot.sample_at)):''}</p>${visuals}${fish}<details class="condition-measurements"><summary>All conditions & measurements</summary><dl class="detail-grid">${fields.map(([key,label])=>field(label,typeof p[key]==='number' ? `${p[key]} ${snapshot.units?.[key] || '(unit not recorded)'}` : p[key])).join('')}${missing}</dl></details>${p.status==='partial'?'<p class="small muted">Some provider data is unavailable. Collection will retry automatically.</p>':''}`;
   }).join('') + '<p class="small muted">Weather and marine estimates: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>, DWD and other contributing models. Sea temperature is at the surface. Modelled tides and currents may differ locally. Spring/neap tendency is calculated from the moon; local tide times require marine data. Unavailable measurements are left blank.</p>';
+}
+function historyContextHTML(context) {
+  if (!context?.features?.windows) return '';
+  const number=value=>typeof value==='number'&&Number.isFinite(value)?esc(Math.round(value*10)/10):'—';
+  const rows=[3,6,12,24,48,72].map(hours=>{
+    const w=context.features.windows[hours]||{};
+    return `<tr><th>${hours} h</th><td>${number(w.wind_speed_10m?.mean)}</td><td>${number(w.precipitation?.total_mm)}${w.precipitation?.total_is_partial?'*':''}</td><td>${number(w.pressure_msl?.change)}</td><td>${number(w.sea_surface_temperature?.change)}</td></tr>`;
+  }).join('');
+  return `<details class="condition-measurements"><summary>Previous 72 hours</summary><p class="small muted">Before this catch · provider model/reanalysis data. Missing values are —; * marks partial rainfall coverage. Marine hourly outputs may be interpolated from coarser data.</p><div style="overflow-x:auto"><table><thead><tr><th>Window</th><th>Mean wind km/h</th><th>Rain mm</th><th>Pressure change hPa</th><th>Sea temperature change °C</th></tr></thead><tbody>${rows}</tbody></table></div><p class="small muted">History status: ${esc(context.status)}. ${esc(context.quality?.native_resolution_warning||'')}</p><p class="small muted">Sun elevation: ${number(context.astronomy?.sun_elevation_degrees)}° · ${context.astronomy?.daylight?'Daylight':'Darkness'} · ${esc(context.astronomy?.season||'')}</p></details>`;
 }
 function addConditionActions(c, generation) {
   const container = $('conditions');
@@ -1273,6 +1283,10 @@ async function showDetail(c) {
     if (error) throw error;
     $('conditions').innerHTML = '<h3>Conditions</h3>' + conditionsHTML(data);
     addConditionActions(c, generation);
+    try {
+      const history=await client.from('fishing_environment_features').select('features,astronomy,quality,status').eq('catch_archive_id',c.archive_id).eq('feature_version','fishing-history-v2').limit(1);
+      if(generation===conditionsGeneration && session && $('details').open && !history.error && history.data?.[0]) $('conditions').insertAdjacentHTML('beforeend',historyContextHTML(history.data[0]));
+    } catch { /* Saved catch conditions remain usable if historical enrichment is unavailable. */ }
   } catch {
     if (generation === conditionsGeneration && $('conditions')) {
       $('conditions').innerHTML =
