@@ -415,9 +415,23 @@ function tripMetrics(t) {
     selected.filter((c) =>
       segments.some((s) =>
         s.mode === 'fishing' && new Date(c.caught_at) / 1000 >= s.started_at &&
-        new Date(c.caught_at) / 1000 < s.ended_at
+        (new Date(c.caught_at) / 1000 < s.ended_at || (s.ended_at === new Date(t.ended_at) / 1000 && new Date(c.caught_at) / 1000 === s.ended_at))
       )
     ).length;
+  let sessions = 0, lastFishingEnd = null, anglerHours = 0, lineHours = 0, knownEffort = true;
+  const settings = [...(t.raw_payload?.effort_settings || [])].sort((a,b)=>a.at-b.at);
+  for (const segment of segments) {
+    if (segment.mode !== 'fishing' || segment.ended_at <= segment.started_at) continue;
+    if (lastFishingEnd !== segment.started_at) sessions++;
+    lastFishingEnd = segment.ended_at;
+    const boundaries = [segment.started_at, ...settings.filter(e=>e.at>segment.started_at && e.at<segment.ended_at).map(e=>e.at), segment.ended_at];
+    for (let i=1;i<boundaries.length;i++) {
+      const effort = settings.filter(e=>e.at<=boundaries[i-1]).at(-1);
+      if (!effort || !Number.isFinite(effort.anglers) || !Number.isFinite(effort.active_lines)) {knownEffort=false;continue;}
+      const hours = (boundaries[i]-boundaries[i-1])/3600;
+      anglerHours += hours*effort.anglers; lineHours += hours*effort.active_lines;
+    }
+  }
   let distance = 0, validPairs = 0;
   for (let i = 1; i < all.length; i++) {
     const km = catchDistance(all[i - 1], all[i]);
@@ -434,6 +448,10 @@ function tripMetrics(t) {
       Math.max(0, total - fishing - travelling),
     count: selected.length,
     fishingCatches,
+    sessions,
+    automatic: t.raw_payload?.movement_algorithm === 'watch-movement-v1',
+    anglerRate: knownEffort && anglerHours>0 ? fishingCatches/anglerHours : null,
+    lineRate: knownEffort && lineHours>0 ? fishingCatches/lineHours : null,
     rate: fishing > 0 ? fishingCatches / (fishing / 3600) : null,
     distance: validPairs ? distance : null,
     averageDistance: validPairs ? distance / validPairs : null,
@@ -454,13 +472,17 @@ function renderTrips() {
       fishing: sum.fishing + m.fishing,
       travelling: sum.travelling + m.travelling,
       count: sum.count + m.count,
+      sessions: sum.sessions + m.sessions,
+      unknown: sum.unknown + m.unclassified,
     }),
-    { total: 0, fishing: 0, travelling: 0, count: 0 },
+    { total: 0, fishing: 0, travelling: 0, count: 0, sessions: 0, unknown: 0 },
   );
   $('trip-summary').innerHTML = [
     ['Trips', rows.length],
     ['Total trip time', durationLabel(totals.total)],
-    ['Fishing time', durationLabel(totals.fishing)],
+    ['Fishing effort', durationLabel(totals.fishing)],
+    ['Fishing sessions', totals.sessions],
+    ['Unknown time', durationLabel(totals.unknown)],
     ['Travelling time', durationLabel(totals.travelling)],
     ['Catches', totals.count],
   ].map(([label, value]) =>
@@ -476,13 +498,13 @@ function renderTrips() {
         durationLabel(m.total)
       }</td><td data-label="Fishing">${
         durationLabel(m.fishing)
-      }</td><td data-label="Travelling">${
+      }<br><span class="small muted">${m.automatic ? 'Estimated from GPS' : 'Recorded activity'} · ${m.sessions} sessions</span></td><td data-label="Travelling">${
         durationLabel(m.travelling)
       }</td><td data-label="Unclassified">${
         durationLabel(m.unclassified)
       }</td><td data-label="Catches">${m.count}</td><td data-label="Fishing catches/hour">${
         m.rate === null ? '—' : m.rate.toFixed(1)
-      }</td><td data-label="Between catches">${
+      }${m.anglerRate===null ? '' : '<br><span class="small muted">'+m.anglerRate.toFixed(1)+'/angler-hour</span>'}${m.lineRate===null ? '' : '<br><span class="small muted">'+m.lineRate.toFixed(1)+'/line-hour</span>'}</td><td data-label="Between catches">${
         m.distance === null
           ? '—'
           : m.distance.toFixed(2) + ' km total<br><span class="small muted">' +
@@ -548,7 +570,6 @@ function renderMap() {
   markers.clearLayers();
   const legend = new Map();
   for (const c of records) {
-    if (!Number.isFinite(c.latitude) || !Number.isFinite(c.longitude)) continue;
     const colour = colourOf(c);
     const label = `${nameOf(c)} · ${dateLabel(c.caught_at)} · ${timeLabel(c.caught_at)}`;
     const marker = L.marker([c.latitude, c.longitude], {
