@@ -964,6 +964,34 @@ dialog {
 .saved-observation { padding:14px 0; border-bottom:1px solid var(--line); }
 @media(max-width:400px) { .condition-history { padding:12px; }.history-metric { padding:12px; }.history-metric strong { font-size:26px; }.measurement-cards dd { font-size:18px; } }
 .day-condition-entry { border-top:1px solid var(--line); padding:12px 0; }
+.day-actions { display:flex; gap:10px; flex-wrap:wrap; margin:16px 0 10px; }
+.day-actions .day-rate { background:#edf1e5; }
+.day-observations h2 { font-family:var(--display-font); font-size:30px; }
+#day-observation-fields { border:0; padding:0; margin:18px 0 0; min-width:0; }
+.day-feel-card { --feel-fill:0%; padding:18px; margin:14px 0; border:1px solid #cbd9ce; border-radius:16px; background:linear-gradient(130deg,#f0f4eb,#fffaf0); }
+.day-feel-card.is-unrated { background:#f6f5ef; border-color:var(--line); }
+.day-feel-card[data-feel-card="water_clarity"] { background:var(--feel-water,#f6f5ef); }
+.day-feel-heading { display:grid; grid-template-columns:34px minmax(0,1fr); gap:3px 8px; align-items:center; }
+.day-feel-icon { grid-row:1/3; font-size:30px; color:#487d69; }
+.day-feel-heading label { font-family:var(--display-font); font-size:22px; }
+.day-feel-heading output { font-size:15px; color:#17543f; min-height:24px; }
+.is-unrated .day-feel-heading output { color:#797c73; }
+.day-feel-card input[type="range"] { appearance:none; -webkit-appearance:none; width:100%; height:44px; padding:0; border:0; background:transparent; cursor:pointer; margin:12px 0 0; }
+.day-feel-card input[type="range"]::-webkit-slider-runnable-track { height:8px; border-radius:8px; background:linear-gradient(to right,#4a8c75 var(--feel-fill),#d8dfd1 var(--feel-fill)); }
+.day-feel-card input[type="range"]::-webkit-slider-thumb { appearance:none; -webkit-appearance:none; width:26px; height:26px; margin-top:-9px; border:3px solid #fffdf7; border-radius:50%; background:#d8a936; box-shadow:0 2px 7px #293a332b; }
+.day-feel-card input[type="range"]::-moz-range-track { height:8px; border-radius:8px; background:linear-gradient(to right,#4a8c75 var(--feel-fill),#d8dfd1 var(--feel-fill)); }
+.day-feel-card input[type="range"]::-moz-range-thumb { width:22px; height:22px; border:3px solid #fffdf7; border-radius:50%; background:#d8a936; }
+.day-feel-card.is-unrated input[type="range"]::-webkit-slider-thumb { background:#a9aea3; }
+.day-feel-card.is-unrated input[type="range"]::-moz-range-thumb { background:#a9aea3; }
+.day-feel-ends { display:flex; justify-content:space-between; gap:12px; font-size:12px; color:#657366; }
+.day-feel-ends span { max-width:48%; }.day-feel-ends span:last-child { text-align:right; }
+.day-feel-bottom { display:flex; align-items:center; gap:10px; margin-top:8px; }
+.day-feel-bottom p { flex:1; margin:6px 0; }
+.feel-clear { flex:none; padding:8px 0 8px 8px; border:0; background:transparent; color:#3b6856; font:inherit; font-size:11px; text-decoration:underline; }
+.feel-clear:disabled { color:#92988a; text-decoration:none; }
+.day-notes-label { display:grid; gap:8px; margin:20px 0 12px; }
+.day-notes-label textarea { width:100%; box-sizing:border-box; padding:12px; font:inherit; font-size:16px; border:1px solid var(--line); border-radius:10px; resize:vertical; }
+@media(max-width:400px) { .day-feel-card { padding:14px; }.day-feel-heading label { font-size:20px; }.day-feel-bottom { align-items:flex-start; } }
 
 .observation-form textarea { font:inherit; width:100%; border:1px solid #bfcec4; border-radius:10px; padding:9px 12px; resize:vertical; }
 .filter-panel summary::after { content:"▾"; margin-left:auto; color:var(--green); }

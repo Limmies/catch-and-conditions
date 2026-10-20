@@ -1091,7 +1091,11 @@ function renderDays() {
     weather.className = 'quiet day-weather';
     weather.textContent = 'View day conditions';
     weather.onclick = () => showDayConditions(rows);
-    section.append(weather);
+    const rate=document.createElement('button');
+    rate.type='button';rate.className='quiet day-rate';rate.textContent='Rate this day';
+    rate.onclick=()=>showDayObservations(rows[0]);
+    const actions=document.createElement('div');actions.className='day-actions';actions.append(weather,rate);
+    section.append(actions);
     for (const c of rows) {
       const button = document.createElement('button');
       button.className = 'catch-row';
@@ -1107,6 +1111,78 @@ function renderDays() {
     }
     $('days').append(section);
   }
+}
+const dayFeelMetrics = [
+  {key:'enjoyment',label:'How was the day?',icon:'☀',low:'Not much fun',high:'An unforgettable day',words:['A tough day','Could be better','Enjoyed it','A great day','Absolutely brilliant'],note:'Your enjoyment, regardless of how many fish you caught.'},
+  {key:'water_clarity',label:'Water clarity',icon:'◈',low:'Very murky',high:'Crystal clear',words:['Very murky','Cloudy','Mixed clarity','Clear','Crystal clear'],note:'Overall impression across the water you fished; not measured visibility.'},
+  {key:'sea_comfort',label:'Sea comfort',icon:'≈',low:'Very uncomfortable',high:'Glassy & comfortable',words:['Very uncomfortable','Choppy','Manageable','Comfortable','Glassy & comfortable'],note:'How comfortable the sea felt, not a wave-height measurement.'},
+  {key:'current_strength',label:'Current strength',icon:'➜',low:'Still water',high:'Ripping current',words:['Still or barely moving','Weak','Moderate','Strong','Very strong'],note:'Perceived water movement, not boat speed or a measured current.'},
+  {key:'bite_activity',label:'Bite activity',icon:'🎣',low:'Nothing touching',high:'Non-stop bites',words:['No bites','Very quiet','Occasional bites','Regular bites','Non-stop bites'],note:'Include bites that did not result in a landed fish.'},
+  {key:'bait_presence',label:'Baitfish activity',icon:'🐟',low:'None seen',high:'Bait everywhere',words:['None seen','A little','Some bait around','Plenty of bait','Bait everywhere'],note:'Baitfish you noticed at the surface or on the fish finder. Unseen does not mean absent.'},
+];
+function dayFeelWord(metric,value) { return metric.words[Math.min(4,Math.floor(value/2.5))]; }
+function dayObservationFormHTML(c,mode) {
+  return `<section class="day-observations"><span class="eyebrow">YOUR DAY ON THE WATER</span><h2>${esc(dateLabel(c.caught_at))}</h2><p class="muted">${esc(fishingModeLabels[mode])} · Day-level observations · ${esc(config.timezone)}</p><p>Drag a slider to rate something you noticed. Leave anything you did not observe unrated.</p><form id="day-observation-form"><fieldset id="day-observation-fields" disabled>${dayFeelMetrics.map(m=>`<section class="day-feel-card is-unrated" data-feel-card="${m.key}"><div class="day-feel-heading"><span class="day-feel-icon" aria-hidden="true">${m.icon}</span><label for="day-feel-${m.key}">${m.label}</label><output for="day-feel-${m.key}" id="day-feel-value-${m.key}" aria-live="polite">Not rated</output></div><input type="range" min="0" max="10" step="1" value="5" id="day-feel-${m.key}" name="${m.key}" data-rated="false" aria-describedby="day-feel-note-${m.key}" aria-valuetext="Not rated"><div class="day-feel-ends"><span>${m.low}</span><span>${m.high}</span></div><div class="day-feel-bottom"><p id="day-feel-note-${m.key}" class="small muted">${m.note}</p><button type="button" class="feel-clear" data-clear-feel="${m.key}" disabled>Clear rating</button></div></section>`).join('')}<label class="day-notes-label">Anything else about the day?<textarea name="notes" rows="3" maxlength="1000" placeholder="Water changed after lunch, lots of birds, bait worked better…"></textarea></label><p class="small muted">These are your impressions for the whole day and fishing type, even if the catch list is filtered. They stay separate from catch-time observations and model estimates.</p><button type="submit" class="primary" id="save-day-observations">Save day observations</button></fieldset><p id="day-observation-status" class="small muted" role="status">Loading your saved day observations…</p></form></section>`;
+}
+async function showDayObservations(c) {
+  const generation=++conditionsGeneration,mode=fishingMode,date=dayKey(c.caught_at);
+  $('detail-body').innerHTML=dayObservationFormHTML(c,mode);
+  if(!$('details').open)$('details').showModal();
+  $('details').scrollTop=0;
+  const form=$('day-observation-form'),fields=$('day-observation-fields'),status=$('day-observation-status');
+  const current=()=>generation===conditionsGeneration && session && $('details').open && form.isConnected;
+  const paint=(metric,value)=>{
+    const input=form.elements[metric.key],rated=value!==null;
+    input.dataset.rated=String(rated);input.value=rated?value:5;
+    const word=rated?dayFeelWord(metric,value):'Not rated';
+    input.setAttribute('aria-valuetext',rated?`${value} out of 10 · ${word}`:'Not rated');
+    const card=input.closest('.day-feel-card');card.classList.toggle('is-unrated',!rated);card.style.setProperty('--feel-fill',`${rated?value*10:0}%`);
+    if(metric.key==='water_clarity')card.style.setProperty('--feel-water',rated?`hsl(${30+value*16} 28% 93%)`:'#f6f5ef');
+    $('day-feel-value-'+metric.key).textContent=rated?`${value}/10 · ${word}`:'Not rated';
+    form.querySelector(`[data-clear-feel="${metric.key}"]`).disabled=!rated;
+  };
+  for(const metric of dayFeelMetrics){
+    form.elements[metric.key].oninput=event=>paint(metric,Number(event.currentTarget.value));
+    // Tapping the existing midpoint should record 5 even without moving the thumb.
+    form.elements[metric.key].onclick=event=>paint(metric,Number(event.currentTarget.value));
+    form.querySelector(`[data-clear-feel="${metric.key}"]`).onclick=()=>paint(metric,null);
+  }
+  let writeId=null,lastSignature=null;
+  const readPayload=()=>{
+    const payload={observation_date:date,timezone:config.timezone,fishing_mode:mode,scale_version:'day-feel-v1',notes:form.elements.notes.value.trim()||null};
+    for(const m of dayFeelMetrics)payload[m.key]=form.elements[m.key].dataset.rated==='true'?Number(form.elements[m.key].value):null;
+    return payload;
+  };
+  form.onsubmit=async event=>{
+    event.preventDefault();if(!current()||fields.disabled)return;
+    const payload=readPayload();
+    if(!dayFeelMetrics.some(m=>payload[m.key]!==null)&&!payload.notes){status.textContent='Move at least one slider or add a note before saving.';return;}
+    if(!form.reportValidity())return;
+    const signature=JSON.stringify(payload);
+    if(signature!==lastSignature||!writeId){writeId=crypto.randomUUID();lastSignature=signature;}
+    fields.disabled=true;status.textContent='Saving your day observations…';
+    try{
+      let {error}=await client.from('fishing_day_observations').insert({id:writeId,...payload});
+      if(error?.code==='23505'){
+        const existing=await client.from('fishing_day_observations').select('id').eq('id',writeId).limit(1);
+        if(!existing.error&&existing.data?.some(row=>row.id===writeId))error=null;
+      }
+      if(error)throw error;
+      if(current()){status.textContent='Saved for this day. Earlier versions are kept in your history.';}
+    }catch{if(current())status.textContent='Could not save. Your ratings are still here; reconnect and try again.';}
+    finally{if(current())fields.disabled=false;}
+  };
+  try{
+    const {data,error}=await client.from('fishing_day_observations').select('*').eq('observation_date',date).eq('fishing_mode',mode).order('recorded_at',{ascending:false}).order('id',{ascending:false}).limit(1);
+    if(!current())return;
+    if(error)throw error;
+    const saved=data?.[0];
+    for(const m of dayFeelMetrics)paint(m,Number.isInteger(saved?.[m.key])?saved[m.key]:null);
+    form.elements.notes.value=saved?.notes||'';
+    if(saved){writeId=saved.id;lastSignature=JSON.stringify(readPayload());}
+    status.textContent=saved?'Your saved ratings are loaded. Change any slider to add a new version.':'No ratings saved yet. Only sliders you use will be recorded.';
+    fields.disabled=false;
+  }catch{if(current())status.innerHTML='Saved ratings could not be loaded. <button type="button" id="retry-day-observations" class="quiet">Try again</button>';if(current())$('retry-day-observations').onclick=()=>showDayObservations(c);}
 }
 function field(label, value) {
   return `<div><dt>${esc(label)}</dt><dd>${
@@ -1532,10 +1608,12 @@ async function start() {
       },
     },
   });
-  client.auth.onAuthStateChange((event, next) => {
+  const authClient=client;
+  authClient.auth.onAuthStateChange((event, next) => {
+    if(client!==authClient)return;
     // Leave the auth callback before making further Supabase requests.
     if (['SIGNED_IN', 'SIGNED_OUT', 'INITIAL_SESSION'].includes(event)) {
-      setTimeout(() => setSession(next), 0);
+      setTimeout(() => {if(client===authClient)setSession(next);}, 0);
     }
     if (event === 'TOKEN_REFRESHED') session = next;
   });
