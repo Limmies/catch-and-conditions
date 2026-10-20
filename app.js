@@ -50,7 +50,7 @@ function modeSpeciesIds() {
 }
 function updateModeControls() {
   document.body.dataset.fishingMode = fishingMode;
-  document.querySelectorAll('[data-fishing-mode]').forEach(button => {
+  document.querySelectorAll('button[data-fishing-mode]').forEach(button => {
     button.setAttribute('aria-pressed', String(button.dataset.fishingMode === fishingMode));
   });
   const selected = $('species').value;
@@ -1165,7 +1165,7 @@ function waterTemperatureCard(p, units) {
 function windDirectionCard(p) {
   const valid = typeof p.wind_direction_10m === 'number' && Number.isFinite(p.wind_direction_10m);
   const degrees = valid ? ((p.wind_direction_10m % 360) + 360) % 360 : null;
-  const compass = valid ? ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'][Math.round(degrees / 22.5) % 16] : '';
+  const compass = valid ? compassPoint(degrees) : '';
   return `<div class="pressure-card wind-direction-card"><span class="visual-label">Wind direction</span><strong class="temperature-value">${valid ? `${compass}<small>${Math.round(degrees) % 360}°</small>` : '—'}</strong><p class="small muted">${valid ? 'Direction the wind is blowing from' : 'Unavailable for this location and time.'}</p></div>`;
 }
 function pressureCard(p, units) {
@@ -1205,55 +1205,108 @@ function fishingScoreCard(p) {
 
 function waterClarityCard(data) {
   const observation = data?.find(snapshot => snapshot.provider === 'Angler observation' && ['Clear','Slightly cloudy','Murky'].includes(snapshot.raw_payload?.water_clarity));
-  return `<div class="pressure-card water-clarity-card"><span class="visual-label">Water clarity</span><strong class="temperature-value">${observation ? esc(observation.raw_payload.water_clarity) : 'Not recorded'}</strong><p class="small muted">${observation ? 'Your observation at catch time' : 'Use Record observations to choose Clear, Slightly cloudy or Murky.'}</p></div>`;
+  return `<div class="pressure-card water-clarity-card"><span class="visual-label">Water clarity</span><strong class="temperature-value">${observation ? esc(observation.raw_payload.water_clarity) : 'Not recorded'}</strong><p class="small muted">${observation ? 'Your observation at catch time' : 'Use Add your observations to record Clear, Slightly cloudy or Murky.'}</p></div>`;
+}
+function measurementCards(p, units = {}) {
+  const groups = [
+    ['Weather', ['temperature_2m','wind_speed_10m','wind_direction_10m','wind_gusts_10m','pressure_msl','pressure_change_3h','cloud_cover','precipitation','relative_humidity_2m','visibility']],
+    ['Ocean', ['sea_surface_temperature','ocean_current_velocity','ocean_current_direction','wave_height','wave_direction','wave_period','wave_peak_period','swell_wave_height','swell_wave_direction','swell_wave_period','swell_wave_peak_period','sea_level_height_msl','tidal_stage','lunar_tidal_cycle','estimated_depth_m','depth_source','depth_resolution_arc_seconds']],
+    ['Your observations', ['water_clarity','water_temperature','current_strength','notes']],
+  ];
+  return groups.map(([title, keys]) => {
+    const fields = keys.filter(key => typeof p[key] === 'string' || Number.isFinite(p[key]));
+    if (!fields.length) return '';
+    return `<section class="measurement-group"><h4>${title}</h4><dl class="measurement-cards">${fields.map(key => field(conditionLabels[key], typeof p[key] === 'number' ? `${Math.round(p[key]*100)/100}${units[key] ? ' '+units[key] : ''}` : p[key])).join('')}</dl></section>`;
+  }).join('') || '<p class="muted">No measurements were supplied for this snapshot.</p>';
 }
 function conditionsHTML(data) {
-  if(!data?.length) return waterClarityCard(data) + '<p class="muted">Conditions are awaiting collection. Use Collect conditions to try now.</p>';
+  if(!data?.length) return waterClarityCard(data) + '<p class="muted">Conditions are awaiting collection. Use Update weather to try now.</p>';
   const displayed=data.some(s=>s.model_version==='fishing-history-v2') ? data.filter(s=>s.model_version!=='fishing-context-v1') : data;
   return waterClarityCard(data) + displayed.map(snapshot => {
-    const p = snapshot.raw_payload || {}, phase = p.moon_phase_fraction;
+    const p = snapshot.raw_payload || {};
     const visuals = conditionVisuals(p, snapshot.units);
     const fish = fishingScoreCard(p);
-    const fields = Object.entries(conditionLabels).filter(([key]) => typeof p[key]==='string' || (typeof p[key]==='number' && Number.isFinite(p[key])));
     const missing = snapshot.model_version === 'fishing-context-v1' ? ['sea_surface_temperature','ocean_current_velocity','tidal_stage'].filter(key => !(key in p)).map(key=>field(conditionLabels[key], 'Unavailable at this location / time')).join('') : '';
-    return `<p class="small muted">${esc(snapshot.provider)}${snapshot.sample_at ? ' · '+esc(dateLabel(snapshot.sample_at))+' '+esc(timeLabel(snapshot.sample_at)):''}</p>${visuals}${fish}<details class="condition-measurements"><summary>All conditions & measurements</summary><dl class="detail-grid">${fields.map(([key,label])=>field(label,typeof p[key]==='number' ? `${p[key]} ${snapshot.units?.[key] || '(unit not recorded)'}` : p[key])).join('')}${missing}</dl></details>${p.status==='partial'?'<p class="small muted">Some provider data is unavailable. Collection will retry automatically.</p>':''}`;
-  }).join('') + '<p class="small muted">Weather and marine estimates: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>, DWD and other contributing models. Sea temperature is at the surface. Modelled tides and currents may differ locally. Spring/neap tendency is calculated from the moon; local tide times require marine data. Unavailable measurements are left blank.</p>';
+    if (snapshot.provider === 'Angler observation') return `<section class="saved-observation"><h4>Your saved observations</h4>${measurementCards(p,snapshot.units)}${p.tidal_stage ? `<p>${esc(p.tidal_stage)}</p>` : ''}</section>`;
+    return `<p class="small muted">${esc(snapshot.provider)}${snapshot.sample_at ? ' · '+esc(dateLabel(snapshot.sample_at))+' '+esc(timeLabel(snapshot.sample_at)):''}</p>${visuals}${fish}<details class="condition-measurements"><summary>Explore all measurements <span class="disclosure-hint">Tap to open / close</span></summary>${measurementCards(p,snapshot.units)}${missing ? `<dl class="detail-grid">${missing}</dl>` : ''}</details>${p.status==='partial'?'<p class="small muted">Some provider data is unavailable. Collection will retry automatically.</p>':''}`;
+  }).join('') + '<p class="small muted condition-source">Model estimates for this catch, not live readings. Sea temperature is at the surface; currents and tides may differ locally. <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo &amp; contributing models ↗</a></p>';
+}
+function compassPoint(degrees) {
+  return ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'][Math.round(((degrees%360)+360)%360/22.5)%16];
 }
 function historyContextHTML(context) {
-  if (!context?.features?.windows) return '';
-  const number=value=>typeof value==='number'&&Number.isFinite(value)?esc(Math.round(value*10)/10):'—';
-  const rows=[3,6,12,24,48,72].map(hours=>{
+  if (!context?.features?.windows) return '<section class="condition-history"><h4>Previous 72 hours</h4><p class="muted">History is not available yet. Use Update weather below to check for saved history.</p></section>';
+  const number=value=>Number.isFinite(value)?esc(Math.round(value*10)/10):'—';
+  const periods=[3,6,12,24,48,72];
+  const panels=periods.map(hours=>{
     const w=context.features.windows[hours]||{};
-    return `<tr><th>${hours} h</th><td>${number(w.wind_speed_10m?.mean)}</td><td>${number(w.precipitation?.total_mm)}${w.precipitation?.total_is_partial?'*':''}</td><td>${number(w.pressure_msl?.change)}</td><td>${number(w.sea_surface_temperature?.change)}</td></tr>`;
+    const metric=(label,value,unit,symbol,note)=>`<div class="history-metric"><span class="history-symbol" aria-hidden="true">${symbol}</span><span>${label}</span><strong>${number(value)}<small>${Number.isFinite(value)?' '+unit:''}</small></strong><small>${note}</small></div>`;
+    const change=value=>!Number.isFinite(value)?'No change estimate':value>0?'↑ Rising':value<0?'↓ Falling':'→ Steady';
+    const direction=Number.isFinite(w.wind_direction_10m?.mean_degrees) ? ` · ${compassPoint(w.wind_direction_10m.mean_degrees)}` : '';
+    return `<div class="history-period" data-history-panel="${hours}"${hours===24?'':' hidden'}><p class="history-window-label">The ${hours} hours leading up to this catch</p><div class="history-metrics">${metric('Average wind',w.wind_speed_10m?.mean,'km/h','≋','Modelled wind'+direction)}${metric('Total rain',w.precipitation?.total_mm,'mm','☂',w.precipitation?.total_is_partial?'Partial rainfall coverage *':'Accumulated over this window')}${metric('Pressure change',w.pressure_msl?.change,'hPa','↕',change(w.pressure_msl?.change))}${metric('Sea temperature change',w.sea_surface_temperature?.change,'°C','≈',change(w.sea_surface_temperature?.change))}</div></div>`;
   }).join('');
-  return `<details class="condition-measurements"><summary>Previous 72 hours</summary><p class="small muted">Before this catch · provider model/reanalysis data. Missing values are —; * marks partial rainfall coverage. Marine hourly outputs may be interpolated from coarser data.</p><div style="overflow-x:auto"><table><thead><tr><th>Window</th><th>Mean wind km/h</th><th>Rain mm</th><th>Pressure change hPa</th><th>Sea temperature change °C</th></tr></thead><tbody>${rows}</tbody></table></div><p class="small muted">History status: ${esc(context.status)}. ${esc(context.quality?.native_resolution_warning||'')}</p><p class="small muted">Sun elevation: ${number(context.astronomy?.sun_elevation_degrees)}° · ${context.astronomy?.daylight?'Daylight':'Darkness'} · ${esc(context.astronomy?.season||'')}</p></details>`;
+  const rows=periods.map(h=>{const w=context.features.windows[h]||{};return `<tr><th>${h} h</th><td>${number(w.wind_speed_10m?.mean)}</td><td>${number(w.precipitation?.total_mm)}${w.precipitation?.total_is_partial?'*':''}</td><td>${number(w.pressure_msl?.change)}</td><td>${number(w.sea_surface_temperature?.change)}</td></tr>`;}).join('');
+  return `<section class="condition-history"><span class="eyebrow">BEFORE THE BITE</span><h4>Previous 72 hours</h4><p class="small muted">Choose a period to see what changed before this catch.</p><div class="history-periods" role="group" aria-label="Hours before catch">${periods.map(h=>`<button type="button" data-history-hours="${h}" aria-pressed="${h===24}">${h}h</button>`).join('')}</div><div class="history-results" aria-live="polite">${panels}</div><p class="small muted">— means unavailable, not zero. These are window summaries, not an hourly track. Marine values may be interpolated from coarser models.</p><details class="history-table"><summary>Compare all periods</summary><div class="history-table-scroll"><table><thead><tr><th>Before catch</th><th>Wind km/h</th><th>Rain mm</th><th>Pressure Δ hPa</th><th>Sea temp Δ °C</th></tr></thead><tbody>${rows}</tbody></table></div></details>${context.status==='partial'?'<p class="small muted">Some historical measurements are missing.</p>':''}</section>`;
 }
 function addConditionActions(c, generation) {
   const container = $('conditions');
-  container.insertAdjacentHTML('beforeend','<div class="condition-actions"><button id="collect-conditions" class="quiet">Collect conditions</button><button id="record-observations" class="quiet">Record observations</button></div><p id="condition-status" role="status" class="small muted"></p>');
+  container.insertAdjacentHTML('beforeend','<div id="condition-history-slot"><p class="small muted">Checking previous 72 hours…</p></div><div class="condition-actions"><button type="button" id="collect-conditions" class="condition-action"><span aria-hidden="true">↻</span><span><strong>Update weather</strong><small>Fetch estimates for this catch’s time and place</small></span></button><button type="button" id="record-observations" class="condition-action" aria-expanded="false" aria-controls="observation-slot"><span aria-hidden="true">◉</span><span><strong>Add your observations</strong><small>Clarity, measured temperature, current and tide</small></span></button></div><p id="condition-status" role="status" class="small muted"></p><div id="observation-slot"></div>');
   $('collect-conditions').onclick = async () => {
     const button=$('collect-conditions');button.disabled=true;
-    $('condition-status').textContent='Collecting weather for this catch…';
+    button.setAttribute('aria-busy','true');
+    $('condition-status').textContent='Checking weather and 72-hour history for this catch…';
     try {
       const {data,error}=await client.functions.invoke('fishing-conditions',{body:{catch_archive_id:c.archive_id}});
-      if(error || !data?.stored) throw Error('Collection unavailable');
-      if(generation===conditionsGeneration && session && $('details').open) await showDetail(c);
-    } catch { if(generation===conditionsGeneration && $('condition-status')) { $('condition-status').textContent='Could not collect conditions. Automatic collection will retry.'; button.disabled=false; } }
+      if(error || !data?.stored) throw error || Error('Collection unavailable');
+      if(generation===conditionsGeneration && session && $('details').open) {
+        const scroll=$('details').scrollTop;
+        await showDetail(c);
+        if(generation+1===conditionsGeneration && $('condition-status')) {
+          $('condition-status').textContent=data.cached?'Saved conditions are up to date. No new measurements were added.':'Weather and history updated for this catch.';
+          $('details').scrollTop=scroll;
+        }
+      }
+    } catch (error) { if(generation===conditionsGeneration && $('condition-status')) {
+      const status=error?.context?.status;
+      $('condition-status').textContent=status===401?'Your sign-in has expired. Sign in again to update weather.':!navigator.onLine?'You are offline. Reconnect and try Update weather again.':'Weather could not be updated. Your saved conditions are still available; try again shortly.';
+    } } finally { if(button.isConnected){button.disabled=false;button.removeAttribute('aria-busy');} }
   };
   $('record-observations').onclick = () => observationForm(c,generation);
 }
 function observationForm(c,generation) {
-  if($('observation-form')) return;
-  $('conditions').insertAdjacentHTML('beforeend',`<form id="observation-form" class="observation-form"><label>Water clarity<select name="water_clarity"><option value="">Not observed</option><option>Clear</option><option>Slightly cloudy</option><option>Murky</option></select></label><label>Measured water temperature (°C)<input name="water_temperature" type="number" min="-3" max="45" step="0.1"></label><label>Observed current<select name="current_strength"><option value="">Not observed</option><option>Still</option><option>Weak</option><option>Moderate</option><option>Strong</option></select></label><label>Observed tide<select name="tidal_stage"><option value="">Not observed</option><option>Incoming / rising</option><option>Outgoing / falling</option><option>High water</option><option>Low water</option><option>Slack water</option></select></label><label>Notes<textarea name="notes" maxlength="1000" rows="3"></textarea></label><button type="submit" class="primary">Save observations</button><p class="small muted">Record observations from the catch time. These are stored separately from provider estimates.</p></form>`);
+  const slot=$('observation-slot');
+  if($('observation-form')) {
+    slot.hidden=!slot.hidden;
+    $('record-observations').setAttribute('aria-expanded',String(!slot.hidden));
+    if(!slot.hidden)slot.scrollIntoView({block:'nearest'});
+    return;
+  }
+  slot.hidden=false;
+  $('record-observations').setAttribute('aria-expanded','true');
+  slot.innerHTML=`<form id="observation-form" class="observation-form"><h4>What did you see at this catch?</h4><p class="small muted">Add only what you observed then. These are saved separately from model estimates.</p><fieldset class="clarity-options"><legend>Water clarity</legend>${[['','Not observed'],['Clear','Clear'],['Slightly cloudy','Slightly cloudy'],['Murky','Murky']].map(([value,label],i)=>`<label><input type="radio" name="water_clarity" value="${value}"${i===0?' checked':''}><span class="clarity-choice clarity-${i}"><i aria-hidden="true"></i>${label}</span></label>`).join('')}</fieldset><label>Measured water temperature (°C)<input name="water_temperature" type="number" min="-3" max="45" step="0.1" placeholder="Only if measured"></label><label>Observed current<select name="current_strength"><option value="">Not observed</option><option>Still</option><option>Weak</option><option>Moderate</option><option>Strong</option></select></label><label>Observed tide<select name="tidal_stage"><option value="">Not observed</option><option>Incoming / rising</option><option>Outgoing / falling</option><option>High water</option><option>Low water</option><option>Slack water</option></select></label><label>Notes<textarea name="notes" maxlength="1000" rows="3"></textarea></label><p id="observation-status" role="status" class="small muted"></p><div class="observation-buttons"><button type="submit" class="primary">Save observations</button><button type="button" id="cancel-observations" class="quiet">Close</button></div></form>`;
+  $('cancel-observations').onclick=()=>{slot.hidden=true;$('record-observations').setAttribute('aria-expanded','false');$('record-observations').focus();};
+  slot.scrollIntoView({block:'nearest'});
+  $('observation-form').querySelector('input').focus({preventScroll:true});
   $('observation-form').onsubmit = async event => {
-    event.preventDefault();const form=event.currentTarget,button=form.querySelector('button');button.disabled=true;
+    event.preventDefault();const form=event.currentTarget,button=form.querySelector('[type="submit"]');
+    if(button.disabled)return;
+    if(!form.reportValidity())return;
+    button.disabled=true;
     const payload={};for(const [key,value] of new FormData(form)) if(value.toString().trim()) payload[key]=key==='water_temperature'?Number(value):value.toString().trim();
-    if(!Object.keys(payload).length){$('condition-status').textContent='Enter at least one observation.';button.disabled=false;return;}
+    if(!Object.keys(payload).length){$('observation-status').textContent='Choose or enter at least one observation.';button.disabled=false;return;}
+    $('observation-status').textContent='Saving your observations…';
     try {
       const {error}=await client.from('fishing_condition_snapshots').insert({catch_archive_id:c.archive_id,provider:'Angler observation',sample_at:c.caught_at,units:{water_temperature:'°C'},raw_payload:payload});
       if(error)throw error;
-      if(generation===conditionsGeneration && session && $('details').open)await showDetail(c);
-    }catch{if(generation===conditionsGeneration){$('condition-status').textContent='Observations could not be saved. Try again.';button.disabled=false;}}
+      if(generation===conditionsGeneration && session && $('details').open) {
+        const scroll=$('details').scrollTop;
+        await showDetail(c);
+        if(generation+1===conditionsGeneration && $('condition-status')){
+          $('condition-status').textContent='Your observations were saved.';
+          $('details').scrollTop=scroll;
+        }
+      }
+    }catch{if(generation===conditionsGeneration && $('observation-status')){$('observation-status').textContent='Observations could not be saved. Your entries are kept here; try again.';button.disabled=false;}}
   };
 }
 async function showDayConditions(rows) {
@@ -1306,13 +1359,16 @@ async function showDetail(c) {
     addConditionActions(c, generation);
     try {
       const history=await client.from('fishing_environment_features').select('features,astronomy,quality,status').eq('catch_archive_id',c.archive_id).eq('feature_version','fishing-history-v2').limit(1);
-      if(generation===conditionsGeneration && session && $('details').open && !history.error && history.data?.[0]) $('conditions').insertAdjacentHTML('beforeend',historyContextHTML(history.data[0]));
-    } catch { /* Saved catch conditions remain usable if historical enrichment is unavailable. */ }
+      if(generation===conditionsGeneration && session && $('details').open) {
+        $('condition-history-slot').innerHTML=history.error?'<p class="muted">History could not be loaded. Try Update weather again.</p>':historyContextHTML(history.data?.[0]);
+      }
+    } catch { if(generation===conditionsGeneration && $('condition-history-slot')) $('condition-history-slot').textContent='History could not be loaded. Try Update weather again.'; }
   } catch {
     if (generation === conditionsGeneration && $('conditions')) {
       $('conditions').innerHTML =
         '<h3>Conditions</h3><p class="muted">Conditions could not be loaded. Your catch is still saved.</p>';
       addConditionActions(c, generation);
+      $('condition-history-slot').innerHTML=historyContextHTML(null);
     }
   }
 }
@@ -1343,7 +1399,7 @@ function route() {
   }
 }
 updateModeControls();
-document.querySelectorAll('[data-fishing-mode]').forEach(button => {
+document.querySelectorAll('button[data-fishing-mode]').forEach(button => {
   button.addEventListener('click', () => setFishingMode(button.dataset.fishingMode));
 });
 for (const id of ['species', 'from', 'to', 'colour']) {
@@ -1360,12 +1416,20 @@ $('chart-vintage').addEventListener('change', applyChartStyle);
 $('fit').onclick = fitMap;
 $('refresh').onclick = refreshJournal;
 document.addEventListener('click', event => {
+  const period=event.target.closest('[data-history-hours]');
+  if(period){
+    const section=period.closest('.condition-history');
+    section.querySelectorAll('[data-history-hours]').forEach(button=>button.setAttribute('aria-pressed',String(button===period)));
+    section.querySelectorAll('[data-history-panel]').forEach(panel=>panel.hidden=panel.dataset.historyPanel!==period.dataset.historyHours);
+    return;
+  }
   const button = event.target.closest('[data-profile]');
   if (button) showSpeciesProfile(button.dataset.profile);
 });
 $('close-detail').onclick = () => $('details').close();
 $('details').addEventListener('close', () => {
-  conditionsGeneration++;
+  // A queued close event from an earlier view must not invalidate a reopened catch.
+  if (!$('details').open) conditionsGeneration++;
 });
 window.addEventListener('hashchange', () => {
   route();
