@@ -1244,3 +1244,81 @@ body[data-fishing-mode=shore][data-page=totals] .heading::before { background-im
 body[data-fishing-mode=shore][data-page=days] .heading::before { background-image: url('fish/mobile/blacktail.jpg'); }
 
 .pressure-card { grid-column:1/-1; border:1px solid var(--line); border-radius:12px; padding:18px; background:#f5f3e9; min-width:0; display:flex; flex-direction:column; align-items:stretch; text-align:left; }
+
+/* Trip records read as individual field-log cards on every screen size. */
+#trips-page .table-wrap { background:transparent; border:0; box-shadow:none; overflow:visible; }
+#trips-page table { width:100%; table-layout:fixed; border-collapse:separate; border-spacing:0 16px; }
+#trip-rows tr { display:grid; grid-template-columns:minmax(0,1fr); padding:0; border:0; background:transparent; }
+#trip-rows td[colspan] { display:block; padding:0; border:0; white-space:normal; }
+.trip-card { padding:22px; border:1px solid var(--line); border-radius:14px; background:#fffefb; text-align:left; font-weight:400; }
+.trip-card header { display:flex; justify-content:space-between; flex-wrap:wrap; align-items:center; gap:12px; margin-bottom:20px; }
+.trip-card h3 { margin:0 0 5px; font-size:23px; }
+.trip-card header p { margin:0; }
+.trip-card header > strong { font-size:22px; }
+.trip-card header > strong span { display:block; font-weight:400; text-align:right; }
+.trip-timeline { display:flex; width:100%; height:24px; overflow:hidden; border-radius:6px; background:#e3dfd4; }
+.trip-band { display:block; flex-shrink:0; height:100%; }
+.trip-visuals .fishing { background:#317c68; }
+.trip-visuals .travelling { background:#497da6; }
+.trip-visuals .unclassified { background:repeating-linear-gradient(135deg,#d8d0bc 0 5px,#eee8da 5px 9px); }
+.trip-time-axis { display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin:6px 0 18px; }
+.trip-time-totals { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:0 0 22px; }
+.trip-time-totals dt { font-size:13px; color:var(--muted); }
+.trip-time-totals i { display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:6px; }
+.trip-time-totals dd { margin:6px 0 0; font-size:20px; font-weight:600; }
+.trip-time-totals small { display:block; color:var(--muted); font-size:12px; font-weight:400; }
+.trip-speed { margin:0 0 18px; }
+.trip-speed figcaption { font-size:14px; }
+.trip-speed svg { width:100%; display:block; margin-top:8px; overflow:visible; }
+.trip-speed svg text { font:12px system-ui,sans-serif; fill:#657064; }
+.speed-guide { stroke:#ddd9ce; stroke-dasharray:4 4; }
+.speed-range { stroke:#497da6; stroke-width:3; stroke-linecap:round; }
+.speed-average { fill:#245c48; }
+.trip-speed p { margin:4px 0 0; }
+.trip-diagnostics { border-top:1px solid var(--line); padding-top:12px; }
+.trip-diagnostics summary { cursor:pointer; font-weight:600; padding:4px 0; }
+.trip-reasons { margin:0; }
+.trip-reasons > div { display:flex; justify-content:space-between; gap:16px; padding:7px 0; border-bottom:1px solid var(--line); font-size:14px; }
+.trip-reasons dd { margin:0; flex-shrink:0; }
+.trip-activity-log { padding:0; list-style:none; margin:18px 0; }
+.trip-activity-log li { display:grid; grid-template-columns:110px 1fr 2fr; gap:10px; padding:9px 0; border-bottom:1px solid var(--line); font-size:13px; }
+.trip-outcomes { display:flex; flex-wrap:wrap; gap:10px 22px; margin-top:18px; padding-top:14px; border-top:1px solid var(--line); font-size:13px; color:var(--muted); }
+.trip-outcomes strong { color:var(--ink); }
+@media(max-width:600px) {
+  .trip-card { padding:15px; }
+  .trip-card h3 { font-size:21px; }
+  .trip-time-totals { gap:8px; }
+  .trip-time-totals dt { font-size:11px; }
+  .trip-time-totals dd { font-size:17px; }
+  .trip-activity-log li { grid-template-columns:1fr 1fr; }
+  .trip-activity-log li > span:last-child { grid-column:1/-1; color:var(--muted); }
+}
+
+#trip-rows tr { margin-bottom:18px; }
+.trip-chart-title { margin:0 0 10px; font-weight:600; }
+.trip-timeline { height:40px; }
+.trip-timeline .trip-band { min-width:0; min-height:40px; padding:0; margin:0; border:0; border-radius:0; cursor:pointer; }
+.trip-band:hover,.trip-band[aria-pressed=true] { box-shadow:inset 0 0 0 3px #203b35; }
+.trip-band:focus-visible { outline:3px solid #d89922; outline-offset:-3px; }
+.trip-selection { min-height:2.5em; margin:9px 0 0; font-size:13px; color:var(--muted); }
+.trip-recording-health { background:#f3f1e8; border:1px solid var(--line); border-radius:10px; padding:16px; margin-bottom:22px; }
+.trip-recording-health > div:first-child { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; margin-bottom:10px; }
+.trip-coverage-track { height:8px; background:#ddd5c2; border-radius:8px; overflow:hidden; }
+.trip-coverage-track > span { display:block; height:100%; background:#317c68; }
+.trip-reason-chart { display:grid; gap:10px; }
+.trip-reason-chart > div { display:grid; grid-template-columns:minmax(100px,1fr) minmax(40px,2fr) auto; align-items:center; gap:12px; font-size:12px; }
+.trip-reason-track { height:10px; background:#e3dfd3; border-radius:4px; overflow:hidden; }
+.trip-reason-track i { display:block; height:100%; background:#a48a54; border-radius:4px; }
+.trip-speed { padding:16px; border:1px solid var(--line); border-radius:10px; background:#fafbf8; }
+.trip-speed svg { min-height:145px; }
+@media(max-width:600px) {
+ .trip-speed { padding:10px; }
+ .trip-speed svg { min-height:125px; }
+ .trip-reason-chart > div { grid-template-columns:minmax(0,1fr) auto; gap:5px 10px; }
+ .trip-reason-track { grid-column:1; grid-row:auto; }
+ .trip-reason-chart > div > strong { grid-column:2; grid-row:1/3; }
+}
+@media(max-width:600px) {
+ .trip-speed { overflow-x:auto; }
+ .trip-speed svg { min-width:560px; }
+}

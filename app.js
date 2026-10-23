@@ -457,6 +457,69 @@ function tripMetrics(t) {
     averageDistance: validPairs ? distance / validPairs : null,
   };
 }
+// Keep saved intervals and unknown gaps distinct; never infer fishing across a gap.
+const tripReasonLabels = {
+  gps_gap: 'GPS signal / quality gap', app_resume_gap: 'App restart / recording gap',
+  app_inactive: 'App stopped', pre_departure: 'Waiting near the start',
+  launch_return: 'Returned near the start', intermediate_speed: 'Between speed thresholds',
+  segment_capacity: 'Activity log full', legacy_trip_resume: 'Older trip resumed',
+};
+function tripIntervals(t) {
+  const start = Date.parse(t.started_at)/1000, end = Date.parse(t.ended_at)/1000;
+  let cursor = start;
+  const result = [];
+  for (const s of [...(t.raw_payload?.activity_segments || [])].sort((a,b)=>a.started_at-b.started_at)) {
+    if (!Number.isFinite(s.started_at) || !Number.isFinite(s.ended_at)) continue;
+    const a = Math.max(cursor, s.started_at), b = Math.min(end, s.ended_at);
+    if (b <= a) continue;
+    if (a > cursor) result.push({mode:'unclassified',started_at:cursor,ended_at:a,reason:'missing_interval'});
+    result.push({...s, started_at:a, ended_at:b, mode:['fishing','travelling'].includes(s.mode) ? s.mode : 'unclassified'});
+    cursor = b;
+  }
+  if (cursor < end) result.push({mode:'unclassified',started_at:cursor,ended_at:end,reason:'missing_interval'});
+  return result;
+}
+function tripVisuals(t, m) {
+  const intervals = tripIntervals(t), reasons = {};
+  const label = mode => mode === 'fishing' ? 'Fishing estimate' : mode === 'travelling' ? 'Travelling' : 'Unclassified';
+  const clock = seconds => timeLabel(new Date(seconds*1000));
+  const start = Date.parse(t.started_at)/1000;
+  const timeline = intervals.map(s => {
+    const title = `${clock(s.started_at)}–${clock(s.ended_at)} · ${label(s.mode)} · ${durationLabel(s.ended_at-s.started_at)} · ${tripReasonLabels[s.reason] || 'Recorded interval'}`;
+    if (s.mode === 'unclassified') reasons[s.reason || 'unknown'] = (reasons[s.reason || 'unknown'] || 0)+s.ended_at-s.started_at;
+    return `<button type="button" class="trip-band ${s.mode}" style="width:${m.total > 0 ? (s.ended_at-s.started_at)/m.total*100 : 0}%" title="${esc(title)}" aria-label="${esc(title)}" aria-pressed="false" data-trip-interval="${esc(title)}"></button>`;
+  }).join('');
+  const bins = (t.raw_payload?.movement?.bins || []).filter(b=>Array.isArray(b) && b.length===10 && b.every(Number.isFinite) && b[6]>0);
+  const maxSpeed = Math.max(20,...bins.map(b=>b[4]*.036));
+  const x = seconds => 38+seconds/Math.max(1,m.total)*640;
+  const y = speed => 112-speed/maxSpeed*90;
+  const params = t.raw_payload?.movement_parameters;
+  const speedChart = bins.length ? `<figure class="trip-speed"><figcaption>GPS speed <span class="muted">· five-minute ranges and averages · km/h</span></figcaption><svg viewBox="0 0 700 140" role="img" aria-label="GPS speed ranges over this trip. Blank areas have no saved speed samples.">
+    ${[0,params?.slow_kmh,params?.fast_kmh].filter(Number.isFinite).map(v=>`<path d="M38 ${y(v)}H678" class="speed-guide"/><text x="2" y="${y(v)+4}">${v}</text>`).join('')}
+    ${bins.map(b=>`<path class="speed-range" d="M${x((b[1]+b[2])/2)} ${y(b[3]*.036)}V${y(b[4]*.036)}"><title>${esc(clock(start+b[1]))}–${esc(clock(start+b[2]))}: ${(b[3]*.036).toFixed(1)}–${(b[4]*.036).toFixed(1)} km/h; ${b[6]} samples</title></path><circle class="speed-average" cx="${x((b[1]+b[2])/2)}" cy="${y(b[5]/b[6]*.036)}" r="3"/>`).join('')}
+    <text x="38" y="134">${esc(timeLabel(t.started_at))}</text><text x="678" y="134" text-anchor="end">${esc(timeLabel(t.ended_at))}</text><text x="678" y="15" text-anchor="end">Peak ${(Math.max(...bins.map(b=>b[4]*.036))).toFixed(1)} km/h</text></svg><p class="small muted">Dots show average speed; vertical lines show the range. Blank areas mean no saved samples, not zero speed.</p></figure>` : '<p class="small muted">No GPS speed history was saved for this trip.</p>';
+  const reasonList = Object.entries(reasons).sort((a,b)=>b[1]-a[1]);
+  const feedback = [];
+  if (reasons.app_resume_gap || reasons.app_inactive) feedback.push('Recording was interrupted. Keep the watch app open for the whole trip; speed settings cannot recover time while it was stopped.');
+  if (reasons.gps_gap) feedback.push('GPS gaps occurred. Outdoors, keep a clear view of the sky. If you know you are fishing, use Correct last activity on the updated watch build: your label holds for ten minutes even without GPS. Unobserved time stays unknown.');
+  if (reasons.pre_departure || reasons.launch_return) feedback.push('Time near the starting point is deliberately excluded from automatic fishing.');
+  if (m.automatic) feedback.push('Low speed is a fishing estimate: a car stop or time indoors can look similar. Use a watch activity correction when needed.');
+  return `<div class="trip-visuals"><p class="trip-chart-title">Activity through the trip <span class="small muted">· tap a section for details</span></p><div class="trip-timeline" role="group" aria-label="Activity timeline from ${esc(timeLabel(t.started_at))} to ${esc(timeLabel(t.ended_at))}; details follow below">${timeline}</div><p class="trip-selection" role="status">Select a coloured section to see its time and classification.</p><div class="trip-time-axis"><span>${esc(timeLabel(t.started_at))}</span><span>${esc(timeLabel(t.ended_at))}</span></div>
+    <dl class="trip-time-totals">${[['fishing','Fishing estimate',m.fishing],['travelling','Travelling',m.travelling],['unclassified','Unclassified',m.unclassified]].map(([mode,name,value])=>`<div><dt><i class="${mode}"></i>${name}</dt><dd>${durationLabel(value)} <small>${m.total ? Math.round(value/m.total*100) : 0}%</small></dd></div>`).join('')}</dl>
+    <div class="trip-recording-health"><div><strong>${m.total ? Math.round((m.fishing+m.travelling)/m.total*100) : 0}% classified</strong><span class="small muted">Coverage of saved trip time · not accuracy</span></div><div class="trip-coverage-track"><span style="width:${Math.min(100,m.total ? (m.fishing+m.travelling)/m.total*100 : 0)}%"></span></div>${reasonList.length ? `<p class="small">Largest gap: <strong>${esc(tripReasonLabels[reasonList[0][0]] || 'No classification recorded')}</strong> · ${durationLabel(reasonList[0][1])}</p><div class="trip-reason-chart">${reasonList.map(([reason,seconds])=>`<div><span>${esc(tripReasonLabels[reason] || 'No classification recorded')}</span><span class="trip-reason-track"><i style="width:${seconds/Math.max(1,...reasonList.map(r=>r[1]))*100}%"></i></span><strong>${durationLabel(seconds)}</strong></div>`).join('')}</div>` : '<p class="small">No unclassified intervals recorded.</p>'}</div>
+    ${speedChart}<details class="trip-diagnostics"><summary>Recording feedback &amp; activity log</summary><p>${m.total ? Math.round((m.fishing+m.travelling)/m.total*100) : 0}% of trip time classified. This measures classification coverage, not accuracy.</p>
+    ${reasonList.length ? `<h4>Why time is unclassified</h4><dl class="trip-reasons">${reasonList.map(([reason,seconds])=>`<div><dt>${esc(tripReasonLabels[reason] || 'No classification recorded')}</dt><dd>${durationLabel(seconds)}</dd></div>`).join('')}</dl>` : ''}
+    ${feedback.map(text=>`<p class="small">${esc(text)}</p>`).join('')}
+    ${params ? `<p class="small muted">Saved settings: below ${esc(params.slow_kmh)} km/h for ${esc(params.fishing_seconds)}s → fishing estimate; above ${esc(params.fast_kmh)} km/h for ${esc(params.travel_seconds)}s → travel. Sampling every ${esc(params.sample_seconds)}s; GPS gap limit ${esc(params.gap_seconds)}s. Median smoothing also delays transitions.</p>` : ''}
+    <ol class="trip-activity-log">${intervals.map(s=>`<li><span>${esc(clock(s.started_at))}–${esc(clock(s.ended_at))}</span><strong>${label(s.mode)}</strong><span>${durationLabel(s.ended_at-s.started_at)} · ${esc(tripReasonLabels[s.reason] || (s.classification_source==='manual' ? 'Watch correction' : 'Recorded activity'))}</span></li>`).join('')}</ol></details></div>`;
+}
+$('trip-rows').addEventListener('click', event => {
+  const button=event.target.closest('[data-trip-interval]');
+  if (!button) return;
+  const panel=button.closest('.trip-visuals');
+  panel.querySelectorAll('[data-trip-interval]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
+  panel.querySelector('.trip-selection').textContent=button.dataset.tripInterval;
+});
 function renderTrips() {
   const rows = trips.filter(matchesFishingMode).map((t) => ({ trip: t, metrics: tripMetrics(t) })).filter(
     ({ trip, metrics }) => {
@@ -482,7 +545,7 @@ function renderTrips() {
     ['Total trip time', durationLabel(totals.total)],
     ['Fishing effort', durationLabel(totals.fishing)],
     ['Fishing sessions', totals.sessions],
-    ['Unknown time', durationLabel(totals.unknown)],
+    ['Unclassified time', durationLabel(totals.unknown)],
     ['Travelling time', durationLabel(totals.travelling)],
     ['Catches', totals.count],
   ].map(([label, value]) =>
@@ -490,26 +553,8 @@ function renderTrips() {
   ).join('');
   $('trip-rows').innerHTML =
     rows.map(({ trip: t, metrics: m }) =>
-      `<tr><td data-label="Trip started">${
-        esc(dateLabel(t.started_at))
-      }<br><span class="small muted">${
-        esc(timeLabel(t.started_at))
-      }</span><br><span class="small muted">${esc(fishingModeLabels[recordFishingMode(t)] || recordFishingMode(t))}</span></td><td data-label="Total time">${
-        durationLabel(m.total)
-      }</td><td data-label="Fishing">${
-        durationLabel(m.fishing)
-      }<br><span class="small muted">${m.automatic ? 'Estimated from GPS' : 'Recorded activity'} · ${m.sessions} sessions</span></td><td data-label="Travelling">${
-        durationLabel(m.travelling)
-      }</td><td data-label="Unclassified">${
-        durationLabel(m.unclassified)
-      }</td><td data-label="Catches">${m.count}</td><td data-label="Fishing catches/hour">${
-        m.rate === null ? '—' : m.rate.toFixed(1)
-      }${m.anglerRate===null ? '' : '<br><span class="small muted">'+m.anglerRate.toFixed(1)+'/angler-hour</span>'}${m.lineRate===null ? '' : '<br><span class="small muted">'+m.lineRate.toFixed(1)+'/line-hour</span>'}</td><td data-label="Between catches">${
-        m.distance === null
-          ? '—'
-          : m.distance.toFixed(2) + ' km total<br><span class="small muted">' +
-            m.averageDistance.toFixed(2) + ' km average</span>'
-      }</td></tr>`
+      `<tr><td colspan="8"><article class="trip-card"><header><div><h3>${esc(dateLabel(t.started_at))}</h3><p class="small muted">${esc(fishingModeLabels[recordFishingMode(t)] || recordFishingMode(t))} · ${esc(timeLabel(t.started_at))}–${esc(timeLabel(t.ended_at))}</p></div><strong>${durationLabel(m.total)}<span class="small muted"> total trip</span></strong></header>
+      ${tripVisuals(t,m)}<div class="trip-outcomes"><span><strong>${m.count}</strong> catches</span><span><strong>${m.sessions}</strong> fishing sessions</span><span><strong>${m.rate===null ? '—' : m.rate.toFixed(1)}</strong> catches / fishing hour</span>${m.anglerRate===null ? '' : `<span>${m.anglerRate.toFixed(1)} / angler-hour</span>`}${m.lineRate===null ? '' : `<span>${m.lineRate.toFixed(1)} / line-hour</span>`}<span>${m.distance===null ? 'No catch distance' : m.distance.toFixed(2)+' km between catches'}</span></div></article></td></tr>`
     ).join('') ||
     '<tr><td colspan="8">No completed trips match these filters.</td></tr>';
 }
