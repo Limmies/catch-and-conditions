@@ -1322,3 +1322,34 @@ body[data-fishing-mode=shore][data-page=days] .heading::before { background-imag
  .trip-speed { overflow-x:auto; }
  .trip-speed svg { min-width:560px; }
 }
+
+.spot-productivity { margin:24px 0; padding:20px; border:1px solid var(--line); border-radius:14px; background:#f5f3e9; }
+.spot-productivity h3,.session-productivity h4 { margin:0; }
+.spot-productivity .section-heading { margin:0 0 10px; }
+.spot-productivity-list,.session-cards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+.spot-productivity-card { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:12px; padding:16px; background:#fffefb; border:1px solid var(--line); border-radius:10px; min-width:0; }
+.spot-productivity-card > div:first-child > span,.session-location > span { display:block; margin-top:5px; }
+.spot-productivity-rate { text-align:right; }
+.spot-productivity-rate strong { display:block; font-size:27px; color:#25614d; }
+.spot-productivity-rate > span { font-size:11px; color:var(--muted); }
+.spot-productivity-card > .session-rate-track,.spot-productivity-card > .session-location,.spot-productivity-card > p { grid-column:1/-1; margin:0; }
+.session-productivity { margin:22px 0; border-top:1px solid var(--line); padding-top:18px; }
+.session-section-heading { display:flex; flex-wrap:wrap; gap:8px; justify-content:space-between; align-items:center; }
+.session-productivity h4 { font-size:19px; }
+.session-card { border:1px solid var(--line); padding:15px; border-radius:10px; background:#fafbf6; min-width:0; }
+.session-card header { margin-bottom:14px; gap:8px; }
+.session-card h5 { font-size:17px; margin:0 0 5px; }
+.session-spot-label { font-size:12px; color:#255842; border:1px solid #c6d6c6; border-radius:15px; padding:4px 9px; background:#edf3e7; }
+.session-rate { display:flex; flex-wrap:wrap; align-items:baseline; gap:6px; font-size:12px; color:var(--muted); }
+.session-rate > strong { font-size:30px; color:#25614d; }
+.session-rate > b { margin-left:auto; color:var(--ink); font-weight:600; }
+.session-rate-track { height:7px; border-radius:5px; background:#e5e8dd; overflow:hidden; margin:8px 0; }
+.session-rate-track > i { display:block; height:100%; background:#50866b; border-radius:5px; }
+.session-species { min-height:1.5em; margin:9px 0; }
+.session-location { font-size:12px; overflow-wrap:anywhere; }
+.session-effort { border-top:1px solid var(--line); padding-top:10px; margin:12px 0 0; }
+@media(max-width:650px) {
+ .spot-productivity-list,.session-cards { grid-template-columns:minmax(0,1fr); }
+ .spot-productivity { padding:14px; }
+}
+.session-location a { color:#2b604b; text-underline-offset:3px; }
