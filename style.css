@@ -1353,3 +1353,298 @@ body[data-fishing-mode=shore][data-page=days] .heading::before { background-imag
  .spot-productivity { padding:14px; }
 }
 .session-location a { color:#2b604b; text-underline-offset:3px; }
+
+/* Journal workspace: compact shared controls, five destinations, progressive detail. */
+:root { --paper:#f6f7f2; --white:#fffefa; --ink:#243d32; --muted:#657369; --line:#dce2d8; }
+body { margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; font-size:15px; line-height:1.5; background:var(--paper); }
+body::before,.heading::before { display:none; }
+button,input,select,textarea { font-family:inherit; }
+input,select,textarea { font-size:16px; }
+h1,h2,h3,h4,h5 { color:var(--ink); line-height:1.25; }
+h1,h2,h3 { font-family:var(--display-font); font-variant:normal; letter-spacing:-.02em; }
+p { margin:10px 0; }
+.small { font-size:13px; }
+.eyebrow,.control-label { font-family:inherit; font-size:10px; font-weight:650; letter-spacing:.13em; text-transform:uppercase; }
+.masthead { padding:12px max(24px,calc((100vw - 1160px)/2)); background:#fffefaf2; min-height:66px; }
+.brand { gap:10px; }
+.brand > span:last-child { font-size:17px; font-variant:normal; letter-spacing:0; }
+.brand br { display:none; }
+.brand b::before { content:' '; }
+.monogram { font-size:18px; padding:7px; border-radius:7px; border-color:#c3cfc1; }
+.masthead .quiet { font-size:12px; border-color:transparent; min-height:38px; }
+main { max-width:1200px; padding:24px 24px 40px; }
+.heading { min-height:0; margin:0 0 20px; align-items:center; }
+.heading h1 { font-size:34px; margin:4px 0 4px; }
+.page-caption { font-family:inherit; font-style:normal; font-size:14px; margin:0; max-width:none; }
+.heading .quiet { flex-shrink:0; min-height:40px; font-size:13px; }
+.quiet,.primary { font-family:inherit; font-weight:550; letter-spacing:0; border-radius:8px; }
+.text-action { display:inline-flex; align-items:center; gap:5px; padding:8px 0; min-height:38px; border:0; background:none; color:var(--green); font:inherit; font-size:13px; text-decoration:none; font-weight:600; cursor:pointer; }
+.text-action:hover { text-decoration:underline; }
+.tabs { display:flex; gap:5px; border:0; padding:5px; border-radius:10px; background:#e9ede4; margin:0 0 18px; }
+.tabs a { display:flex; flex:1; align-items:center; justify-content:center; gap:8px; min-height:42px; padding:8px 12px; border:0; border-radius:7px; font:inherit; font-size:14px; font-weight:550; color:var(--muted); text-decoration:none; }
+.tabs a[aria-current=page] { background:var(--white); color:#285b43; box-shadow:0 1px 5px #25432b12; }
+.nav-icon { display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; flex-shrink:0; font-size:20px; line-height:1; }
+.nav-icon svg { display:block; width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
+.journal-controls { display:grid; grid-template-columns:minmax(250px,.85fr) minmax(0,1.4fr); gap:14px; align-items:start; }
+.fishing-style-panel { margin:0; display:grid; grid-template-columns:auto 1fr; align-items:center; gap:5px 12px; }
+.control-label { color:var(--muted); }
+.fishing-modes { display:flex; flex-wrap:nowrap; padding:3px; border-radius:8px; gap:2px; background:#eef0e8; }
+.fishing-modes button { flex:1; white-space:nowrap; min-height:36px; padding:6px 10px; font-size:12px; border-radius:6px; }
+.fishing-style-panel p { grid-column:2; font-size:11px; margin:0; }
+.filter-panel { margin:0; padding:11px 14px; background:var(--white); border-radius:9px; box-shadow:none; min-width:0; }
+.filter-panel summary { display:flex; align-items:center; flex-wrap:wrap; gap:4px 10px; min-height:24px; padding:0; cursor:pointer; }
+.filter-panel summary .filter-label { flex:none; font-size:13px; font-style:normal; font-weight:600; }
+.filter-panel summary #filter-summary { font-size:11px; font-style:normal; line-height:1.4; overflow-wrap:anywhere; }
+.filter-panel[open] .filters { margin-top:15px; }
+.filters { grid-template-columns:1.35fr 1fr 1fr auto; gap:10px; }
+.filters label { font-size:12px; }
+.filters .quiet { font-size:12px; }
+.filter-panel .text-action { margin-top:8px; }
+#status:empty,#trip-status:empty { display:none; }
+#status { margin:12px 0 0; font-size:13px; }
+.overview { margin:16px 0 20px; background:transparent; border:0; border-bottom:1px solid var(--line); border-radius:0; box-shadow:none; }
+.overview > div { display:flex; align-items:baseline; gap:9px; padding:9px 18px 12px 0; border:0; }
+.overview span { font-size:12px; font-style:normal; }
+.overview strong { font-family:inherit; font-size:22px; font-weight:650; letter-spacing:-.04em; order:-1; }
+.section-heading { margin:0 0 14px; gap:12px; align-items:center; }
+.section-heading h2 { font-size:24px; font-variant:normal; margin:0; }
+.section-heading > span { font-size:12px; margin:0; }
+.page-intro { font-size:14px; color:var(--muted); max-width:760px; margin:-4px 0 18px; }
+.map-toolbar { padding:0; gap:14px; margin-bottom:12px; }
+.map-toolbar label { font-size:12px; gap:7px; }
+.map-toolbar select { min-height:38px; padding:5px 8px; }
+.map-toolbar .quiet { font-size:12px; min-height:38px; }
+#map { height:52vh; min-height:330px; max-height:650px; border-radius:12px; border:1px solid var(--line); }
+.legend { font-size:12px; gap:8px 18px; margin:12px 0; }
+#totals-page .table-wrap { box-shadow:none; border-radius:12px; }
+#totals-page th { font-family:inherit; font-variant:normal; font-size:11px; letter-spacing:.04em; padding:12px 18px; background:#f0f3eb; }
+#totals-page td { padding:10px 18px; }
+#totals-page .species-cell { font-family:inherit; font-size:15px; }
+#totals-page .species-cell .fish-thumb { width:76px; height:48px; }
+#totals-page td strong { font-family:inherit; font-size:22px; font-weight:600; }
+.species-scientific { font-family:var(--display-font); font-size:12px; margin-top:2px; }
+#totals-page .species-bar-row td { padding:0 18px 12px; }
+.day-card { margin:0 0 14px; padding:18px; box-shadow:none; border-radius:12px; }
+.day-header h3 { font-size:22px; }
+.day-total { font-size:12px; font-weight:600; padding:4px 10px; }
+.day-summary { font-style:normal; margin:10px 0; gap:7px; }
+.day-summary .fish-name-link { font-size:12px; padding:5px 9px; border-radius:6px; background:#f0f3eb; text-decoration:none; }
+.day-actions { margin:10px 0 14px; gap:8px; }
+.day-actions .quiet { min-height:38px; font-size:12px; }
+.day-catch-list { border-top:1px solid var(--line); }
+.day-catch-list summary { display:flex; justify-content:space-between; align-items:center; gap:12px; min-height:44px; cursor:pointer; font-size:13px; font-weight:600; }
+.day-catch-list summary > span:last-child { font-size:11px; color:var(--muted); font-weight:400; }
+.day-catch-list[open] summary { margin-bottom:4px; }
+.catch-row { min-height:60px; }
+.catch-row time { color:var(--muted); font-size:12px; flex-shrink:0; }
+.trip-summary { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:0; margin:0 0 20px; border:1px solid var(--line); border-radius:10px; background:var(--white); overflow:hidden; }
+.trip-summary > div { border:0; border-right:1px solid var(--line); border-radius:0; background:transparent; padding:13px 12px; box-shadow:none; min-width:0; }
+.trip-summary > div:last-child { border:0; }
+.trip-summary span { font-size:10px; line-height:1.3; display:block; margin-bottom:6px; }
+.trip-summary strong { font-size:20px; font-family:inherit; font-weight:600; letter-spacing:-.03em; overflow-wrap:anywhere; }
+#trips-page table { border-spacing:0; }
+#trip-rows tr { margin-bottom:14px; }
+.trip-card { padding:20px; border-radius:12px; }
+.trip-card > header { margin-bottom:18px; }
+.trip-card h3 { font-size:24px; }
+.trip-card > header > strong { font-family:inherit; font-size:18px; font-weight:600; }
+.trip-card > header .small { font-size:12px; }
+.trip-at-a-glance { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); margin:0; gap:10px; }
+.trip-at-a-glance > div { padding:12px; border-radius:8px; background:#f2f5ed; min-width:0; }
+.trip-at-a-glance dt { font-size:11px; color:var(--muted); }
+.trip-at-a-glance dd { margin:4px 0 0; font-size:20px; font-weight:600; letter-spacing:-.03em; }
+.trip-card > .trip-outcomes { border:0; padding:0; margin:12px 0 18px; font-size:11px; gap:6px 16px; }
+.trip-disclosure { border-top:1px solid var(--line); }
+.trip-disclosure > summary { display:flex; align-items:center; gap:10px; min-height:48px; padding:8px 0; cursor:pointer; font-size:13px; font-weight:600; }
+.trip-disclosure > summary::after { content:'+'; margin-left:auto; font-size:20px; font-weight:400; color:var(--muted); }
+.trip-disclosure[open] > summary::after { content:'−'; }
+.disclosure-count { font-size:11px; font-weight:400; color:var(--muted); }
+.trip-disclosure .session-productivity { border:0; padding:0; margin:4px 0 18px; }
+.trip-disclosure .session-section-heading h4 { font-family:inherit; font-size:13px; }
+.trip-disclosure .session-section-heading > span { font-size:11px; }
+.trip-disclosure .session-productivity > p { font-size:12px; margin:7px 0 12px; }
+.trip-disclosure > .trip-visuals { padding-top:10px; padding-bottom:18px; }
+.session-card { background:#f6f8f1; border-radius:9px; padding:14px; }
+.session-card h5 { font-family:inherit; font-size:14px; }
+.session-card header { margin-bottom:10px; }
+.session-rate > strong { font-size:26px; }
+.spot-productivity { background:none; border:0; padding:0; margin:0; }
+.spot-productivity > .section-heading { padding:12px 0; border-top:1px solid var(--line); margin:0; }
+.spot-productivity > .section-heading h3 { font-family:inherit; font-size:14px; font-weight:600; letter-spacing:0; }
+.spot-productivity-list { margin-top:16px; grid-template-columns:repeat(3,minmax(0,1fr)); }
+.spot-productivity-card { padding:18px; border-radius:12px; }
+.spot-method { font-size:12px; color:var(--muted); }
+.spot-method summary { cursor:pointer; padding:5px 0; }
+.spot-productivity-card > div:first-child > strong { font-family:var(--display-font); font-size:23px; font-weight:400; }
+.spot-productivity-rate strong { font-size:28px; }
+.spot-productivity-card .small { font-size:11px; }
+footer { margin-top:22px; padding-top:16px; border-top:1px solid var(--line); font-size:11px; font-style:normal; }
+.login-panel { max-width:420px; margin:8vh auto; background:var(--white); border:1px solid var(--line); border-radius:16px; padding:28px; }
+.login-panel::before { display:none; }
+.login-panel h1 { font-size:42px; font-variant:normal; }
+.login-panel > p:first-of-type { font-style:normal; font-size:14px; }
+.login-panel form { margin:24px 0 10px; gap:15px; }
+dialog { width:min(760px,calc(100% - 32px)); padding:0 24px 24px; max-height:90dvh; border-radius:16px; background:var(--white); }
+.dialog-heading { position:sticky; top:0; z-index:3; background:var(--white); padding:14px 0; margin:0 0 16px; border-bottom:1px solid var(--line); }
+.dialog-heading .eyebrow { font-family:inherit; font-size:11px; }
+.dialog-heading button { min-height:36px; font-size:12px; }
+#detail-body > h2 { font-size:29px; font-variant:normal; }
+#detail-body > p.muted { font-style:normal; font-size:13px; }
+#details[data-view=catch] .fish-portrait { float:right; width:140px; height:100px; margin:0 0 10px 12px; object-fit:contain; }
+.catch-primary { clear:both; margin-top:18px; border-top:1px solid var(--line); padding-top:15px; }
+.detail-grid dt { font-size:11px; }
+.detail-grid dd { font-size:14px; }
+.record-details,.history-disclosure { padding:12px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); margin:16px 0; }
+.record-details summary,.history-disclosure > summary { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; cursor:pointer; font-size:13px; font-weight:600; }
+.record-details summary::after { content:'+'; color:var(--muted); }
+.record-details[open] summary::after { content:'−'; }
+.record-details .record-id { margin-bottom:0; }
+.condition { margin-top:20px; }
+.condition > h3 { font-size:23px; font-variant:normal; }
+.condition-visuals { gap:10px; }
+.condition-actions { gap:10px; }
+.condition-action { padding:12px; min-height:64px; border-radius:9px; }
+.condition-action strong { font-size:13px; }
+.condition-action small { font-size:11px; }
+.history-disclosure .condition-history { margin-top:12px; }
+.day-observations h2 { font-size:28px; }
+.day-feel-card { margin:0; padding:15px; border-radius:10px; }
+#day-observation-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+#day-observation-fields > .day-notes-label,#day-observation-fields > p,#day-observation-fields > button { grid-column:1/-1; }
+.day-feel-heading label { font-family:inherit; font-size:16px; font-weight:600; }
+.day-feel-heading output { font-size:12px; }
+.day-feel-icon { font-size:23px; }
+.day-feel-bottom { align-items:flex-start; }
+.day-feel-bottom p { font-size:11px; }
+.day-notes-label { margin:12px 0 0; }
+@media(max-width:950px) {
+ .journal-controls { grid-template-columns:minmax(0,1fr); gap:12px; }
+ .fishing-style-panel { grid-template-columns:auto minmax(0,340px) 1fr; }
+ .fishing-style-panel p { grid-column:3; }
+ .filters { grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) auto; }
+ .spot-productivity-list { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ .trip-summary { grid-template-columns:repeat(4,minmax(0,1fr)); }
+ .trip-summary > div { border-bottom:1px solid var(--line); }
+}
+@media(max-width:600px) {
+ main { width:100%; padding:18px max(14px,env(safe-area-inset-right)) calc(92px + env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left)); }
+ .masthead { padding:10px max(14px,env(safe-area-inset-left)); min-height:56px; }
+ .brand > span:last-child { font-size:15px; }
+ .monogram { padding:6px; font-size:17px; }
+ .heading { margin:0 0 16px; gap:12px; }
+ .heading .eyebrow { display:none; }
+ .heading h1 { font-size:29px; margin:0 0 5px; }
+ .page-caption { font-size:12px; margin:0; line-height:1.4; }
+ .heading .quiet { font-size:12px; padding:7px 10px; }
+ .tabs { position:fixed; bottom:0; left:0; right:0; top:auto; z-index:1000; width:100%; display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:2px; margin:0; padding:6px 7px calc(6px + env(safe-area-inset-bottom)); background:#fffefaf5; border:0; border-top:1px solid var(--line); border-radius:0; backdrop-filter:blur(14px); }
+ .tabs a { flex-direction:column; gap:3px; padding:5px 2px; min-height:52px; font-size:10px; border-radius:7px; }
+ .tabs a[aria-current=page] { background:#e9f0e3; box-shadow:none; }
+ .journal-controls { gap:10px; }
+ .fishing-style-panel { display:grid; grid-template-columns:auto minmax(0,1fr); gap:4px 12px; }
+ .fishing-style-panel p { grid-column:1/-1; font-size:10px; margin:0; }
+ .fishing-modes { width:100%; }
+ .fishing-modes button { padding:5px 7px; min-height:34px; font-size:11px; }
+ .control-label { font-size:9px; letter-spacing:.08em; }
+ .filter-panel { padding:10px 12px; }
+ .filter-panel summary { gap:4px 8px; }
+ .filter-panel summary #filter-summary { font-size:10px; max-width:calc(100% - 36px); }
+ .filter-panel summary::after { margin-left:auto; }
+ .filters { grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
+ .filters > label:first-child { grid-column:1/-1; }
+ .filters .quiet { grid-column:1/-1; min-height:38px; }
+ .overview { margin:12px 0 18px; }
+ .overview > div { gap:5px; padding:6px 4px 10px 0; }
+ .overview strong { font-size:21px; }
+ .overview span { font-size:10px; }
+ .section-heading { gap:8px; margin-bottom:12px; }
+ .section-heading h2 { font-size:22px; margin:0; }
+ .section-heading .text-action { font-size:11px; padding:0; min-height:30px; }
+ .page-intro { font-size:12px; margin:0 0 14px; }
+ .map-toolbar { gap:8px; }
+ .map-toolbar label { font-size:11px; }
+ .map-toolbar .quiet { font-size:11px; padding:5px 8px; }
+ .map-toolbar select { font-size:16px; max-width:112px; min-height:36px; }
+ #map { height:49svh; min-height:290px; max-height:500px; }
+ #map-page > p.small { font-size:11px; }
+ #totals-page th { padding:10px; }
+ #totals-page td { padding:9px 10px; }
+ #totals-page .species-cell { font-size:14px; gap:8px; }
+ #totals-page .species-cell .fish-thumb { width:62px; height:44px; }
+ #totals-page td strong { font-size:21px; }
+ #totals-page .species-bar-row td { padding:0 10px 10px; }
+ .day-card { padding:14px; }
+ .day-header h3 { font-size:21px; }
+ .day-summary .fish-name-link { font-size:11px; }
+ .trip-summary { grid-template-columns:repeat(3,minmax(0,1fr)); border-radius:9px; margin-bottom:14px; }
+ .trip-summary > div { padding:10px; }
+ .trip-summary span { font-size:10px; }
+ .trip-summary strong { font-size:18px; }
+ .trip-card { padding:15px; }
+ .trip-card h3 { font-size:22px; }
+ .trip-card > header > strong { font-size:16px; }
+ .trip-at-a-glance { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+ .trip-at-a-glance > div { padding:10px; }
+ .trip-at-a-glance dt { font-size:10px; }
+ .trip-at-a-glance dd { font-size:20px; }
+ .trip-card > .trip-outcomes { margin:10px 0 14px; font-size:10px; }
+ .trip-disclosure > summary { font-size:12px; }
+ .disclosure-count { font-size:10px; }
+ .spot-productivity-list { grid-template-columns:minmax(0,1fr); gap:12px; }
+ .spot-productivity-card { padding:16px; }
+ .spot-productivity > .section-heading span { font-size:10px; }
+ .login-panel { margin:24px auto; padding:22px; }
+ .login-panel h1 { font-size:38px; }
+ dialog { width:calc(100% - 16px); max-height:calc(100dvh - 24px); padding:0 16px 20px; border-radius:14px; }
+ .dialog-heading { padding:12px 0; margin-bottom:14px; }
+ #details[data-view=catch] .fish-portrait { width:115px; height:90px; margin-left:8px; }
+ #detail-body > h2 { font-size:26px; }
+ .catch-primary { margin-top:14px; gap:12px; }
+ .record-details,.history-disclosure { margin:14px 0; }
+ .condition-actions { grid-template-columns:1fr; }
+ #day-observation-fields { grid-template-columns:minmax(0,1fr); }
+ .day-feel-heading label { font-size:17px; }
+ footer { flex-direction:column; gap:5px; font-size:10px; }
+}
+
+/* Keep the overview concise; full totals and every map option remain accessible. */
+.trip-summary { display:block; border:0; background:none; overflow:visible; }
+.trip-summary > .trip-summary-main { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:0; padding:0; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--white); }
+.trip-summary-main > div { min-width:0; padding:13px; border-right:1px solid var(--line); }
+.trip-summary-main > div:last-child { border:0; }
+.trip-summary-more { margin-top:8px; }
+.trip-summary-more summary { display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; font-size:12px; min-height:36px; color:var(--muted); cursor:pointer; }
+.trip-summary-more summary::before { content:'+'; font-size:16px; }
+.trip-summary-more[open] summary::before { content:'−'; }
+.trip-summary-more summary > span { margin:0; font-size:11px; }
+.trip-summary-more dl { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:5px 0 16px; padding:12px; background:#eef2e8; border-radius:8px; }
+.trip-summary-more dt { font-size:11px; color:var(--muted); }
+.trip-summary-more dd { margin:4px 0 0; font-size:17px; font-weight:600; }
+.map-toolbar { position:relative; justify-content:space-between; z-index:5; }
+.map-options > summary { min-height:44px; display:flex; align-items:center; gap:12px; padding:8px 12px; font-size:12px; cursor:pointer; }
+.map-options > summary::after { content:'⌄'; }
+.map-options[open] > summary::after { content:'⌃'; }
+.map-options-panel { position:absolute; top:calc(100% + 6px); right:0; z-index:10; display:grid; gap:14px; width:280px; max-width:calc(100vw - 28px); border:1px solid var(--line); border-radius:10px; padding:16px; background:var(--white); box-shadow:0 6px 24px #243b3220; }
+.map-options-panel label { justify-content:space-between; min-height:44px; }
+.map-options-panel select { max-width:150px; }
+#map { z-index:0; isolation:isolate; }
+.spot-productivity > .section-heading { display:none; }
+#spots-page > .section-heading h2,#trips-page > .section-heading h2 { font-family:inherit; font-size:15px; font-weight:600; letter-spacing:0; }
+.fishing-modes button,.heading .quiet,.map-toolbar .quiet,.map-toolbar select { min-height:44px; }
+@media(max-width:600px) {
+ .trip-summary-main > div { padding:11px 8px; }
+ .trip-summary-main span { font-size:9px; min-height:24px; margin-bottom:3px; }
+ .trip-summary-main strong { font-size:16px; }
+ .trip-summary-more dl { gap:8px; padding:10px; }
+ .trip-summary-more dt { font-size:10px; }
+ .trip-summary-more dd { font-size:16px; }
+ .trip-summary-more summary > span { min-height:0; }
+ .map-options > summary { font-size:12px; }
+ .map-options-panel label { font-size:13px; }
+ .masthead .quiet { min-height:44px; }
+ .fishing-modes button { min-height:40px; }
+}
+.day-catch-list > summary > span:last-child::after { content:' +'; margin-left:8px; font-size:17px; }
+.day-catch-list[open] > summary > span:last-child::after { content:' −'; }
+.history-disclosure > summary::after { content:'+'; color:var(--muted); font-size:17px; }
+.history-disclosure[open] > summary::after { content:'−'; }
+.history-disclosure > summary > .small { margin-left:auto; }

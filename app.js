@@ -361,12 +361,13 @@ function render() {
       ? `${$('from').value || 'Start'} to ${$('to').value || 'End'}`
       : 'All dates'
   }`;
+  $('filter-species-info').hidden = !$('species').value;
   $('catch-count').textContent = visible.length;
   $('species-count').textContent =
     new Set(visible.map((c) => c.species_id)).size;
   $('day-count').textContent =
     new Set(visible.map((c) => dayKey(c.caught_at))).size;
-  $('empty').hidden = location.hash === '#trips' || visible.length > 0;
+  $('empty').hidden = ['#trips','#spots'].includes(location.hash) || visible.length > 0;
   $('empty').textContent = catches.length
     ? 'No catches match these filters.'
     : 'No catches yet. Save one on your watch and sync it to see it here.';
@@ -383,7 +384,8 @@ function durationLabel(seconds) {
   const whole = Math.max(0, Math.round(seconds));
   if (whole < 60) return `${whole}s`;
   const minutes = Math.floor(whole / 60);
-  return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+  if (minutes < 60) return `${minutes}m`;
+  return `${Math.floor(minutes / 60)}h${minutes % 60 ? ` ${minutes % 60}m` : ''}`;
 }
 
 function catchDistance(a, b) {
@@ -548,6 +550,7 @@ function sessionProductivityHTML(t) {
   }).join('')}</div></section>`;
 }
 function renderSpotProductivity(rows) {
+  const expanded=disclosureState($('spot-productivity'));
   const spots=new Map(); let unlocated=0;
   for (const {trip} of rows) for (const s of storedSessions(trip)) {
     if (!s.spot_archive_id) {unlocated++;continue;}
@@ -559,9 +562,28 @@ function renderSpotProductivity(rows) {
   }
   const ranked=[...spots.values()].sort((a,b)=>b.count/b.seconds-a.count/a.seconds || b.seconds-a.seconds);
   const maximum=Math.max(1,...ranked.map(s=>s.count*3600/s.seconds));
-  $('spot-productivity').innerHTML=`<div class="section-heading"><h3>Productivity by spot</h3><span class="small muted">30 metre matching radius</span></div><p class="small muted">Nearby session anchors share one unnamed spot. Rates divide catches by total recorded fishing effort, including zero-catch sessions. Dates follow trip start; species filters change catches, while keeping all eligible fishing effort. A drifting session may cover more than its anchor location.</p>${ranked.length ? `<div class="spot-productivity-list">${ranked.map(spot=>`<article class="spot-productivity-card"><div><strong>${esc(sessionSpotLabel(spot.session))}</strong><span class="small muted">${spot.sessions} ${spot.sessions===1 ? 'session' : 'sessions'} · ${durationLabel(spot.seconds)} · ${spot.count} catches</span></div><div class="spot-productivity-rate"><strong>${(spot.count*3600/spot.seconds).toFixed(1)}</strong><span>catches / hour</span></div><div class="session-rate-track"><i style="width:${spot.count*3600/spot.seconds/maximum*100}%"></i></div><div class="session-location">${sessionLocationHTML(spot.session)}</div><p class="small muted">${spot.knownAnglers && spot.anglerSeconds>0 ? (spot.count*3600/spot.anglerSeconds).toFixed(1)+' / angler-hour' : 'Angler effort unavailable'} · ${spot.knownLines && spot.lineSeconds>0 ? (spot.count*3600/spot.lineSeconds).toFixed(1)+' / line-hour' : 'Line effort unavailable'}</p></article>`).join('')}</div>` : '<p class="small muted">No located fishing sessions match these dates and fishing style.</p>'}${unlocated ? `<p class="small muted">${unlocated} session${unlocated===1?'':'s'} without a location remain in the trip records and are excluded from spot rates.</p>` : ''}`;
+  $('spot-productivity').innerHTML=`<div class="section-heading"><h3>Productivity by spot</h3><span class="small muted">30 metre matching radius</span></div><details class="spot-method" data-disclosure="spot-method"><summary>How spots and productivity are calculated</summary><p class="small muted">Nearby session anchors share one unnamed spot. Rates divide catches by total recorded fishing effort, including zero-catch sessions. Dates follow trip start; species filters change catches, while keeping all eligible fishing effort. A drifting session may cover more than its anchor location.</p></details>${ranked.length ? `<div class="spot-productivity-list">${ranked.map(spot=>`<article class="spot-productivity-card"><div><strong>${esc(sessionSpotLabel(spot.session))}</strong><span class="small muted">${spot.sessions} ${spot.sessions===1 ? 'session' : 'sessions'} · ${durationLabel(spot.seconds)} · ${spot.count} catches</span></div><div class="spot-productivity-rate"><strong>${(spot.count*3600/spot.seconds).toFixed(1)}</strong><span>catches / hour</span></div><div class="session-rate-track"><i style="width:${spot.count*3600/spot.seconds/maximum*100}%"></i></div><div class="session-location">${sessionLocationHTML(spot.session)}</div><p class="small muted">${spot.knownAnglers && spot.anglerSeconds>0 ? (spot.count*3600/spot.anglerSeconds).toFixed(1)+' / angler-hour' : 'Angler effort unavailable'} · ${spot.knownLines && spot.lineSeconds>0 ? (spot.count*3600/spot.lineSeconds).toFixed(1)+' / line-hour' : 'Line effort unavailable'}</p></article>`).join('')}</div>` : '<p class="small muted">No located fishing sessions match these dates and fishing style.</p>'}${unlocated ? `<p class="small muted">${unlocated} session${unlocated===1?'':'s'} without a location remain in the trip records and are excluded from spot rates.</p>` : ''}`;
+  restoreDisclosures($('spot-productivity'),expanded);
+}
+function disclosureState(container) {
+  return new Map([...container.querySelectorAll('details[data-disclosure]')].map(d=>[d.dataset.disclosure,d.open]));
+}
+function restoreDisclosures(container,state) {
+  container.querySelectorAll('details[data-disclosure]').forEach(d=>{if(state.has(d.dataset.disclosure))d.open=state.get(d.dataset.disclosure);});
+}
+function tripCardHTML(t,m) {
+  const key=t.archive_id || t.device_id+':'+t.watch_trip_id;
+  const sessions=storedSessions(t);
+  return `<tr><td colspan="8"><article class="trip-card"><header><div><h3>${esc(dateLabel(t.started_at))}</h3><p class="small muted">${esc(fishingModeLabels[recordFishingMode(t)] || recordFishingMode(t))} · ${esc(timeLabel(t.started_at))}–${esc(timeLabel(t.ended_at))}</p></div><strong>${durationLabel(m.total)}<span class="small muted">total trip</span></strong></header>
+    <dl class="trip-at-a-glance"><div><dt>Fishing estimate</dt><dd>${durationLabel(m.fishing)}</dd></div><div><dt>Travelling</dt><dd>${durationLabel(m.travelling)}</dd></div><div><dt>Unclassified</dt><dd>${durationLabel(m.unclassified)}</dd></div><div><dt>Catches / fishing hour</dt><dd>${m.rate===null?'—':m.rate.toFixed(1)}</dd></div></dl>
+    <div class="trip-outcomes"><span><strong>${m.count}</strong> catches</span><span><strong>${m.sessions}</strong> fishing sessions</span>${m.anglerRate===null?'':`<span>${m.anglerRate.toFixed(1)} / angler-hour</span>`}${m.lineRate===null?'':`<span>${m.lineRate.toFixed(1)} / line-hour</span>`}<span>${m.distance===null?'No catch distance':m.distance.toFixed(2)+' km between catches · '+m.averageDistance.toFixed(2)+' km average'}</span></div>
+    <details class="trip-disclosure" data-disclosure="${esc(key)}:sessions"><summary><span>Fishing sessions</span><span class="disclosure-count">${sessions.length} saved</span></summary>${sessionProductivityHTML(t)}</details>
+    <details class="trip-disclosure" data-disclosure="${esc(key)}:recording"><summary><span>Activity timeline &amp; GPS</span><span class="disclosure-count">${m.total?Math.round((m.fishing+m.travelling)/m.total*100):0}% classified</span></summary>${tripVisuals(t,m).replace('<details class="trip-diagnostics">',`<details class="trip-diagnostics" data-disclosure="${esc(key)}:feedback">`)}</details>
+  </article></td></tr>`;
 }
 function renderTrips() {
+  const expanded=disclosureState($('trip-rows'));
+  const summaryExpanded=disclosureState($('trip-summary'));
   const locations=new Map();
   for(const trip of trips) for(const s of storedSessions(trip)) if(s.spot_archive_id) {
     const spot=s.fishing_spots;
@@ -585,23 +607,12 @@ function renderTrips() {
     }),
     { total: 0, fishing: 0, travelling: 0, count: 0, sessions: 0, unknown: 0 },
   );
-  $('trip-summary').innerHTML = [
-    ['Trips', rows.length],
-    ['Total trip time', durationLabel(totals.total)],
-    ['Fishing effort', durationLabel(totals.fishing)],
-    ['Fishing sessions', totals.sessions],
-    ['Unclassified time', durationLabel(totals.unknown)],
-    ['Travelling time', durationLabel(totals.travelling)],
-    ['Catches', totals.count],
-  ].map(([label, value]) =>
-    `<div><span>${label}</span><strong>${value}</strong></div>`
-  ).join('');
-  $('trip-rows').innerHTML =
-    rows.map(({ trip: t, metrics: m }) =>
-      `<tr><td colspan="8"><article class="trip-card"><header><div><h3>${esc(dateLabel(t.started_at))}</h3><p class="small muted">${esc(fishingModeLabels[recordFishingMode(t)] || recordFishingMode(t))} · ${esc(timeLabel(t.started_at))}–${esc(timeLabel(t.ended_at))}</p></div><strong>${durationLabel(m.total)}<span class="small muted"> total trip</span></strong></header>
-      ${sessionProductivityHTML(t)}${tripVisuals(t,m)}<div class="trip-outcomes"><span><strong>${m.count}</strong> catches</span><span><strong>${m.sessions}</strong> fishing sessions</span><span><strong>${m.rate===null ? '—' : m.rate.toFixed(1)}</strong> catches / fishing hour</span>${m.anglerRate===null ? '' : `<span>${m.anglerRate.toFixed(1)} / angler-hour</span>`}${m.lineRate===null ? '' : `<span>${m.lineRate.toFixed(1)} / line-hour</span>`}<span>${m.distance===null ? 'No catch distance' : m.distance.toFixed(2)+' km between catches'}</span></div></article></td></tr>`
-    ).join('') ||
-    '<tr><td colspan="8">No completed trips match these filters.</td></tr>';
+  const headline=[['Trips',rows.length],['Fishing effort',durationLabel(totals.fishing)],['Travelling',durationLabel(totals.travelling)],['Catches',totals.count]];
+  const remaining=[['Total trip time',durationLabel(totals.total)],['Fishing sessions',totals.sessions],['Unclassified time',durationLabel(totals.unknown)]];
+  $('trip-summary').innerHTML=`<div class="trip-summary-main">${headline.map(([label,value])=>`<div><span>${label}</span><strong>${value}</strong></div>`).join('')}</div><details class="trip-summary-more" data-disclosure="trip-totals"><summary>Full trip totals <span>${durationLabel(totals.unknown)} unclassified</span></summary><dl>${remaining.map(([label,value])=>`<div><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl></details>`;
+  restoreDisclosures($('trip-summary'),summaryExpanded);
+  $('trip-rows').innerHTML=rows.map(({trip,metrics})=>tripCardHTML(trip,metrics)).join('') || '<tr><td colspan="8">No completed trips match these filters.</td></tr>';
+  restoreDisclosures($('trip-rows'),expanded);
 }
 function applyChartStyle() {
   if (map) $('map').classList.toggle('vintage-chart', $('chart-vintage').checked);
@@ -1125,6 +1136,8 @@ function fishProfileHTML(id) {
 function showSpeciesProfile(id) {
   if (!fishProfiles[id]) return;
   conditionsGeneration++;
+  $('detail-label').textContent='Species guide';
+  $('details').dataset.view='species';
   $('detail-body').innerHTML = `${fishImage(id, true)}<h2>${esc(species[id][0])}</h2>${scientificCaption(id)}${fishProfileHTML(id)}`;
   upgradeFishPortrait(id);
   if (!$('details').open) $('details').showModal();
@@ -1155,6 +1168,7 @@ function renderTotals() {
   ).join('');
 }
 function renderDays() {
+  const expanded=disclosureState($('days'));
   const groups = new Map();
   for (const c of visible) {
     const key = dayKey(c.caught_at);
@@ -1162,7 +1176,7 @@ function renderDays() {
     groups.get(key).push(c);
   }
   $('days').replaceChildren();
-  for (const [, rows] of groups) {
+  for (const [key, rows] of groups) {
     const section = document.createElement('section');
     section.className = 'day-card';
     const totals = new Map();
@@ -1186,6 +1200,9 @@ function renderDays() {
     rate.onclick=()=>showDayObservations(rows[0]);
     const actions=document.createElement('div');actions.className='day-actions';actions.append(weather,rate);
     section.append(actions);
+    const list=document.createElement('details');list.className='day-catch-list';list.dataset.disclosure='day:'+key;
+    list.open=$('days').children.length===0;list.innerHTML=`<summary><span>Catch list</span><span>${rows.length} saved</span></summary>`;
+    section.append(list);
     for (const c of rows) {
       const button = document.createElement('button');
       button.className = 'catch-row';
@@ -1197,10 +1214,11 @@ function renderDays() {
         esc(timeLabel(c.caught_at))
       }</time>`;
       button.onclick = () => showDetail(c);
-      section.append(button);
+      list.append(button);
     }
     $('days').append(section);
   }
+  restoreDisclosures($('days'),expanded);
 }
 const dayFeelMetrics = [
   {key:'enjoyment',label:'How was the day?',icon:'☀',low:'Not much fun',high:'An unforgettable day',words:['A tough day','Could be better','Enjoyed it','A great day','Absolutely brilliant'],note:'Your enjoyment, regardless of how many fish you caught.'},
@@ -1215,6 +1233,8 @@ function dayObservationFormHTML(c,mode) {
   return `<section class="day-observations"><span class="eyebrow">YOUR DAY ON THE WATER</span><h2>${esc(dateLabel(c.caught_at))}</h2><p class="muted">${esc(fishingModeLabels[mode])} · Day-level observations · ${esc(config.timezone)}</p><p>Drag a slider to rate something you noticed. Leave anything you did not observe unrated.</p><form id="day-observation-form"><fieldset id="day-observation-fields" disabled>${dayFeelMetrics.map(m=>`<section class="day-feel-card is-unrated" data-feel-card="${m.key}"><div class="day-feel-heading"><span class="day-feel-icon" aria-hidden="true">${m.icon}</span><label for="day-feel-${m.key}">${m.label}</label><output for="day-feel-${m.key}" id="day-feel-value-${m.key}" aria-live="polite">Not rated</output></div><input type="range" min="0" max="10" step="1" value="5" id="day-feel-${m.key}" name="${m.key}" data-rated="false" aria-describedby="day-feel-note-${m.key}" aria-valuetext="Not rated"><div class="day-feel-ends"><span>${m.low}</span><span>${m.high}</span></div><div class="day-feel-bottom"><p id="day-feel-note-${m.key}" class="small muted">${m.note}</p><button type="button" class="feel-clear" data-clear-feel="${m.key}" disabled>Clear rating</button></div></section>`).join('')}<label class="day-notes-label">Anything else about the day?<textarea name="notes" rows="3" maxlength="1000" placeholder="Water changed after lunch, lots of birds, bait worked better…"></textarea></label><p class="small muted">These are your impressions for the whole day and fishing type, even if the catch list is filtered. They stay separate from catch-time observations and model estimates.</p><button type="submit" class="primary" id="save-day-observations">Save day observations</button></fieldset><p id="day-observation-status" class="small muted" role="status">Loading your saved day observations…</p></form></section>`;
 }
 async function showDayObservations(c) {
+  $('detail-label').textContent='Day notes & ratings';
+  $('details').dataset.view='day-notes';
   const generation=++conditionsGeneration,mode=fishingMode,date=dayKey(c.caught_at);
   $('detail-body').innerHTML=dayObservationFormHTML(c,mode);
   if(!$('details').open)$('details').showModal();
@@ -1416,7 +1436,7 @@ function historyContextHTML(context) {
 }
 function addConditionActions(c, generation) {
   const container = $('conditions');
-  container.insertAdjacentHTML('beforeend','<div id="condition-history-slot"><p class="small muted">Checking previous 72 hours…</p></div><div class="condition-actions"><button type="button" id="collect-conditions" class="condition-action"><span aria-hidden="true">↻</span><span><strong>Update weather</strong><small>Fetch estimates for this catch’s time and place</small></span></button><button type="button" id="record-observations" class="condition-action" aria-expanded="false" aria-controls="observation-slot"><span aria-hidden="true">◉</span><span><strong>Add your observations</strong><small>Clarity, measured temperature, current and tide</small></span></button></div><p id="condition-status" role="status" class="small muted"></p><div id="observation-slot"></div>');
+  container.insertAdjacentHTML('beforeend','<div class="condition-actions"><button type="button" id="collect-conditions" class="condition-action"><span aria-hidden="true">↻</span><span><strong>Update weather</strong><small>Fetch estimates for this catch’s time and place</small></span></button><button type="button" id="record-observations" class="condition-action" aria-expanded="false" aria-controls="observation-slot"><span aria-hidden="true">◉</span><span><strong>Add your observations</strong><small>Clarity, measured temperature, current and tide</small></span></button></div><p id="condition-status" role="status" class="small muted"></p><div id="observation-slot"></div><details class="history-disclosure"><summary>Weather before the catch <span class="small muted">Up to 72 hours</span></summary><div id="condition-history-slot"><p class="small muted">Checking previous 72 hours…</p></div></details>');
   $('collect-conditions').onclick = async () => {
     const button=$('collect-conditions');button.disabled=true;
     button.setAttribute('aria-busy','true');
@@ -1476,6 +1496,8 @@ function observationForm(c,generation) {
   };
 }
 async function showDayConditions(rows) {
+  $('detail-label').textContent='Day conditions';
+  $('details').dataset.view='day-conditions';
   const generation=++conditionsGeneration;
   $('detail-body').innerHTML=`<h2>${esc(dateLabel(rows[0].caught_at))}</h2><p class="muted">Conditions at each catch location and time.</p><div id="day-conditions">Loading saved conditions…</div>`;
   if(!$('details').open)$('details').showModal();
@@ -1490,6 +1512,8 @@ async function showDayConditions(rows) {
 }
 
 async function showDetail(c) {
+  $('detail-label').textContent='Catch details';
+  $('details').dataset.view='catch';
   const generation = ++conditionsGeneration;
   const gpsDelay = Math.round(
     (new Date(c.gps_at) - new Date(c.caught_at)) / 1000,
@@ -1498,15 +1522,7 @@ async function showDetail(c) {
     esc(nameOf(c))
   }</h2>${scientificCaption(c.species_id)}<p class="muted">${esc(dateLabel(c.caught_at))} · ${
     esc(timeLabel(c.caught_at))
-  }</p><dl class="detail-grid">${field('Latitude', c.latitude.toFixed(6))}${
-    field('Longitude', c.longitude.toFixed(6))
-  }${field('Fish length', Number.isInteger(c.raw_payload?.length_cm) ? `${c.raw_payload.length_cm} cm` : null)}${field('Fishing style', fishingModeLabels[recordFishingMode(c)] || recordFishingMode(c))}${field('Position', c.position_method)}${field('Tackle', c.tackle_method)}${
-    field('GPS fix', c.gps_quality === 4 ? 'Good' : 'Usable')
-  }${
-    field('Fix relative to catch', `${gpsDelay}s`)
-  }</dl><p class="record-id muted">Catch ID: ${
-    esc(c.catch_id)
-  }</p><div id="conditions" class="condition"><h3>Conditions</h3><p class="muted">Checking saved conditions…</p></div>`;
+  }</p><dl class="detail-grid catch-primary">${field('Fish length', Number.isInteger(c.raw_payload?.length_cm) ? `${c.raw_payload.length_cm} cm` : null)}${field('Fishing style', fishingModeLabels[recordFishingMode(c)] || recordFishingMode(c))}${field('Position', c.position_method)}${field('Tackle', c.tackle_method)}</dl><details class="record-details"><summary>Location &amp; GPS record</summary><dl class="detail-grid">${field('Latitude',c.latitude.toFixed(6))}${field('Longitude',c.longitude.toFixed(6))}${field('GPS fix',c.gps_quality===4?'Good':'Usable')}${field('Fix relative to catch',`${gpsDelay}s`)}</dl><p class="record-id muted">Catch ID: ${esc(c.catch_id)}</p></details><div id="conditions" class="condition"><h3>Conditions</h3><p class="muted">Checking saved conditions…</p></div>`;
   upgradeFishPortrait(c.species_id);
   if (!$('details').open) $('details').showModal();
   $('details').scrollTop = 0;
@@ -1540,10 +1556,10 @@ async function showDetail(c) {
 }
 function route() {
   const page =
-    ['map', 'totals', 'days', 'trips'].includes(location.hash.slice(1))
+    ['map', 'totals', 'days', 'trips', 'spots'].includes(location.hash.slice(1))
       ? location.hash.slice(1)
       : 'map';
-  for (const key of ['map', 'totals', 'days', 'trips']) {
+  for (const key of ['map', 'totals', 'days', 'trips', 'spots']) {
     $(`${key}-page`).hidden = page !== key;
     document.querySelector(`[data-page="${key}"]`).setAttribute(
       'aria-current',
@@ -1551,14 +1567,16 @@ function route() {
     );
   }
   document.body.dataset.page = page;
-  $('page-caption').textContent = {map:'A record of fish, place & time.',totals:'The species that tell your story.',days:'Notes from days on the water.',trips:'Every journey, faithfully recorded.'}[page];
+  $('page-caption').textContent = {map:'Explore catch locations and their recorded conditions.',totals:'Catch totals, identification and your species field guide.',days:'Catches, conditions and your notes from each day.',trips:'Fishing effort, sessions and how each trip was recorded.',spots:'Compare productivity across repeat visits.'}[page];
   $('page-title').textContent = {
     map: 'Catch map',
-    totals: 'Species totals',
+    totals: 'Species',
     days: 'Catch journal',
-    trips: 'Trip overview',
+    trips: 'Fishing trips',
+    spots: 'Fishing spots',
   }[page];
-  $('empty').hidden = page === 'trips' || visible.length > 0;
+  $('empty').hidden = ['trips','spots'].includes(page) || visible.length > 0;
+  document.title = $('page-title').textContent+' · Catch and Conditions';
   if (page === 'map' && session) {
     renderMap();
     requestAnimationFrame(() => map?.invalidateSize({pan:false}));
@@ -1571,9 +1589,7 @@ document.querySelectorAll('button[data-fishing-mode]').forEach(button => {
 for (const id of ['species', 'from', 'to', 'colour']) {
   $(id).addEventListener('change', render);
 }
-$('species').addEventListener('change', () => {
-  if ($('species').value) showSpeciesProfile($('species').value);
-});
+$('filter-species-info').onclick = () => { if ($('species').value) showSpeciesProfile($('species').value); };
 $('clear').onclick = () => {
   for (const id of ['species', 'from', 'to']) $(id).value = '';
   render();
