@@ -1792,3 +1792,73 @@ dialog { background:var(--white); border-color:var(--line); border-radius:20px; 
  .trip-card,.spot-productivity-card,.day-card { border-radius:14px; }
  dialog { border-radius:16px; }
 }
+
+/* Shared spacing rhythm and aligned card contents. */
+main { padding-top:24px; }
+.heading { margin-bottom:20px; gap:16px; }
+.heading h1 { margin:0; }
+.journal-controls { align-items:start; gap:12px; }
+.fishing-modes { min-height:48px; align-items:stretch; }
+.fishing-modes button { min-height:40px; }
+.filter-panel { padding:11px 14px; min-height:48px; }
+.filter-panel summary { min-height:24px; }
+.overview { padding:4px 16px; margin:16px 0 24px; }
+.overview > div { padding:10px 12px; gap:8px; }
+.overview > div:first-child { padding-left:0; }
+.overview > div:last-child { padding-right:0; }
+.section-heading { margin-bottom:16px; }
+.map-toolbar { align-items:center; gap:12px; margin-bottom:12px; }
+.map-options > summary { padding-right:4px; }
+.day-card,.trip-card,.spot-productivity-card { padding:20px; }
+.day-header { align-items:center; gap:12px; }
+.day-header h3 { margin:0; }
+.day-summary { margin:12px 0; }
+.day-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:stretch; gap:10px; margin:16px 0; }
+.day-actions .quiet { width:100%; min-height:44px; margin:0; padding:10px 12px; line-height:1.35; text-align:center; }
+.day-catch-list > summary { padding:10px 0; }
+.trip-card > header { align-items:start; gap:12px; margin-bottom:16px; }
+.trip-card > header > strong { text-align:right; }
+.trip-at-a-glance > div { padding:12px; }
+.trip-at-a-glance dt { min-height:2.6em; }
+.trip-at-a-glance dd { margin-top:6px; }
+.trip-time-strip { margin:16px 0 10px; }
+.trip-card > .trip-outcomes { margin:0 0 16px; }
+.spot-productivity-list { margin-top:0; gap:16px; align-items:start; }
+.spot-productivity-card { gap:14px; align-items:start; }
+.spot-productivity-card > div:first-child > strong { display:block; line-height:1.25; }
+.spot-productivity-rate strong { line-height:1.15; }
+.spot-productivity-rate > span { display:block; margin-top:6px; }
+.spot-productivity-card .session-rate-track { margin:2px 0; }
+.spot-productivity-card > .spot-extra { margin:0; }
+.session-cards { align-items:start; gap:12px; }
+.session-card { padding:16px; }
+.session-card header { align-items:start; }
+.session-card h5 { margin:0 0 4px; }
+.session-location { margin-top:12px; }
+.dialog-heading { gap:12px; align-items:center; }
+.condition-visuals,.measurement-cards { gap:12px; }
+footer { margin-top:24px; }
+@media(min-width:601px) and (max-width:950px) {
+ .spot-productivity-list { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:600px) {
+ main { padding:18px 14px calc(96px + env(safe-area-inset-bottom)); }
+ .heading { margin-bottom:16px; }
+ .journal-controls { gap:8px; }
+ .fishing-modes { min-height:46px; }
+ .filter-panel { min-height:46px; padding:10px 12px; }
+ .overview { margin:12px 0 20px; padding:2px 12px; }
+ .overview > div { flex-direction:column; align-items:flex-start; gap:2px; padding:10px 8px; }
+ .overview strong { line-height:1.2; }
+ .overview span { line-height:1.35; }
+ .day-card,.trip-card,.spot-productivity-card { padding:16px; }
+ .day-actions { gap:8px; margin:14px 0; }
+ .day-actions .quiet { font-size:11px; padding:10px 8px; }
+ .trip-summary-main > div { padding:12px 10px; }
+ .trip-at-a-glance { gap:8px; }
+ .trip-at-a-glance > div { padding:10px; }
+ .section-heading { flex-wrap:wrap; gap:4px 12px; margin-bottom:12px; }
+ .section-heading .text-action { margin-left:auto; }
+ .spot-productivity-list { gap:12px; }
+ .tabs a { min-height:50px; }
+}
