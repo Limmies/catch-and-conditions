@@ -1712,3 +1712,83 @@ footer { border:0; padding-top:0; margin-top:18px; justify-content:flex-end; }
  #totals-page .species-cell { font-size:15px; }
  #totals-page .species-cell .fish-thumb { width:74px; height:48px; }
 }
+
+/* Vintage field colours, modern geometry. No filters on data or fish artwork. */
+:root {
+ --paper:#f2ecdf; --white:#fffaf0; --ink:#293f38; --green:#355d4e;
+ --muted:#686b5b; --line:#d9cfba; --ochre:#b08a43;
+ --fishing:#4b7965; --travel:#597f8b;
+}
+body {
+ background-color:var(--paper);
+ background-image:radial-gradient(#8474540a .65px,transparent .85px);
+ background-size:5px 5px;
+}
+h1,h2,h3 { font-family:Georgia,'Times New Roman',serif; font-weight:400; letter-spacing:-.035em; }
+.masthead { background:#faf5e9f5; border-bottom:1px solid var(--line); }
+.brand > span:last-child { font-family:Georgia,'Times New Roman',serif; letter-spacing:-.015em; }
+.monogram { border:1px solid #a99b79; border-radius:12px; color:var(--green); background:#e8dfca; }
+.tabs { background:#e5ddcc; border-radius:14px; }
+.tabs a { border-radius:10px; color:#5b6254; }
+.tabs a[aria-current=page] { color:#284c3d; background:var(--white); box-shadow:0 2px 6px #574c3212; }
+.quiet,input,select,textarea { background-color:var(--white); border-color:var(--line); color:var(--ink); }
+.quiet,.primary { border-radius:10px; }
+.primary { background:var(--green); color:#fffaf0; }
+.fishing-modes { background:#e8e0ce; border-color:var(--line); border-radius:12px; }
+.fishing-modes button { color:#526052; border-radius:8px; }
+.fishing-modes button[aria-pressed=true] { background:var(--green); color:#fffaf0; box-shadow:0 2px 5px #293f3818; }
+.filter-panel,.overview,.day-card,.trip-card,.table-wrap,
+.spot-productivity-card,.session-card,.trip-summary > .trip-summary-main {
+ background:var(--white); border-color:var(--line); border-radius:16px;
+ box-shadow:0 3px 14px #64523006;
+}
+.filter-panel { border-radius:12px; }
+.overview strong,.trip-at-a-glance dd,.session-rate > strong,.spot-productivity-rate strong { font-variant-numeric:tabular-nums; }
+.trip-at-a-glance > div,.trip-summary-more dl { background:#f0eadb; border-color:var(--line); border-radius:10px; }
+.trip-at-a-glance > div:first-child { background:#e6ebdb; }
+.trip-at-a-glance > div:nth-child(2) { background:#e5ece8; }
+.trip-at-a-glance > div:nth-child(3) { background:#f0e5cf; }
+.trip-at-a-glance > div:first-child dt { color:#3c634e; }
+.trip-at-a-glance > div:nth-child(2) dt { color:#456b78; }
+.trip-at-a-glance > div:nth-child(3) dt { color:#786030; }
+.trip-time-strip,.trip-timeline { background:#e6dcc7; border-radius:8px; }
+.trip-time-strip .fishing,.trip-visuals .fishing { background:var(--fishing); }
+.trip-time-strip .travelling,.trip-visuals .travelling { background:var(--travel); }
+.trip-time-strip .unclassified,.trip-visuals .unclassified { background:repeating-linear-gradient(135deg,#d1bf99 0 4px,#f0e5cf 4px 8px); }
+.speed-range { stroke:var(--travel); }
+.speed-average { fill:var(--green); }
+.speed-guide { stroke:var(--line); }
+.trip-speed svg text { fill:var(--muted); }
+.species-visual-track,.session-rate-track,.count-track,.score-track { background:#e8dfcb; }
+.session-rate-track > i,.score-track > span { background:var(--fishing); }
+.day-total,.disclosure-count,.score-note { background:#e9e2cd; color:#52604c; }
+.day-summary { color:#53604d; }
+dialog { background:var(--white); border-color:var(--line); border-radius:20px; }
+.dialog-heading { background:var(--white); border-color:var(--line); }
+.condition-action,.condition-history,.observation-form,.condition-measurements { background:#f2ecdc; border-color:var(--line); border-radius:14px; }
+.condition-action:hover,.condition-action[aria-expanded=true] { background:#e6e9d7; }
+.measurement-cards > div,.history-metric,.history-periods button { background:var(--white); border-color:var(--line); border-radius:12px; }
+.history-periods button[aria-pressed=true] { background:var(--green); border-color:var(--green); color:#fffaf0; }
+.weather-card { background:linear-gradient(145deg,#e5eade,#f5e8cd); }
+.moon-card { background:#293d42; border-color:#293d42; color:#f4e5be; }
+.temperature-card { background:#f8efdf; }
+.water-temperature-card { background:linear-gradient(145deg,#e1e9df,#f5eedc); border-color:#bdc8b5; }
+.temperature-scale { background:linear-gradient(90deg,#648691,#91a99a 30%,#c7c596 56%,#cba164 78%,#ac6d50); }
+.fishing-score,.bite-summary { background:#e8ebd9; border-color:#cdd4bc; }
+.score-fish-badge { background:#dce2c9; }
+.fish-reference-card { background:#efe5ce; border-color:var(--line); border-radius:16px; }
+.fish-reference-card:nth-child(3) { background:#e4e8d3; }
+.fish-reference-card:nth-child(4) { background:#e0e8df; }
+.fish-profile { background:#f1eddd; border-color:var(--line); }
+.day-feel-card { background:linear-gradient(130deg,#e8ebda,#fbefda); border-color:#cdd1b9; }
+.day-feel-card.is-unrated { background:#f1ecdf; }
+#map { border-color:#b8ac8c; border-radius:16px; }
+#map.vintage-chart { background-color:#eae0c6; border-color:#b8ac8c; box-shadow:inset 0 0 24px #7c674515; }
+#map.vintage-chart .leaflet-tile-pane { filter:sepia(.38) saturate(.65) contrast(.96); }
+.map-options-panel { background:var(--white); border-color:var(--line); border-radius:14px; }
+@media(max-width:600px) {
+ .tabs { background:#faf5e9f5; border-radius:0; border-top:1px solid var(--line); }
+ .tabs a[aria-current=page] { background:#e4e7d5; box-shadow:none; }
+ .trip-card,.spot-productivity-card,.day-card { border-radius:14px; }
+ dialog { border-radius:16px; }
+}
