@@ -1648,3 +1648,67 @@ dialog { width:min(760px,calc(100% - 32px)); padding:0 24px 24px; max-height:90d
 .history-disclosure > summary::after { content:'+'; color:var(--muted); font-size:17px; }
 .history-disclosure[open] > summary::after { content:'−'; }
 .history-disclosure > summary > .small { margin-left:auto; }
+
+/* Minimal views: figures and visual summaries first; reference detail on demand. */
+.heading { margin-bottom:18px; }
+.heading h1 { margin:0; }
+.fishing-style-panel { display:block; }
+.fishing-modes { width:100%; }
+.journal-controls { grid-template-columns:minmax(250px,.8fr) minmax(0,1.2fr); align-items:center; }
+.overview { margin:14px 0 18px; }
+#status:empty,.trip-selection:empty { display:none; }
+.trip-time-strip { display:flex; height:8px; border-radius:6px; overflow:hidden; margin:14px 0 8px; background:#ddd8c8; }
+.trip-time-strip > span { height:100%; flex-shrink:0; }
+.trip-time-strip .fishing { background:#317c68; }
+.trip-time-strip .travelling { background:#497da6; }
+.trip-time-strip .unclassified { background:repeating-linear-gradient(135deg,#cfc6b0 0 4px,#eee7d5 4px 8px); }
+.trip-at-a-glance > div:first-child dt { color:#286750; }
+.trip-at-a-glance > div:nth-child(2) dt { color:#3f7094; }
+.trip-at-a-glance > div:nth-child(3) dt { color:#8a7440; }
+.trip-card > .trip-outcomes { margin:6px 0 14px; font-size:12px; }
+.recording-extra .trip-outcomes { border:0; margin:0 0 12px; padding:0; font-size:11px; }
+.session-section-heading { display:none; }
+.session-card header { margin-bottom:12px; }
+.session-location { margin-top:10px; }
+.location-action { display:inline-flex; align-items:center; gap:6px; min-height:36px; font-size:12px; text-decoration:none; }
+.location-action > span { font-size:18px; }
+.session-extra,.spot-extra { margin-top:6px; border-top:1px solid var(--line); font-size:12px; color:var(--muted); }
+.session-extra summary,.spot-extra summary { padding:8px 0; cursor:pointer; }
+.session-extra .session-effort { border:0; padding:0 0 6px; margin:0; }
+.spot-productivity-card > .spot-extra { grid-column:1/-1; }
+.spot-productivity-card { padding:20px; }
+.spot-productivity-rate strong { font-size:34px; letter-spacing:-.04em; }
+.spot-productivity-card > div:first-child > strong { font-size:24px; }
+.spot-productivity-card .session-rate-track { height:9px; }
+.trip-disclosure .session-productivity { margin-top:8px; }
+.reference-notes { border-top:1px solid var(--line); padding-top:10px; margin:16px 0 0; color:var(--muted); font-size:12px; }
+.reference-notes summary { cursor:pointer; padding:5px 0; }
+.reference-notes p,.reference-notes .small { font-size:12px; }
+.condition-actions .condition-action { min-height:48px; }
+.condition-actions .condition-action > span:first-child { font-size:24px; }
+.score-note { display:inline-block; margin:0 0 10px; padding:3px 8px; border-radius:5px; background:#edf1e7; color:var(--muted); font-size:10px; }
+.condition-visuals .pressure-card > p:empty { display:none; }
+.history-window-label { font-size:12px; margin:6px 0 12px; }
+footer { border:0; padding-top:0; margin-top:18px; justify-content:flex-end; }
+#updated { font-size:10px; opacity:.8; }
+@media(max-width:950px) { .journal-controls { grid-template-columns:minmax(0,1fr); } }
+@media(max-width:600px) {
+ .heading h1 { font-size:28px; }
+ .heading { margin-bottom:14px; }
+ .journal-controls { gap:8px; }
+ .fishing-modes button { min-height:38px; }
+ .overview { margin:10px 0 16px; }
+ .trip-summary { margin-bottom:12px; }
+ .spot-productivity-card { padding:17px; }
+ .trip-card > .trip-outcomes { font-size:11px; }
+ .session-rate > strong { font-size:30px; }
+}
+.day-feel-bottom .feel-clear:disabled { display:none; }
+.day-feel-bottom:has(.feel-clear:disabled) { margin-top:0; }
+.day-feel-bottom p.sr-only { margin:0; }
+#totals-page .species-cell { font-size:16px; }
+#totals-page .species-cell .fish-thumb { width:88px; height:54px; }
+@media(max-width:600px) {
+ #totals-page .species-cell { font-size:15px; }
+ #totals-page .species-cell .fish-thumb { width:74px; height:48px; }
+}
