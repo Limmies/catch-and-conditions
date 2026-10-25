@@ -1862,3 +1862,26 @@ footer { margin-top:24px; }
  .spot-productivity-list { gap:12px; }
  .tabs a { min-height:50px; }
 }
+
+/* Activity has distinct hues and patterns as well as readable labels. */
+:root { --fishing:#285c4d; --travel:#af5c2c; }
+.trip-at-a-glance > div:first-child { background:#e3eadc; border-top:4px solid var(--fishing); }
+.trip-at-a-glance > div:nth-child(2) { background:#f3e2cd; border-top:4px solid var(--travel); }
+.trip-at-a-glance > div:nth-child(3) { border-top:4px solid #9b8962; }
+.trip-at-a-glance > div:first-child dt { color:#285341; font-weight:650; }
+.trip-at-a-glance > div:nth-child(2) dt { color:#864018; font-weight:650; }
+.trip-time-strip { height:18px; margin-bottom:10px; }
+.trip-time-strip .travelling,.trip-visuals .travelling,.trip-time-key .travelling {
+ background:repeating-linear-gradient(90deg,#af5c2c 0 10px,#d59761 10px 13px);
+}
+.trip-time-key { display:flex; flex-wrap:wrap; gap:8px 20px; margin:0 0 14px; font-size:11px; color:var(--ink); }
+.trip-time-key > span { display:inline-flex; align-items:center; gap:6px; }
+.trip-time-key i { display:inline-block; width:16px; height:10px; border-radius:2px; flex:none; }
+.trip-time-key .fishing { background:var(--fishing); }
+.trip-time-key .unclassified { background:repeating-linear-gradient(135deg,#c5b387 0 3px,#f0e5cf 3px 6px); }
+.trip-time-key b { font-weight:600; font-variant-numeric:tabular-nums; }
+.trip-timeline { height:30px; }
+.trip-band { min-height:0; padding:0; border:0; border-radius:0; }
+.trip-band + .trip-band { box-shadow:inset 2px 0 #fffaf0; }
+.trip-band[aria-pressed=true] { outline:3px solid var(--ink); outline-offset:-3px; }
+@media(max-width:600px) { .trip-time-key { gap:8px 14px; font-size:10px; } }
