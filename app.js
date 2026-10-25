@@ -1284,16 +1284,28 @@ function renderDays() {
   restoreDisclosures($('days'),expanded);
 }
 const dayFeelMetrics = [
-  {key:'enjoyment',label:'How was the day?',icon:'☀',low:'Not much fun',high:'An unforgettable day',words:['A tough day','Could be better','Enjoyed it','A great day','Absolutely brilliant'],note:'Your enjoyment, regardless of how many fish you caught.'},
-  {key:'water_clarity',label:'Water clarity',icon:'◈',low:'Very murky',high:'Crystal clear',words:['Very murky','Cloudy','Mixed clarity','Clear','Crystal clear'],note:'Overall impression across the water you fished; not measured visibility.'},
-  {key:'sea_comfort',label:'Sea comfort',icon:'≈',low:'Very uncomfortable',high:'Glassy & comfortable',words:['Very uncomfortable','Choppy','Manageable','Comfortable','Glassy & comfortable'],note:'How comfortable the sea felt, not a wave-height measurement.'},
-  {key:'current_strength',label:'Current strength',icon:'➜',low:'Still water',high:'Ripping current',words:['Still or barely moving','Weak','Moderate','Strong','Very strong'],note:'Perceived water movement, not boat speed or a measured current.'},
-  {key:'bite_activity',label:'Bite activity',icon:'🎣',low:'Nothing touching',high:'Non-stop bites',words:['No bites','Very quiet','Occasional bites','Regular bites','Non-stop bites'],note:'Include bites that did not result in a landed fish.'},
-  {key:'bait_presence',label:'Baitfish activity',icon:'🐟',low:'None seen',high:'Bait everywhere',words:['None seen','A little','Some bait around','Plenty of bait','Bait everywhere'],note:'Baitfish you noticed at the surface or on the fish finder. Unseen does not mean absent.'},
+  {key:'enjoyment',label:'How was the day?',low:'Not much fun',high:'An unforgettable day',words:['A tough day','Could be better','Enjoyed it','A great day','Absolutely brilliant'],note:'Your enjoyment, regardless of how many fish you caught.'},
+  {key:'water_clarity',label:'Water clarity',low:'Very murky',high:'Crystal clear',words:['Very murky','Cloudy','Mixed clarity','Clear','Crystal clear'],note:'Overall impression across the water you fished; not measured visibility.'},
+  {key:'sea_comfort',label:'Sea comfort',low:'Very uncomfortable',high:'Glassy & comfortable',words:['Very uncomfortable','Choppy','Manageable','Comfortable','Glassy & comfortable'],note:'How comfortable the sea felt, not a wave-height measurement.'},
+  {key:'current_strength',label:'Current strength',low:'Still water',high:'Ripping current',words:['Still or barely moving','Weak','Moderate','Strong','Very strong'],note:'Perceived water movement, not boat speed or a measured current.'},
+  {key:'bite_activity',label:'Bite activity',low:'Nothing touching',high:'Non-stop bites',words:['No bites','Very quiet','Occasional bites','Regular bites','Non-stop bites'],note:'Include bites that did not result in a landed fish.'},
+  {key:'bait_presence',label:'Baitfish activity',low:'None seen',high:'Bait everywhere',words:['None seen','A little','Some bait around','Plenty of bait','Bait everywhere'],note:'Baitfish you noticed at the surface or on the fish finder. Unseen does not mean absent.'},
 ];
+function dayRatingArt(key) {
+  const fish = '<path d="M5 12c7-9 18-9 25 0-7 9-18 9-25 0Zm25 0 8-6v12l-8-6Z"/><circle cx="12" cy="10" r="1" fill="currentColor" stroke="none"/>';
+  const art = {
+    enjoyment:'<circle cx="24" cy="24" r="10" fill="#d9bb72" stroke="none"/><circle cx="24" cy="24" r="9"/><path d="M24 5v5m0 28v5M5 24h5m28 0h5M11 11l4 4m18 18 4 4M11 37l4-4m18-18 4-4"/>',
+    water_clarity:'<path d="M24 5c-5 8-14 17-14 25a14 14 0 0 0 28 0c0-8-9-17-14-25Z" fill="#cbdccf"/><path d="M16 30c0 5 3 8 7 9m5-20 4 6"/>',
+    sea_comfort:'<path d="M5 29q5-6 10 0t10 0 10 0 10 0M5 38q5-6 10 0t10 0 10 0 10 0M13 16h23l-5 7H19Z"/><path d="M24 7v9m-6-6h12"/>',
+    current_strength:'<path d="M5 13h31m-6-6 6 6-6 6M12 25h31m-6-6 6 6-6 6M5 37h24m-6-6 6 6-6 6"/>',
+    bite_activity:'<path d="M29 5v24a9 9 0 0 1-18 0v-7l5 5M25 5h8"/><circle cx="29" cy="10" r="2" fill="#d9bb72" stroke="none"/><path d="m37 20 5-3m-4 11h6"/>',
+    bait_presence:'<g transform="translate(1 6) scale(.75)">'+fish+'</g><g transform="translate(15 20) scale(.7)">'+fish+'</g><g transform="translate(1 32) scale(.55)">'+fish+'</g>'
+  };
+  return `<svg class="rating-art" viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${art[key] || ''}</svg>`;
+}
 function dayFeelWord(metric,value) { return metric.words[Math.min(4,Math.floor(value/2.5))]; }
 function dayObservationFormHTML(c,mode) {
-  return `<section class="day-observations"><h2>${esc(dateLabel(c.caught_at))}</h2><p class="muted">${esc(fishingModeLabels[mode])}</p><form id="day-observation-form"><fieldset id="day-observation-fields" disabled>${dayFeelMetrics.map(m=>`<section class="day-feel-card is-unrated" data-feel-card="${m.key}"><div class="day-feel-heading"><span class="day-feel-icon" aria-hidden="true">${m.icon}</span><label for="day-feel-${m.key}">${m.label}</label><output for="day-feel-${m.key}" id="day-feel-value-${m.key}" aria-live="polite">Not rated</output></div><input type="range" min="0" max="10" step="1" value="5" id="day-feel-${m.key}" name="${m.key}" data-rated="false" aria-describedby="day-feel-note-${m.key}" aria-valuetext="Not rated"><div class="day-feel-ends"><span>${m.low}</span><span>${m.high}</span></div><div class="day-feel-bottom"><p id="day-feel-note-${m.key}" class="sr-only">${m.note}</p><button type="button" class="feel-clear" data-clear-feel="${m.key}" disabled>Clear rating</button></div></section>`).join('')}<label class="day-notes-label">Anything else about the day?<textarea name="notes" rows="3" maxlength="1000" placeholder="Water changed after lunch, lots of birds, bait worked better…"></textarea></label><button type="submit" class="primary" id="save-day-observations">Save day observations</button></fieldset><p id="day-observation-status" class="small muted" role="status">Loading your saved day observations…</p></form></section>`;
+  return `<section class="day-observations"><h2>${esc(dateLabel(c.caught_at))}</h2><p class="muted">${esc(fishingModeLabels[mode])}</p><form id="day-observation-form"><fieldset id="day-observation-fields" disabled>${dayFeelMetrics.map(m=>`<section class="day-feel-card is-unrated" data-feel-card="${m.key}"><div class="day-feel-heading"><span class="day-feel-icon" aria-hidden="true">${dayRatingArt(m.key)}</span><label for="day-feel-${m.key}">${m.label}</label><output for="day-feel-${m.key}" id="day-feel-value-${m.key}" aria-live="polite">Not rated</output></div><input type="range" min="0" max="10" step="1" value="5" id="day-feel-${m.key}" name="${m.key}" data-rated="false" aria-describedby="day-feel-note-${m.key}" aria-valuetext="Not rated"><div class="day-feel-ends"><span>${m.low}</span><span>${m.high}</span></div><div class="day-feel-bottom"><p id="day-feel-note-${m.key}" class="sr-only">${m.note}</p><button type="button" class="feel-clear" data-clear-feel="${m.key}" disabled>Clear rating</button></div></section>`).join('')}<label class="day-notes-label">Anything else about the day?<textarea name="notes" rows="3" maxlength="1000" placeholder="Water changed after lunch, lots of birds, bait worked better…"></textarea></label><button type="submit" class="primary" id="save-day-observations">Save day ratings</button></fieldset><p id="day-observation-status" class="small muted" role="status">Loading your saved day observations…</p></form></section>`;
 }
 async function showDayObservations(c) {
   $('detail-label').textContent='Day notes & ratings';
@@ -1469,7 +1481,7 @@ function measurementCards(p, units = {}) {
   }).join('') || '<p class="muted">No measurements were supplied for this snapshot.</p>';
 }
 function conditionsHTML(data) {
-  if(!data?.length) return waterClarityCard(data) + '<p class="muted">Conditions are awaiting collection. Use Update weather to try now.</p>';
+  if(!data?.length) return waterClarityCard(data) + '<p class="muted">Conditions are awaiting collection. Use Refresh catch weather to try now.</p>';
   const displayed=data.some(s=>s.model_version==='fishing-history-v2') ? data.filter(s=>s.model_version!=='fishing-context-v1') : data;
   return waterClarityCard(data) + displayed.map(snapshot => {
     const p = snapshot.raw_payload || {};
@@ -1484,7 +1496,7 @@ function compassPoint(degrees) {
   return ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'][Math.round(((degrees%360)+360)%360/22.5)%16];
 }
 function historyContextHTML(context) {
-  if (!context?.features?.windows) return '<section class="condition-history" aria-label="Previous 72 hours"><p class="muted">History is not available yet. Use Update weather below to check for saved history.</p></section>';
+  if (!context?.features?.windows) return '<section class="condition-history" aria-label="Previous 72 hours"><p class="muted">History is not available yet. Use Refresh catch weather below to check for saved history.</p></section>';
   const number=value=>Number.isFinite(value)?esc(Math.round(value*10)/10):'—';
   const periods=[3,6,12,24,48,72];
   const panels=periods.map(hours=>{
@@ -1499,7 +1511,7 @@ function historyContextHTML(context) {
 }
 function addConditionActions(c, generation) {
   const container = $('conditions');
-  container.insertAdjacentHTML('beforeend','<div class="condition-actions"><button type="button" id="collect-conditions" class="condition-action"><span aria-hidden="true">↻</span><span><strong>Update weather</strong></span></button><button type="button" id="record-observations" class="condition-action" aria-expanded="false" aria-controls="observation-slot"><span aria-hidden="true">◉</span><span><strong>Add observations</strong></span></button></div><p id="condition-status" role="status" class="small muted"></p><div id="observation-slot"></div><details class="history-disclosure"><summary>Weather before the catch <span class="small muted">Up to 72 hours</span></summary><div id="condition-history-slot"><p class="small muted">Checking previous 72 hours…</p></div></details>');
+  container.insertAdjacentHTML('beforeend','<div class="condition-actions"><button type="button" id="collect-conditions" class="condition-action"><span aria-hidden="true">↻</span><span><strong>Refresh catch weather</strong><small>For this catch’s time and location</small></span></button></div><p id="condition-status" role="status" class="small muted"></p><details class="history-disclosure"><summary>Weather before the catch <span class="small muted">Up to 72 hours</span></summary><div id="condition-history-slot"><p class="small muted">Checking previous 72 hours…</p></div></details>');
   $('collect-conditions').onclick = async () => {
     const button=$('collect-conditions');button.disabled=true;
     button.setAttribute('aria-busy','true');
@@ -1517,45 +1529,8 @@ function addConditionActions(c, generation) {
       }
     } catch (error) { if(generation===conditionsGeneration && $('condition-status')) {
       const status=error?.context?.status;
-      $('condition-status').textContent=status===401?'Your sign-in has expired. Sign in again to update weather.':!navigator.onLine?'You are offline. Reconnect and try Update weather again.':'Weather could not be updated. Your saved conditions are still available; try again shortly.';
+      $('condition-status').textContent=status===401?'Your sign-in has expired. Sign in again to update weather.':!navigator.onLine?'You are offline. Reconnect and try Refresh catch weather again.':'Weather could not be updated. Your saved conditions are still available; try again shortly.';
     } } finally { if(button.isConnected){button.disabled=false;button.removeAttribute('aria-busy');} }
-  };
-  $('record-observations').onclick = () => observationForm(c,generation);
-}
-function observationForm(c,generation) {
-  const slot=$('observation-slot');
-  if($('observation-form')) {
-    slot.hidden=!slot.hidden;
-    $('record-observations').setAttribute('aria-expanded',String(!slot.hidden));
-    if(!slot.hidden)slot.scrollIntoView({block:'nearest'});
-    return;
-  }
-  slot.hidden=false;
-  $('record-observations').setAttribute('aria-expanded','true');
-  slot.innerHTML=`<form id="observation-form" class="observation-form"><h4>What did you see at this catch?</h4><p class="small muted">Add only what you observed then. These are saved separately from model estimates.</p><fieldset class="clarity-options"><legend>Water clarity</legend>${[['','Not observed'],['Clear','Clear'],['Slightly cloudy','Slightly cloudy'],['Murky','Murky']].map(([value,label],i)=>`<label><input type="radio" name="water_clarity" value="${value}"${i===0?' checked':''}><span class="clarity-choice clarity-${i}"><i aria-hidden="true"></i>${label}</span></label>`).join('')}</fieldset><label>Measured water temperature (°C)<input name="water_temperature" type="number" min="-3" max="45" step="0.1" placeholder="Only if measured"></label><label>Observed current<select name="current_strength"><option value="">Not observed</option><option>Still</option><option>Weak</option><option>Moderate</option><option>Strong</option></select></label><label>Observed tide<select name="tidal_stage"><option value="">Not observed</option><option>Incoming / rising</option><option>Outgoing / falling</option><option>High water</option><option>Low water</option><option>Slack water</option></select></label><label>Notes<textarea name="notes" maxlength="1000" rows="3"></textarea></label><p id="observation-status" role="status" class="small muted"></p><div class="observation-buttons"><button type="submit" class="primary">Save observations</button><button type="button" id="cancel-observations" class="quiet">Close</button></div></form>`;
-  $('cancel-observations').onclick=()=>{slot.hidden=true;$('record-observations').setAttribute('aria-expanded','false');$('record-observations').focus();};
-  slot.scrollIntoView({block:'nearest'});
-  $('observation-form').querySelector('input').focus({preventScroll:true});
-  $('observation-form').onsubmit = async event => {
-    event.preventDefault();const form=event.currentTarget,button=form.querySelector('[type="submit"]');
-    if(button.disabled)return;
-    if(!form.reportValidity())return;
-    button.disabled=true;
-    const payload={};for(const [key,value] of new FormData(form)) if(value.toString().trim()) payload[key]=key==='water_temperature'?Number(value):value.toString().trim();
-    if(!Object.keys(payload).length){$('observation-status').textContent='Choose or enter at least one observation.';button.disabled=false;return;}
-    $('observation-status').textContent='Saving your observations…';
-    try {
-      const {error}=await client.from('fishing_condition_snapshots').insert({catch_archive_id:c.archive_id,provider:'Angler observation',sample_at:c.caught_at,units:{water_temperature:'°C'},raw_payload:payload});
-      if(error)throw error;
-      if(generation===conditionsGeneration && session && $('details').open) {
-        const scroll=$('details').scrollTop;
-        await showDetail(c);
-        if(generation+1===conditionsGeneration && $('condition-status')){
-          $('condition-status').textContent='Your observations were saved.';
-          $('details').scrollTop=scroll;
-        }
-      }
-    }catch{if(generation===conditionsGeneration && $('observation-status')){$('observation-status').textContent='Observations could not be saved. Your entries are kept here; try again.';button.disabled=false;}}
   };
 }
 async function showDayConditions(rows) {
@@ -1605,9 +1580,9 @@ async function showDetail(c) {
     try {
       const history=await client.from('fishing_environment_features').select('features,astronomy,quality,status').eq('catch_archive_id',c.archive_id).eq('feature_version','fishing-history-v2').limit(1);
       if(generation===conditionsGeneration && session && $('details').open) {
-        $('condition-history-slot').innerHTML=history.error?'<p class="muted">History could not be loaded. Try Update weather again.</p>':historyContextHTML(history.data?.[0]);
+        $('condition-history-slot').innerHTML=history.error?'<p class="muted">History could not be loaded. Try Refresh catch weather again.</p>':historyContextHTML(history.data?.[0]);
       }
-    } catch { if(generation===conditionsGeneration && $('condition-history-slot')) $('condition-history-slot').textContent='History could not be loaded. Try Update weather again.'; }
+    } catch { if(generation===conditionsGeneration && $('condition-history-slot')) $('condition-history-slot').textContent='History could not be loaded. Try Refresh catch weather again.'; }
   } catch {
     if (generation === conditionsGeneration && $('conditions')) {
       $('conditions').innerHTML =

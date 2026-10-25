@@ -1962,3 +1962,11 @@ footer { margin-top:24px; }
 @media(min-width:951px) and (hover:hover) and (pointer:fine) {
  #journal > #empty,#journal > footer { order:3; }
 }
+
+/* Field-guide illustrations replace platform-dependent emoji in day ratings. */
+.day-feel-icon { display:flex; align-items:center; justify-content:center; width:48px; height:48px; border-radius:12px; background:#e5e8d7; color:#355d4e; }
+.rating-art { display:block; width:38px; height:38px; }
+.condition-actions { display:block; }
+.condition-actions .condition-action { width:100%; }
+.condition-action small { display:block; font-size:12px; margin-top:3px; font-weight:400; }
+.day-feel-heading { grid-template-columns:48px minmax(0,1fr); column-gap:12px; }
