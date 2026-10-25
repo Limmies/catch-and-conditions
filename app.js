@@ -1291,7 +1291,7 @@ const dayFeelMetrics = [
   {key:'bite_activity',label:'Bite activity',low:'Nothing touching',high:'Non-stop bites',words:['No bites','Very quiet','Occasional bites','Regular bites','Non-stop bites'],note:'Include bites that did not result in a landed fish.'},
   {key:'bait_presence',label:'Baitfish activity',low:'None seen',high:'Bait everywhere',words:['None seen','A little','Some bait around','Plenty of bait','Bait everywhere'],note:'Baitfish you noticed at the surface or on the fish finder. Unseen does not mean absent.'},
 ];
-function dayRatingArt(key) {
+function journalArt(key) {
   const fish = '<path d="M5 12c7-9 18-9 25 0-7 9-18 9-25 0Zm25 0 8-6v12l-8-6Z"/><circle cx="12" cy="10" r="1" fill="currentColor" stroke="none"/>';
   const art = {
     enjoyment:'<circle cx="24" cy="24" r="10" fill="#d9bb72" stroke="none"/><circle cx="24" cy="24" r="9"/><path d="M24 5v5m0 28v5M5 24h5m28 0h5M11 11l4 4m18 18 4 4M11 37l4-4m18-18 4-4"/>',
@@ -1299,13 +1299,17 @@ function dayRatingArt(key) {
     sea_comfort:'<path d="M5 29q5-6 10 0t10 0 10 0 10 0M5 38q5-6 10 0t10 0 10 0 10 0M13 16h23l-5 7H19Z"/><path d="M24 7v9m-6-6h12"/>',
     current_strength:'<path d="M5 13h31m-6-6 6 6-6 6M12 25h31m-6-6 6 6-6 6M5 37h24m-6-6 6 6-6 6"/>',
     bite_activity:'<path d="M29 5v24a9 9 0 0 1-18 0v-7l5 5M25 5h8"/><circle cx="29" cy="10" r="2" fill="#d9bb72" stroke="none"/><path d="m37 20 5-3m-4 11h6"/>',
+    pressure:'<path d="M10 36a18 18 0 1 1 28 0"/><path d="M14 33h20M24 13v4m-12 5 4 2m20-2-4 2M24 30l8-8"/><circle cx="24" cy="30" r="3" fill="#d9bb72"/>',
+    temperature:'<path d="M20 29V10a5 5 0 0 1 10 0v19a10 10 0 1 1-10 0Z"/><path d="M25 16v18m11-20h5m-5 8h5"/><circle cx="25" cy="36" r="4" fill="#d9bb72" stroke="none"/>',
+    rain:'<path d="M12 27a8 8 0 1 1 1-16 11 11 0 0 1 21 2 7 7 0 1 1 3 14Z" fill="#e1e8df"/><path d="m15 33-3 7m13-7-3 7m13-7-3 7"/>',
+    refresh:'<path d="M35 13a15 15 0 1 0 4 18M27 13h9V4"/>',
     bait_presence:'<g transform="translate(1 6) scale(.75)">'+fish+'</g><g transform="translate(15 20) scale(.7)">'+fish+'</g><g transform="translate(1 32) scale(.55)">'+fish+'</g>'
   };
   return `<svg class="rating-art" viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${art[key] || ''}</svg>`;
 }
 function dayFeelWord(metric,value) { return metric.words[Math.min(4,Math.floor(value/2.5))]; }
 function dayObservationFormHTML(c,mode) {
-  return `<section class="day-observations"><h2>${esc(dateLabel(c.caught_at))}</h2><p class="muted">${esc(fishingModeLabels[mode])}</p><form id="day-observation-form"><fieldset id="day-observation-fields" disabled>${dayFeelMetrics.map(m=>`<section class="day-feel-card is-unrated" data-feel-card="${m.key}"><div class="day-feel-heading"><span class="day-feel-icon" aria-hidden="true">${dayRatingArt(m.key)}</span><label for="day-feel-${m.key}">${m.label}</label><output for="day-feel-${m.key}" id="day-feel-value-${m.key}" aria-live="polite">Not rated</output></div><input type="range" min="0" max="10" step="1" value="5" id="day-feel-${m.key}" name="${m.key}" data-rated="false" aria-describedby="day-feel-note-${m.key}" aria-valuetext="Not rated"><div class="day-feel-ends"><span>${m.low}</span><span>${m.high}</span></div><div class="day-feel-bottom"><p id="day-feel-note-${m.key}" class="sr-only">${m.note}</p><button type="button" class="feel-clear" data-clear-feel="${m.key}" disabled>Clear rating</button></div></section>`).join('')}<label class="day-notes-label">Anything else about the day?<textarea name="notes" rows="3" maxlength="1000" placeholder="Water changed after lunch, lots of birds, bait worked better…"></textarea></label><button type="submit" class="primary" id="save-day-observations">Save day ratings</button></fieldset><p id="day-observation-status" class="small muted" role="status">Loading your saved day observations…</p></form></section>`;
+  return `<section class="day-observations"><h2>${esc(dateLabel(c.caught_at))}</h2><p class="muted">${esc(fishingModeLabels[mode])}</p><form id="day-observation-form"><fieldset id="day-observation-fields" disabled>${dayFeelMetrics.map(m=>`<section class="day-feel-card is-unrated" data-feel-card="${m.key}"><div class="day-feel-heading"><span class="day-feel-icon" aria-hidden="true">${journalArt(m.key)}</span><label for="day-feel-${m.key}">${m.label}</label><output for="day-feel-${m.key}" id="day-feel-value-${m.key}" aria-live="polite">Not rated</output></div><input type="range" min="0" max="10" step="1" value="5" id="day-feel-${m.key}" name="${m.key}" data-rated="false" aria-describedby="day-feel-note-${m.key}" aria-valuetext="Not rated"><div class="day-feel-ends"><span>${m.low}</span><span>${m.high}</span></div><div class="day-feel-bottom"><p id="day-feel-note-${m.key}" class="sr-only">${m.note}</p><button type="button" class="feel-clear" data-clear-feel="${m.key}" disabled>Clear rating</button></div></section>`).join('')}<label class="day-notes-label">Anything else about the day?<textarea name="notes" rows="3" maxlength="1000" placeholder="Water changed after lunch, lots of birds, bait worked better…"></textarea></label><button type="submit" class="primary" id="save-day-observations">Save day ratings</button></fieldset><p id="day-observation-status" class="small muted" role="status">Loading your saved day observations…</p></form></section>`;
 }
 async function showDayObservations(c) {
   $('detail-label').textContent='Day notes & ratings';
@@ -1501,7 +1505,7 @@ function historyContextHTML(context) {
   const periods=[3,6,12,24,48,72];
   const panels=periods.map(hours=>{
     const w=context.features.windows[hours]||{};
-    const metric=(label,value,unit,symbol,note)=>`<div class="history-metric"><span class="history-symbol" aria-hidden="true">${symbol}</span><span>${label}</span><strong>${number(value)}<small>${Number.isFinite(value)?' '+unit:''}</small></strong><small>${note}</small></div>`;
+    const metric=(label,value,unit,symbol,note)=>`<div class="history-metric"><span class="history-symbol" aria-hidden="true">${journalArt({'≋':'current_strength','☂':'rain','↕':'pressure','≈':'temperature'}[symbol])}</span><span>${label}</span><strong>${number(value)}<small>${Number.isFinite(value)?' '+unit:''}</small></strong><small>${note}</small></div>`;
     const change=value=>!Number.isFinite(value)?'No change estimate':value>0?'↑ Rising':value<0?'↓ Falling':'→ Steady';
     const direction=Number.isFinite(w.wind_direction_10m?.mean_degrees) ? ` · ${compassPoint(w.wind_direction_10m.mean_degrees)}` : '';
     return `<div class="history-period" data-history-panel="${hours}"${hours===24?'':' hidden'}><p class="history-window-label">The ${hours} hours leading up to this catch</p><div class="history-metrics">${metric('Average wind',w.wind_speed_10m?.mean,'km/h','≋','Modelled wind'+direction)}${metric('Total rain',w.precipitation?.total_mm,'mm','☂',w.precipitation?.total_is_partial?'Partial rainfall coverage *':'Accumulated over this window')}${metric('Pressure change',w.pressure_msl?.change,'hPa','↕',change(w.pressure_msl?.change))}${metric('Sea temperature change',w.sea_surface_temperature?.change,'°C','≈',change(w.sea_surface_temperature?.change))}</div></div>`;
@@ -1511,7 +1515,7 @@ function historyContextHTML(context) {
 }
 function addConditionActions(c, generation) {
   const container = $('conditions');
-  container.insertAdjacentHTML('beforeend','<div class="condition-actions"><button type="button" id="collect-conditions" class="condition-action"><span aria-hidden="true">↻</span><span><strong>Refresh catch weather</strong><small>For this catch’s time and location</small></span></button></div><p id="condition-status" role="status" class="small muted"></p><details class="history-disclosure"><summary>Weather before the catch <span class="small muted">Up to 72 hours</span></summary><div id="condition-history-slot"><p class="small muted">Checking previous 72 hours…</p></div></details>');
+  container.insertAdjacentHTML('beforeend','<div class="condition-actions"><button type="button" id="collect-conditions" class="condition-action"><span aria-hidden="true">'+journalArt('refresh')+'</span><span><strong>Refresh catch weather</strong><small>For this catch’s time and location</small></span></button></div><p id="condition-status" role="status" class="small muted"></p><details class="history-disclosure"><summary>Weather before the catch <span class="small muted">Up to 72 hours</span></summary><div id="condition-history-slot"><p class="small muted">Checking previous 72 hours…</p></div></details>');
   $('collect-conditions').onclick = async () => {
     const button=$('collect-conditions');button.disabled=true;
     button.setAttribute('aria-busy','true');
