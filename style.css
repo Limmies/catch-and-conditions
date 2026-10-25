@@ -1885,3 +1885,28 @@ footer { margin-top:24px; }
 .trip-band + .trip-band { box-shadow:inset 2px 0 #fffaf0; }
 .trip-band[aria-pressed=true] { outline:3px solid var(--ink); outline-offset:-3px; }
 @media(max-width:600px) { .trip-time-key { gap:8px 14px; font-size:10px; } }
+
+/* A stable sign-in screen and one quiet loading state. */
+.login-panel { margin:clamp(24px,8vh,80px) auto; }
+#login-status { min-height:3em; margin-bottom:0; }
+#login-form[aria-busy=true] #login-button { position:relative; }
+#login-form[aria-busy=true] #login-button::after,#status.is-loading::before {
+ content:''; display:inline-block; width:22px; height:12px; margin-left:10px;
+ vertical-align:middle; background:currentColor;
+ clip-path:polygon(0 50%,18% 14%,54% 4%,75% 30%,100% 0,100% 100%,75% 70%,54% 96%,18% 86%);
+ animation:fish-swim 1.2s ease-in-out infinite;
+}
+#status.is-loading::before { margin:0 10px 0 0; }
+.app-loading { min-height:55vh; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; color:var(--green); }
+.app-loading p { margin:0; font-size:14px; color:var(--muted); }
+.loading-fish { width:68px; height:36px; animation:fish-swim 1.2s ease-in-out infinite; }
+#journal { animation:journal-appear .22s ease-out; }
+@keyframes fish-swim { 0%,100% { transform:translateX(-3px) rotate(-3deg); } 50% { transform:translateX(3px) rotate(3deg); } }
+@keyframes journal-appear { from { opacity:0; } to { opacity:1; } }
+@media(prefers-reduced-motion:reduce) {
+ .loading-fish,#login-form[aria-busy=true] #login-button::after,#status.is-loading::before,#journal { animation:none; }
+}
+.map-loading { position:absolute; z-index:800; top:12px; left:50%; transform:translateX(-50%); padding:8px 12px; border:1px solid var(--line); border-radius:20px; background:var(--white); color:var(--green); font:12px/1.4 system-ui,sans-serif; pointer-events:none; box-shadow:0 2px 8px #293f3812; white-space:nowrap; }
+/* Reserve the sync line so background refreshes do not move cards or the map. */
+#status,#status:empty { display:block; min-height:20px; margin:10px 0 0; }
+.map-loading::before { content:'›'; display:inline-block; margin-right:7px; color:var(--green); }

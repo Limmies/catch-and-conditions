@@ -17,12 +17,12 @@
     <link rel="stylesheet" href="vendor/leaflet.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.Default.css">
-    <link rel="stylesheet" href="style.css?v=55">
+    <link rel="stylesheet" href="style.css?v=56">
     <script defer src="vendor/supabase.js"></script>
     <script defer src="vendor/leaflet.js"></script>
     <script defer src="vendor/leaflet.markercluster.js"></script>
     <script defer src="config.js"></script>
-    <script defer src="app.js?v=55"></script>
+    <script defer src="app.js?v=56"></script>
   </head>
   <body>
     <header
@@ -33,6 +33,10 @@
       <form id="login-form"><label>Email<input id="email" type="email" autocomplete="username" required></label><label>Password<input id="password" type="password" autocomplete="current-password" required></label><button id="login-button" class="primary" type="submit">Sign in</button></form>
       <p id="login-status" role="status" class="muted">Sign in with your fishing journal account.</p>
     </section>
+      <section id="app-loading" class="app-loading" role="status" hidden>
+        <svg class="loading-fish" viewBox="0 0 100 50" aria-hidden="true"><path d="M72 25 94 9v32L72 25ZM8 25C25 3 58 3 77 25 58 47 25 47 8 25Z" fill="currentColor"/><circle cx="25" cy="21" r="3" fill="#fffaf0"/><path d="M42 12q10 13 0 26" fill="none" stroke="#fffaf0" stroke-width="2"/></svg>
+        <p>Opening your journal…</p>
+      </section>
       <section id="journal" hidden>
         <div
           class="heading"><div><h1 id="page-title">Map</h1></div><button id="refresh" class="quiet">Refresh</button></div>

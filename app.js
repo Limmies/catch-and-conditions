@@ -179,6 +179,7 @@ let client,
   lastRefreshAt = 0;
 let dayPalette = new Map();
 function message(text, error = false, kind = 'load') {
+  $('status').classList.remove('is-loading');
   $('status').dataset.kind = kind;
   $('status').textContent = text;
   $('status').classList.toggle('error', error);
@@ -221,28 +222,32 @@ function resetPrivateView() {
   $('signout').hidden = true;
   $('password').value = '';
   $('refresh').disabled = false;
+  $('app-loading').hidden = true;
+  $('login-form').removeAttribute('aria-busy');
   lastRefreshAt = 0;
 }
 async function setSession(next) {
-  session = next;
-  if (!session) {
+  // Supabase may emit SIGNED_IN again on focus. Do not rebuild the journal.
+  if (next && session?.user.id === next.user.id) { session = next; return; }
+  if (!next) { session = null; resetPrivateView(); return; }
+  if (config.ownerId && next.user.id !== config.ownerId) {
+    session = null;
     resetPrivateView();
-    return;
-  }
-  if (config.ownerId && session.user.id !== config.ownerId) {
     await client.auth.signOut({ scope: 'local' });
-    loginMessage(
-      'This account is not the owner of this fishing journal.',
-      true,
-    );
+    loginMessage('This account is not the owner of this fishing journal.', true);
     return;
   }
+  session = next;
   $('login').hidden = true;
+  $('app-loading').hidden = false;
+  $('password').value = '';
+  await refreshJournal();
+  if (session?.user.id !== next.user.id) return;
+  $('app-loading').hidden = true;
   $('journal').hidden = false;
   $('signout').hidden = false;
-  $('password').value = '';
   route();
-  await refreshJournal();
+  requestAnimationFrame(() => { map?.invalidateSize({pan:false}); fitMap(); });
 }
 // Deduplicate by archive identity, never coordinates: several real catches may share a spot.
 function uniqueRecords(rows) {
@@ -282,7 +287,8 @@ async function refreshJournal() {
   const generation = ++loadGeneration;
   const owner = session.user.id;
   $('refresh').disabled = true;
-  message('Refreshing your journal…');
+  message('Refreshing…');
+  $('status').classList.add('is-loading');
   try {
     const [catchResult, tripResult] = await Promise.allSettled([
       readRecords(
@@ -334,7 +340,10 @@ async function refreshJournal() {
       lastRefreshAt = Date.now();
     }
   } finally {
-    if (generation === loadGeneration) $('refresh').disabled = false;
+    if (generation === loadGeneration) {
+      $('refresh').disabled = false;
+      $('status').classList.remove('is-loading');
+    }
   }
 }
 
@@ -375,7 +384,7 @@ function render() {
   } else if ($('status').dataset.kind === 'filter') message('');
   renderTotals();
   renderDays();
-  renderMap();
+  if (!$('journal').hidden && (location.hash === '#map' || !location.hash)) renderMap();
   renderTrips();
 }
 
@@ -630,15 +639,30 @@ function initMap() {
     scrollWheelZoom: true,
     inertia: false,
     zoomAnimation: false,
-    fadeAnimation: false,
+    fadeAnimation: !matchMedia('(prefers-reduced-motion: reduce)').matches,
     markerZoomAnimation: false,
     bounceAtZoomLimits: false,
     touchZoom: true,
   }).setView([-34.08, 22.97], 8);
   const osmCredit = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  const tileStatus = document.createElement('div');
+  tileStatus.className = 'map-loading';
+  tileStatus.setAttribute('role', 'status');
+  tileStatus.textContent = 'Loading map…';
+  tileStatus.hidden = true;
+  map.getContainer().append(tileStatus);
+  let tileTimer;
+  const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom:19, attribution:osmCredit,
-  }).addTo(map);
+  });
+  tiles.on('loading', () => {
+    clearTimeout(tileTimer);
+    tileStatus.hidden = false;
+    tileTimer = setTimeout(() => { tileStatus.hidden = true; }, 12000);
+  });
+  tiles.on('load', () => { clearTimeout(tileTimer); tileStatus.hidden = true; });
+  map.on('unload', () => clearTimeout(tileTimer));
+  tiles.addTo(map);
   L.control.scale({imperial:false, position:'bottomleft'}).addTo(map);
   applyChartStyle();
   markers = L.markerClusterGroup({
@@ -713,7 +737,7 @@ function renderMap() {
 function fitMap() {
   if (!map || !markers || !markers.getLayers().length) return;
   map.invalidateSize({pan:false});
-  map.fitBounds(markers.getBounds(), { padding: [45, 45], maxZoom: 14 });
+  map.fitBounds(markers.getBounds(), { padding: [45, 45], maxZoom: 14, animate:false });
 }
 const speciesScientific = {
   kabeljo: 'Argyrosomus inodorus',
@@ -1578,7 +1602,7 @@ function route() {
   }[page];
   $('empty').hidden = ['trips','spots'].includes(page) || visible.length > 0;
   document.title = $('page-title').textContent+' · Catch and Conditions';
-  if (page === 'map' && session) {
+  if (page === 'map' && session && !$('journal').hidden) {
     renderMap();
     requestAnimationFrame(() => map?.invalidateSize({pan:false}));
   }
@@ -1647,14 +1671,17 @@ $('signout').onclick = async () => {
 $('login-form').onsubmit = async (event) => {
   event.preventDefault();
   if (!client) return;
+  if ($('login-button').disabled) return;
   $('login-button').disabled = true;
+  $('login-form').setAttribute('aria-busy', 'true');
   loginMessage('Signing in…');
   try {
-    const { error } = await client.auth.signInWithPassword({
+    const { data, error } = await client.auth.signInWithPassword({
       email: $('email').value.trim(),
       password: $('password').value,
     });
     if (error) throw error;
+    if (data?.session) await setSession(data.session);
   } catch (error) {
     loginMessage(
       error.message || 'Could not sign in. Check your connection.',
@@ -1662,6 +1689,7 @@ $('login-form').onsubmit = async (event) => {
     );
   } finally {
     $('login-button').disabled = false;
+    $('login-form').removeAttribute('aria-busy');
     $('password').value = '';
   }
 };
@@ -1693,9 +1721,15 @@ async function start() {
     $('login-button').disabled = true;
     return;
   }
+  // Remove only this project's legacy saved token. New sessions live in memory.
+  try {
+    const storageKey = `sb-${new URL(config.supabaseUrl).hostname.split('.')[0]}-auth-token`;
+    localStorage.removeItem(storageKey);
+    localStorage.removeItem(storageKey + '-code-verifier');
+  } catch { /* Storage can be unavailable in private browsing. */ }
   client = window.supabase.createClient(config.supabaseUrl, key, {
     auth: {
-      persistSession: true,
+      persistSession: false,
       autoRefreshToken: true,
       detectSessionInUrl: false,
     },
@@ -1727,11 +1761,7 @@ async function start() {
 }
 start();
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-  const alreadyControlled = Boolean(navigator.serviceWorker.controller);
-  // An installed app should move to the new shell after an update activates.
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (alreadyControlled) location.reload();
-  }, { once: true });
+  // Updates apply on the next opening; never interrupt a login or unsaved form.
   navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
     .then((registration) => registration.update()).catch(() => {});
 }
