@@ -1091,7 +1091,7 @@ dialog {
  --display-font:Georgia,'Times New Roman',serif;
 }
 body { background:var(--paper); font-family:var(--display-font); position:relative; isolation:isolate; }
-body::before { content:""; position:fixed; inset:0; z-index:-1; pointer-events:none; background-image:url('fish/mobile/kabeljo.jpg'),url('fish/mobile/red_steenbras.jpg'),url('fish/mobile/miss_lucy.jpg'); background-repeat:no-repeat; background-size:min(58vw,68vh,780px) auto,min(48vw,56vh,650px) auto,min(42vw,50vh,580px) auto; background-position:right 24px top 8vh,left 24px top 55%,right 24px bottom 24px; background-blend-mode:multiply; opacity:.085; mix-blend-mode:multiply; }
+body::before { content:""; position:fixed; inset:0; z-index:-1; pointer-events:none; background-image:url('fish/mobile/kabeljo.png'),url('fish/mobile/red_steenbras.png'),url('fish/mobile/miss_lucy.png'); background-repeat:no-repeat; background-size:min(58vw,68vh,780px) auto,min(48vw,56vh,650px) auto,min(42vw,50vh,580px) auto; background-position:right 24px top 8vh,left 24px top 55%,right 24px bottom 24px; background-blend-mode:multiply; opacity:.085; mix-blend-mode:multiply; }
 h1,h2,h3,.brand,.monogram { font-family:var(--display-font); font-weight:400; }
 h1 { font-variant:small-caps; letter-spacing:.025em; font-size:clamp(34px,5vw,52px); }
 h2 { letter-spacing:.015em; font-size:27px; }
@@ -1104,10 +1104,10 @@ h3 { letter-spacing:.015em; }
 .masthead .quiet { color:#53634e; border-color:#cdd3c3; }
 .eyebrow { font-family:var(--display-font); font-size:12px; letter-spacing:.19em; font-weight:400; }
 .heading { position:relative; isolation:isolate; min-height:150px; margin-bottom:10px; }
-.heading::before { content:""; position:absolute; z-index:-1; right:60px; top:-12px; bottom:-5px; width:min(55%,530px); background:url('fish/mobile/kabeljo.jpg') center/contain no-repeat; opacity:.13; mix-blend-mode:multiply; pointer-events:none; }
-body[data-page=totals] .heading::before { background-image:url('fish/mobile/red_steenbras.jpg'); }
-body[data-page=days] .heading::before { background-image:url('fish/mobile/miss_lucy.jpg'); }
-body[data-page=trips] .heading::before { background-image:url('fish/mobile/kabeljo.jpg'); }
+.heading::before { content:""; position:absolute; z-index:-1; right:60px; top:-12px; bottom:-5px; width:min(55%,530px); background:url('fish/mobile/kabeljo.png') center/contain no-repeat; opacity:.13; mix-blend-mode:multiply; pointer-events:none; }
+body[data-page=totals] .heading::before { background-image:url('fish/mobile/red_steenbras.png'); }
+body[data-page=days] .heading::before { background-image:url('fish/mobile/miss_lucy.png'); }
+body[data-page=trips] .heading::before { background-image:url('fish/mobile/kabeljo.png'); }
 .heading h1 { margin-bottom:6px; }
 .page-caption { font-size:16px; font-style:italic; color:var(--muted); margin:7px 0 20px; }
 .tabs { border-bottom-color:#cdd2c5; gap:12px; }
@@ -1148,7 +1148,7 @@ dialog { background:#fdfcf7; border:1px solid #deded3; border-radius:12px; }
 .condition-measurements { background:#f5f5ed; border-radius:8px; }
 .condition-measurements summary { font-weight:400; }
 .login-panel { position:relative; isolation:isolate; }
-.login-panel::before { content:""; position:absolute; z-index:-1; inset:-70px -90px auto -90px; height:310px; background:url('fish/mobile/kabeljo.jpg') center/contain no-repeat; opacity:.11; mix-blend-mode:multiply; pointer-events:none; }
+.login-panel::before { content:""; position:absolute; z-index:-1; inset:-70px -90px auto -90px; height:310px; background:url('fish/mobile/kabeljo.png') center/contain no-repeat; opacity:.11; mix-blend-mode:multiply; pointer-events:none; }
 .login-panel h1 { font-size:52px; }
 .login-panel > p:first-of-type { font-style:italic; }
 footer { font-style:italic; }
@@ -1238,10 +1238,10 @@ img[data-species="santer"] { filter: brightness(1.18) contrast(.94); }
 .fishing-style-panel p { margin: .55rem 0 0; }
 @media (max-width: 400px) { .fishing-modes { display: flex; } .fishing-modes button { flex: 1; padding: .6rem .65rem; } }
 
-body[data-fishing-mode=shore]::before { background-image: url('fish/mobile/blacktail.jpg'),url('fish/mobile/galjoen.jpg'),url('fish/mobile/garrick.jpg'); }
-body[data-fishing-mode=shore] .heading::before { background-image: url('fish/mobile/garrick.jpg'); }
-body[data-fishing-mode=shore][data-page=totals] .heading::before { background-image: url('fish/mobile/galjoen.jpg'); }
-body[data-fishing-mode=shore][data-page=days] .heading::before { background-image: url('fish/mobile/blacktail.jpg'); }
+body[data-fishing-mode=shore]::before { background-image: url('fish/mobile/blacktail.png'),url('fish/mobile/galjoen.png'),url('fish/mobile/garrick.png'); }
+body[data-fishing-mode=shore] .heading::before { background-image: url('fish/mobile/garrick.png'); }
+body[data-fishing-mode=shore][data-page=totals] .heading::before { background-image: url('fish/mobile/galjoen.png'); }
+body[data-fishing-mode=shore][data-page=days] .heading::before { background-image: url('fish/mobile/blacktail.png'); }
 
 .pressure-card { grid-column:1/-1; border:1px solid var(--line); border-radius:12px; padding:18px; background:#f5f3e9; min-width:0; display:flex; flex-direction:column; align-items:stretch; text-align:left; }
 
@@ -2036,3 +2036,58 @@ dialog { border-color:#bfb59d; box-shadow:0 10px 50px #263d3226; }
  .day-card::before,.trip-card::before { right:20px; width:36px; height:11px; top:-6px; }
 }
 .overview > div:last-child { border-left:1px solid #d9cfb780; }
+
+/* Scrapbook pages with the original natural-history fish plates restored. */
+body::before {
+ display:block;
+ background-image:url('fish/mobile/kabeljo.png'),url('fish/mobile/red_steenbras.png'),url('fish/mobile/miss_lucy.png');
+ background-size:min(48vw,740px) auto,min(40vw,600px) auto,min(36vw,520px) auto;
+ background-position:right 3vw top 13vh,left 2vw top 58%,right 8vw bottom 5vh;
+ opacity:.14;
+}
+body[data-fishing-mode=shore]::before { background-image:url('fish/mobile/blacktail.png'),url('fish/mobile/galjoen.png'),url('fish/mobile/garrick.png'); }
+body[data-fishing-mode=all]::before { background-image:url('fish/mobile/kabeljo.png'),url('fish/mobile/galjoen.png'),url('fish/mobile/red_steenbras.png'); }
+.heading::before { display:block; top:-8px; bottom:-8px; right:120px; width:240px; opacity:.16; background-image:url('fish/mobile/kabeljo.png'); }
+body[data-page=spots] .heading::before { background-image:url('fish/mobile/red_steenbras.png'); }
+body[data-fishing-mode=shore][data-page=spots] .heading::before { background-image:url('fish/mobile/blacktail.png'); }
+body[data-fishing-mode=all] .heading::before { background-image:url('fish/mobile/galjoen.png'); }
+.day-card,.trip-card,.session-card,.fish-profile,.history-metric,.measurement-cards > div {
+ background-color:#fbf3db;
+ background-image:linear-gradient(115deg,#fffdf640,transparent 65%);
+ border-radius:6px 8px 11px 5px;
+ box-shadow:1px 4px 0 #d8cba64d;
+}
+.day-card,.trip-card { border-color:#d2c095; }
+.day-card::after,.trip-card::after { content:''; position:absolute; bottom:0; right:0; width:13px; height:13px; background:linear-gradient(135deg,#e0d1a6 0 48%,#f1eadb 52%); border-top-left-radius:3px; pointer-events:none; }
+.session-card { background-color:#edf0dc; border-color:#b9c0a0; }
+.session-spot-label { background:#f7eab9; border:1px solid #d4c18b; border-radius:5px 8px 6px 4px; }
+#totals-page .table-wrap { background:#fbf3db; border-radius:6px 9px 11px 5px; border-color:#cabc98; }
+#totals-page .species-row td,#totals-page .species-bar-row td { background:#fff8e5; }
+#totals-page th { background:#e8e8ce; border-bottom:1px dashed #b9b79b; }
+#totals-page .species-row + .species-bar-row td { border-bottom:1px dashed #cfbf98; }
+.trip-summary > .trip-summary-main { background:#faf1d6; border-color:#cfbe96; border-radius:6px 9px 7px 5px; box-shadow:0 3px 0 #d8cba64d; }
+.trip-summary-main > div { border-right-style:dashed; }
+.overview { background:#f8efd4; border-color:#cdbd96; border-radius:5px 8px 10px 6px; }
+.condition-history,.condition-measurements { background:#f5edda; border-style:dashed; border-color:#c4b898; }
+.history-metric { background-color:#fffae9; }
+.history-periods button { border-radius:5px 8px 6px 4px; background:#fff7de; border-color:#cbbb94; }
+.condition-actions .condition-action { background:#ebedd6; border-color:#b5bd9b; border-radius:6px 9px 10px 5px; }
+.map-options-panel { border-style:dashed; border-color:#b9ab87; border-radius:6px 8px 11px 5px; }
+.fishing-modes { background:#e4dec7; border-style:dashed; border-radius:6px 8px 9px 5px; }
+.fishing-modes button { border-radius:5px 8px 6px 4px; }
+.filter-panel { background:#fff7e4; border-style:dashed; border-radius:6px 9px 8px 5px; }
+.primary,.quiet { border-radius:5px 8px 6px 4px; }
+.login-panel { background:#fff7e4; border-radius:6px 10px 12px 5px; }
+dialog { background:#fff9eb; border-radius:8px 12px 10px 6px; }
+.dialog-heading { background:#fff9eb; }
+@media(min-width:601px) {
+ .tabs { background:#e0d7be; border-radius:6px 8px 9px 5px; }
+ .tabs a { border:1px solid #c7b993; background:#eee5cb; border-radius:6px 9px 5px 4px; }
+ .tabs a[data-selected=false] { background:#eee5cb; }
+ .tabs a[data-selected=true] { background:#fff4cc; border-color:#b69b5f; box-shadow:inset 0 -3px #b89951,0 2px 0 #d2c29a; }
+}
+@media(max-width:600px) {
+ body::before { background-size:88vw auto,80vw auto,76vw auto; background-position:right -12px top 17vh,left -12px top 56%,right 4px bottom 90px; opacity:.12; }
+ .heading::before { right:65px; width:170px; top:-10px; bottom:-14px; opacity:.13; }
+ .day-card::after,.trip-card::after { width:11px; height:11px; }
+}
