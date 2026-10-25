@@ -568,7 +568,10 @@ function openSpotOnMap(latitude, longitude, label) {
   if (!session || !Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude)>90 || Math.abs(longitude)>180) return;
   focusedSpot = {latitude,longitude,label};
   const pages = desktopViews.matches ? selectedPages() : [];
-  if (!pages.includes('map')) pages.push('map');
+  if (!pages.includes('map')) {
+    if (pages.length===2) pages.splice(0,1);
+    pages.push('map');
+  }
   location.hash = pages.join(',');
   route();
   requestAnimationFrame(() => {
@@ -1619,7 +1622,7 @@ const viewNames = {map:'Map', totals:'Species', days:'Days', trips:'Trips', spot
 const desktopViews = matchMedia('(min-width: 951px) and (hover: hover) and (pointer: fine)');
 function selectedPages() {
   const pages = [...new Set(location.hash.slice(1).split(',').filter(key => viewKeys.includes(key)))];
-  return pages.length ? pages : ['map'];
+  return pages.length>2 ? [pages[0],pages.at(-1)] : pages.length ? pages : ['map'];
 }
 function route() {
   const requested = selectedPages();
@@ -1630,6 +1633,7 @@ function route() {
     const section = $(`${key}-page`);
     section.hidden = !pages.includes(key);
     section.dataset.viewLabel = viewNames[key];
+    section.style.order = desktopViews.matches ? String(pages.indexOf(key)+1) : '';
     const tab = document.querySelector(`.tabs [data-page="${key}"]`);
     tab.dataset.selected = String(pages.includes(key));
     tab.setAttribute('aria-current',page === key ? 'page' : 'false');
@@ -1650,7 +1654,7 @@ document.querySelectorAll('.tabs [data-page]').forEach(tab => {
     event.preventDefault();
     const key = tab.dataset.page;
     let pages = selectedPages();
-    pages = pages.includes(key) ? (pages.length>1 ? pages.filter(page=>page!==key) : [key]) : [...pages,key];
+    pages = pages.includes(key) ? (pages.length>1 ? pages.filter(page=>page!==key) : [key]) : pages.length===2 ? [pages[0],key] : [...pages,key];
     location.hash = pages.join(',');
     route();
   });
