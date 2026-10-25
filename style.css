@@ -1910,3 +1910,21 @@ footer { margin-top:24px; }
 /* Reserve the sync line so background refreshes do not move cards or the map. */
 #status,#status:empty { display:block; min-height:20px; margin:10px 0 0; }
 .map-loading::before { content:'›'; display:inline-block; margin-right:7px; color:var(--green); }
+
+/* Spot anchors and desktop view selection. Mobile remains one page at a time. */
+.spot-title { display:block; padding:0; min-height:36px; border:0; border-radius:4px; background:none; color:var(--ink); font:24px/1.25 Georgia,serif; text-align:left; }
+.spot-title:hover { color:var(--green); text-decoration:underline; text-underline-offset:4px; }
+.spot-coordinates { display:block; margin:3px 0 4px; padding:3px 0; min-height:32px; border:0; border-radius:4px; background:none; color:var(--green); font:12px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace; text-align:left; font-variant-numeric:tabular-nums; }
+.location-action { padding:0; border:0; background:none; color:var(--green); text-align:left; }
+.tabs a:focus:not(:focus-visible) { outline:none; }
+.tabs a[data-selected=true] { background:var(--white); color:#284c3d; box-shadow:0 2px 6px #574c3212; }
+.tabs a[data-selected=false] { background:transparent; box-shadow:none; color:var(--muted); }
+@media(min-width:951px) and (hover:hover) and (pointer:fine) {
+ .multiple-views #journal > section:not([hidden]) { margin-bottom:32px; padding-top:20px; border-top:1px solid var(--line); scroll-margin-top:20px; }
+ .multiple-views #journal > section:not([hidden])::before { content:attr(data-view-label); display:block; margin:0 0 16px; color:var(--ink); font:26px/1.25 Georgia,serif; }
+ .multiple-views #page-title { font-size:30px; }
+}
+@media(max-width:600px) {
+ .tabs a[data-selected=true] { background:#e4e7d5; box-shadow:none; }
+ .spot-coordinates { min-height:36px; }
+}

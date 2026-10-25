@@ -196,6 +196,8 @@ function resetPrivateView() {
   visible = [];
   dayPalette.clear();
   sessionSpotLabels.clear();
+  focusedSpot = null;
+  spotLayer = null;
   if (map) map.remove();
   map = null;
   markers = null;
@@ -375,7 +377,7 @@ function render() {
     new Set(visible.map((c) => c.species_id)).size;
   $('day-count').textContent =
     new Set(visible.map((c) => dayKey(c.caught_at))).size;
-  $('empty').hidden = ['#trips','#spots'].includes(location.hash) || visible.length > 0;
+  $('empty').hidden = !(desktopViews.matches ? selectedPages() : [selectedPages().at(-1)]).some(key=>['map','totals','days'].includes(key)) || visible.length > 0;
   $('empty').textContent = catches.length
     ? 'No catches match these filters.'
     : 'No catches yet. Save one on your watch and sync it to see it here.';
@@ -384,7 +386,7 @@ function render() {
   } else if ($('status').dataset.kind === 'filter') message('');
   renderTotals();
   renderDays();
-  if (!$('journal').hidden && (location.hash === '#map' || !location.hash)) renderMap();
+  if (!$('journal').hidden && !$('map-page').hidden) renderMap();
   renderTrips();
 }
 
@@ -542,10 +544,42 @@ function sessionCatchCount(s) {
 }
 function sessionRate(s) { return sessionCatchCount(s)*3600/s.fishing_seconds; }
 function sessionSpotLabel(s) { return s.spot_archive_id ? sessionSpotLabels.get(s.spot_archive_id) || 'Recorded spot' : 'Location unavailable'; }
+function spotPosition(s) {
+  const anchor = s.fishing_spots;
+  return anchor && Number.isFinite(anchor.latitude) && Number.isFinite(anchor.longitude) ? anchor : s;
+}
+function mapSpotAttributes(s) {
+  const p = spotPosition(s);
+  return `data-map-lat="${p.latitude}" data-map-lon="${p.longitude}" data-map-label="${esc(sessionSpotLabel(s))}"`;
+}
+function spotCoordinatesHTML(s) {
+  const p = spotPosition(s);
+  if (!Number.isFinite(p.latitude) || !Number.isFinite(p.longitude)) return '';
+  return `<button type="button" class="spot-coordinates" ${mapSpotAttributes(s)} aria-label="Open ${esc(sessionSpotLabel(s))} at ${p.latitude.toFixed(5)}, ${p.longitude.toFixed(5)} on map">${p.latitude.toFixed(5)}, ${p.longitude.toFixed(5)}</button>`;
+}
 function sessionLocationHTML(s) {
-  if (!Number.isFinite(s.latitude) || !Number.isFinite(s.longitude)) return '<span class="muted">No location saved</span>';
-  const latitude=s.latitude.toFixed(5),longitude=s.longitude.toFixed(5);
-  return `<a class="location-action" href="https://www.openstreetmap.org/?mlat=${latitude}&amp;mlon=${longitude}#map=17/${latitude}/${longitude}" target="_blank" rel="noopener noreferrer" title="${latitude}, ${longitude} · ${s.location_source==='gps_summary'?'GPS summary':'Catch location'}"><span aria-hidden="true">⌖</span> View on map ↗</a>`;
+  const p = spotPosition(s);
+  if (!Number.isFinite(p.latitude) || !Number.isFinite(p.longitude)) return '<span class="muted">No location saved</span>';
+  return `<button type="button" class="location-action" ${mapSpotAttributes(s)}><span aria-hidden="true">⌖</span> View on map →</button>`;
+}
+let focusedSpot = null;
+let spotLayer = null;
+function openSpotOnMap(latitude, longitude, label) {
+  if (!session || !Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude)>90 || Math.abs(longitude)>180) return;
+  focusedSpot = {latitude,longitude,label};
+  const pages = desktopViews.matches ? selectedPages() : [];
+  if (!pages.includes('map')) pages.push('map');
+  location.hash = pages.join(',');
+  route();
+  requestAnimationFrame(() => {
+    if (!focusedSpot || !map) return;
+    map.invalidateSize({pan:false});
+    if (spotLayer) map.removeLayer(spotLayer);
+    spotLayer = L.circle([latitude,longitude], {radius:20,color:'#285c4d',weight:3,fillColor:'#285c4d',fillOpacity:.15}).addTo(map);
+    map.setView([latitude,longitude],18,{animate:false});
+    spotLayer.bindPopup(`<strong>${esc(label)}</strong><br>${latitude.toFixed(5)}, ${longitude.toFixed(5)}<br>20 m spot radius`).openPopup();
+    $('map-page').scrollIntoView({block:'start',behavior:'instant'});
+  });
 }
 function sessionProductivityHTML(t) {
   const sessions=storedSessions(t);
@@ -570,7 +604,7 @@ function renderSpotProductivity(rows) {
   }
   const ranked=[...spots.values()].sort((a,b)=>b.count/b.seconds-a.count/a.seconds || b.seconds-a.seconds);
   const maximum=Math.max(1,...ranked.map(s=>s.count*3600/s.seconds));
-  $('spot-productivity').innerHTML=`<div class="section-heading"><h3>Productivity by spot</h3><span class="small muted">30 metre matching radius</span></div>${ranked.length ? `<div class="spot-productivity-list">${ranked.map(spot=>`<article class="spot-productivity-card"><div><strong>${esc(sessionSpotLabel(spot.session))}</strong><span class="small muted">${spot.sessions} ${spot.sessions===1 ? 'session' : 'sessions'} · ${durationLabel(spot.seconds)} · ${spot.count} catches</span></div><div class="spot-productivity-rate"><strong>${(spot.count*3600/spot.seconds).toFixed(1)}</strong><span>catches / hour</span></div><div class="session-rate-track"><i style="width:${spot.count*3600/spot.seconds/maximum*100}%"></i></div><div class="session-location">${sessionLocationHTML(spot.session)}</div>${(spot.knownAnglers && spot.anglerSeconds>0) || (spot.knownLines && spot.lineSeconds>0) ? `<details class="spot-extra"><summary>Effort</summary><p class="small muted">${spot.knownAnglers && spot.anglerSeconds>0 ? (spot.count*3600/spot.anglerSeconds).toFixed(1)+' / angler-hour' : 'Angler effort unavailable'} · ${spot.knownLines && spot.lineSeconds>0 ? (spot.count*3600/spot.lineSeconds).toFixed(1)+' / line-hour' : 'Line effort unavailable'}</p></details>` : ''}</article>`).join('')}</div>` : '<p class="small muted">No located fishing sessions match these dates and fishing style.</p>'}${unlocated ? `<p class="small muted">${unlocated} session${unlocated===1?'':'s'} without a location remain in the trip records and are excluded from spot rates.</p>` : ''}`;
+  $('spot-productivity').innerHTML=`<div class="section-heading"><h3>Productivity by spot</h3><span class="small muted">20 metre matching radius</span></div>${ranked.length ? `<div class="spot-productivity-list">${ranked.map(spot=>`<article class="spot-productivity-card"><div><button type="button" class="spot-title" ${mapSpotAttributes(spot.session)}>${esc(sessionSpotLabel(spot.session))}</button>${spotCoordinatesHTML(spot.session)}<span class="small muted">${spot.sessions} ${spot.sessions===1 ? 'session' : 'sessions'} · ${durationLabel(spot.seconds)} · ${spot.count} catches</span></div><div class="spot-productivity-rate"><strong>${(spot.count*3600/spot.seconds).toFixed(1)}</strong><span>catches / hour</span></div><div class="session-rate-track"><i style="width:${spot.count*3600/spot.seconds/maximum*100}%"></i></div><div class="session-location">${sessionLocationHTML(spot.session)}</div>${(spot.knownAnglers && spot.anglerSeconds>0) || (spot.knownLines && spot.lineSeconds>0) ? `<details class="spot-extra"><summary>Effort</summary><p class="small muted">${spot.knownAnglers && spot.anglerSeconds>0 ? (spot.count*3600/spot.anglerSeconds).toFixed(1)+' / angler-hour' : 'Angler effort unavailable'} · ${spot.knownLines && spot.lineSeconds>0 ? (spot.count*3600/spot.lineSeconds).toFixed(1)+' / line-hour' : 'Line effort unavailable'}</p></details>` : ''}</article>`).join('')}</div>` : '<p class="small muted">No located fishing sessions match these dates and fishing style.</p>'}${unlocated ? `<p class="small muted">${unlocated} session${unlocated===1?'':'s'} without a location remain in the trip records and are excluded from spot rates.</p>` : ''}`;
   restoreDisclosures($('spot-productivity'),expanded);
 }
 function disclosureState(container) {
@@ -1580,33 +1614,58 @@ async function showDetail(c) {
     }
   }
 }
+const viewKeys = ['map', 'totals', 'days', 'trips', 'spots'];
+const viewNames = {map:'Map', totals:'Species', days:'Days', trips:'Trips', spots:'Spots'};
+const desktopViews = matchMedia('(min-width: 951px) and (hover: hover) and (pointer: fine)');
+function selectedPages() {
+  const pages = [...new Set(location.hash.slice(1).split(',').filter(key => viewKeys.includes(key)))];
+  return pages.length ? pages : ['map'];
+}
 function route() {
-  const page =
-    ['map', 'totals', 'days', 'trips', 'spots'].includes(location.hash.slice(1))
-      ? location.hash.slice(1)
-      : 'map';
-  for (const key of ['map', 'totals', 'days', 'trips', 'spots']) {
-    $(`${key}-page`).hidden = page !== key;
-    document.querySelector(`[data-page="${key}"]`).setAttribute(
-      'aria-current',
-      page === key ? 'page' : 'false',
-    );
+  const requested = selectedPages();
+  const page = requested[requested.length-1];
+  const pages = desktopViews.matches ? requested : [page];
+  document.body.classList.toggle('multiple-views', pages.length>1);
+  for (const key of viewKeys) {
+    const section = $(`${key}-page`);
+    section.hidden = !pages.includes(key);
+    section.dataset.viewLabel = viewNames[key];
+    const tab = document.querySelector(`.tabs [data-page="${key}"]`);
+    tab.dataset.selected = String(pages.includes(key));
+    tab.setAttribute('aria-current',page === key ? 'page' : 'false');
   }
   document.body.dataset.page = page;
-  $('page-title').textContent = {
-    map: 'Map',
-    totals: 'Species',
-    days: 'Days',
-    trips: 'Trips',
-    spots: 'Spots',
-  }[page];
-  $('empty').hidden = ['trips','spots'].includes(page) || visible.length > 0;
+  $('page-title').textContent = pages.map(key => viewNames[key]).join(' + ');
+  $('empty').hidden = !pages.some(key=>['map','totals','days'].includes(key)) || visible.length>0;
   document.title = $('page-title').textContent+' · Catch and Conditions';
-  if (page === 'map' && session && !$('journal').hidden) {
+  if (pages.includes('map') && session && !$('journal').hidden) {
     renderMap();
     requestAnimationFrame(() => map?.invalidateSize({pan:false}));
   }
 }
+desktopViews.addEventListener('change', route);
+document.querySelectorAll('.tabs [data-page]').forEach(tab => {
+  tab.addEventListener('click', event => {
+    if (!desktopViews.matches || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    const key = tab.dataset.page;
+    let pages = selectedPages();
+    pages = pages.includes(key) ? (pages.length>1 ? pages.filter(page=>page!==key) : [key]) : [...pages,key];
+    location.hash = pages.join(',');
+    route();
+  });
+  tab.addEventListener('dblclick', event => {
+    if (!desktopViews.matches) return;
+    event.preventDefault();
+    location.hash = tab.dataset.page;
+    route();
+  });
+});
+document.addEventListener('click', event => {
+  const target = event.target.closest('[data-map-lat]');
+  if (!target) return;
+  openSpotOnMap(Number(target.dataset.mapLat),Number(target.dataset.mapLon),target.dataset.mapLabel);
+});
 updateModeControls();
 document.querySelectorAll('button[data-fishing-mode]').forEach(button => {
   button.addEventListener('click', () => setFishingMode(button.dataset.fishingMode));
