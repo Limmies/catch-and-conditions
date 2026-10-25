@@ -17,16 +17,16 @@
     <link rel="stylesheet" href="vendor/leaflet.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.Default.css">
-    <link rel="stylesheet" href="style.css?v=61">
+    <link rel="stylesheet" href="style.css?v=62">
     <script defer src="vendor/supabase.js"></script>
     <script defer src="vendor/leaflet.js"></script>
     <script defer src="vendor/leaflet.markercluster.js"></script>
     <script defer src="config.js"></script>
-    <script defer src="app.js?v=61"></script>
+    <script defer src="app.js?v=62"></script>
   </head>
   <body>
     <header
-      class="masthead"><a class="brand" href="#map" aria-label="Catch and Conditions home"><span class="monogram">C&C</span><span>Catch and<br><b>Conditions</b></span></a><button id="signout" class="quiet" hidden>Sign out</button></header>
+      class="masthead"><a class="brand" href="#home" aria-label="Catch and Conditions home"><span class="monogram">C&C</span><span>Catch and<br><b>Conditions</b></span></a><button id="signout" class="quiet" hidden>Sign out</button></header>
     <main id="main-content">
       <section id="login" class="login-panel">
       <span class="eyebrow">CATCH AND CONDITIONS</span><h1>Your fishing<br>journal.</h1><p>Catch locations, species totals and days on the water.</p>
@@ -39,8 +39,9 @@
       </section>
       <section id="journal" hidden>
         <div
-          class="heading"><div><h1 id="page-title">Map</h1></div><button id="refresh" class="quiet">Refresh</button></div>
+          class="heading"><div><h1 id="page-title">Home</h1></div><button id="refresh" class="quiet">Refresh</button></div>
         <nav class="tabs" aria-label="Journal pages">
+          <a href="#home" data-page="home"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 11 12 3l9 8M5 10v11h14V10M9 21v-7h6v7"/></svg></span><span>Home</span></a>
           <a href="#map" data-page="map"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></span><span>Map</span></a>
           <a href="#totals" data-page="totals"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M18 12c-4-7-11-7-16 0 5 7 12 7 16 0Zm0 0 4-5v10l-4-5Z"/><circle cx="7" cy="11" r=".7"/></svg></span><span>Species</span></a>
           <a href="#days" data-page="days"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18m-13 5h2m4 0h2"/></svg></span><span>Days</span></a>
@@ -68,7 +69,64 @@
           <div><span>Species</span><strong id="species-count">0</strong></div>
           <div><span>Catch days</span><strong id="day-count">0</strong></div>
         </div>
-        <section id="map-page" aria-label="Catch map">
+        <section id="home-page" aria-label="About Catch and Conditions">
+          <div class="home-book">
+            <div class="home-opening">
+              <article class="home-letter">
+                <span class="home-kicker">A fisherman’s diary</span>
+                <h2>Keep the story.<br>Learn from the details.</h2>
+                <p class="home-lead">A watch on your wrist. A record of your catches. A little more understanding every time you go fishing.</p>
+                <p>Catch and Conditions brings your catches, time on the water and fishing spots into one personal journal. Keep the memories, then look back at what happened, where it happened and how much fishing went into it.</p>
+                <a class="primary home-link" href="#map">Open the catch map <span aria-hidden="true">→</span></a>
+              </article>
+              <div class="home-photo-pair">
+                <figure class="home-print home-print-hero"><img src="photos/offshore-memory.jpg" width="1186" height="662" alt="An angler holding a fish beside the boat on a clear offshore day" fetchpriority="high"><figcaption>Days worth keeping.</figcaption></figure>
+                <aside class="home-note"><span class="home-note-label">The idea</span><p>Less to remember.<br>More to learn from.</p><span>Catch by catch. Session by session.</span></aside>
+              </div>
+            </div>
+
+            <section class="home-chapter" aria-labelledby="home-about-title">
+              <div class="home-chapter-heading"><span class="home-kicker">01 / About the journal</span><h2 id="home-about-title">More than a catch count.</h2></div>
+              <div class="home-about-grid">
+                <article class="home-paper"><h3>The catch</h3><p>Log the species on the watch and save its time and GPS position when a usable fix is available. Review catches on the map, browse the fish guide or look back by day.</p><a href="#totals" class="text-action">Explore species →</a></article>
+                <article class="home-paper home-paper-sage"><h3>The effort</h3><p>See fishing time, travel time and individual fishing sessions. Compare catches per fishing hour, including sessions when nothing was caught.</p><a href="#trips" class="text-action">Read the trip log →</a></article>
+                <article class="home-paper home-paper-blue"><h3>The place & conditions</h3><p>Compare unnamed spots within a 20-metre radius of their saved anchor. Pair the records with modelled catch-time weather and your own day ratings.</p><a href="#spots" class="text-action">Find the fishing spots →</a></article>
+              </div>
+            </section>
+
+            <div class="home-photo-strip" aria-label="Pages from the water">
+              <figure class="home-print"><img src="photos/bass-closeup.jpg" width="768" height="1024" alt="A bass held above a lake beneath cloudy mountains" loading="lazy"><figcaption>A page from freshwater.</figcaption></figure>
+              <figure class="home-print"><img src="photos/release.jpg" width="1182" height="665" alt="A fish being lowered into the water beside a boat at sunset" loading="lazy"><figcaption>And back into the water.</figcaption></figure>
+              <figure class="home-print"><img src="photos/boat-stickers.jpg" width="768" height="1024" alt="The underside of a boat canopy covered with collected stickers" loading="lazy"><figcaption>Every trip leaves its mark.</figcaption></figure>
+            </div>
+
+            <section class="home-chapter" aria-labelledby="home-watch-title">
+              <div class="home-chapter-heading"><span class="home-kicker">02 / From wrist to journal</span><h2 id="home-watch-title">Fish first. Keep a record as you go.</h2><p>The current setup pairs a Garmin fēnix 5X with Garmin Connect on the phone and this private web journal.</p></div>
+              <ol class="home-workflow">
+                <li><span class="home-step">1</span><h3>On the watch</h3><p>Choose a fishing style, start a trip and select a species to save a catch when GPS is usable. The record is kept locally on the watch.</p></li>
+                <li><span class="home-step">2</span><h3>Across the connection</h3><p>With Garmin Connect, Bluetooth and internet available, the watch sends its saved records. Unsent records stay queued for another attempt.</p></li>
+                <li><span class="home-step">3</span><h3>In your journal</h3><p>Sign in to see uploaded catches, completed trips and sessions. The website brings together the map, effort, spot comparisons and conditions.</p></li>
+              </ol>
+              <aside class="home-note home-accuracy"><h3>A note in the margin</h3><p>GPS and automatic activity estimates have limits. Uncertain time remains unclassified. Weather describes the catch’s time and location, not today’s conditions; your day ratings are kept separate from those model estimates.</p></aside>
+            </section>
+
+            <div class="home-photo-strip home-photo-strip-wide" aria-label="Fishing memories">
+              <figure class="home-print"><img src="photos/mountain-bass.jpg" width="768" height="1024" alt="An angler holding a bass beside reeds and mountains" loading="lazy"><figcaption>Some days start in the mountains.</figcaption></figure>
+              <figure class="home-print"><img src="photos/grunter-day.jpg" width="2048" height="1153" alt="An angler holding a spotted fish on a small boat" loading="lazy"><figcaption>Another page from the water.</figcaption></figure>
+              <figure class="home-print"><img src="photos/river-day.jpg" width="1078" height="729" alt="An angler kneeling in a rocky river with a fish and fly rod" loading="lazy"><figcaption>A different river. Another memory.</figcaption></figure>
+            </div>
+
+            <section class="home-chapter home-next" aria-labelledby="home-next-title">
+              <article class="home-letter"><span class="home-kicker">03 / The plan</span><h2 id="home-next-title">Build a better picture over time.</h2><p>The goal is a useful record of real fishing: what you caught, how long you fished and what the day was like. Better notes and more sessions can help reveal patterns worth exploring.</p><p>The next steps are to improve GPS and fishing-versus-travel estimates, make session and spot comparisons more useful, and learn enough about the unnamed spots before giving them names.</p><p class="home-letter-ending">A work in progress, built around days on the water.</p><a class="text-action" href="#days">Open the diary →</a></article>
+              <figure class="home-print home-print-feature"><img src="photos/roman-memory.jpg" width="1182" height="665" alt="An angler holding a large reddish fish aboard a boat" loading="lazy"><figcaption>The details matter. So do the memories.</figcaption></figure>
+            </section>
+            <div class="home-last-prints" aria-label="More pages from the diary">
+              <figure class="home-print"><img src="photos/offshore-closeup.jpg" width="2048" height="1141" alt="A close view of a large fish held aboard a boat on blue water" loading="lazy"><figcaption>One for the scrapbook.</figcaption></figure>
+              <figure class="home-print"><img src="photos/yellowtail-day.jpg" width="1909" height="1280" alt="An angler holding a silver fish and fishing lure on a boat" loading="lazy"><figcaption>Until the next trip.</figcaption></figure>
+            </div>
+          </div>
+        </section>
+        <section id="map-page" hidden aria-label="Catch map">
           <div class="map-toolbar"><button id="fit" class="quiet">Show all spots</button><details class="map-options"><summary>Map options</summary><div class="map-options-panel"><label class="chart-style"><input id="chart-vintage" type="checkbox" checked>Old chart style</label><label>Colour by <select id="colour"><option value="species">Species</option><option value="day">Day</option></select></label></div></details></div>
           <div id="map" aria-label="Map of catch locations"></div>
           <div id="legend" class="legend"></div>

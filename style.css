@@ -2091,3 +2091,95 @@ dialog { background:#fff9eb; border-radius:8px 12px 10px 6px; }
  .heading::before { right:65px; width:170px; top:-10px; bottom:-14px; opacity:.13; }
  .day-card::after,.trip-card::after { width:11px; height:11px; }
 }
+
+/* The opening scrapbook: a letter, real photographs and useful margin notes. */
+.home-only #journal > .heading,.home-only #journal > .journal-controls,.home-only #journal > .overview,.home-only #journal > #status,.home-only #journal > footer { display:none; }
+.home-book { max-width:1580px; margin:16px auto 32px; color:var(--ink); }
+.home-opening { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:clamp(28px,4vw,68px); align-items:center; padding:22px 16px 40px; }
+.home-letter { position:relative; padding:clamp(24px,3vw,44px); background:#fff9e8; border:1px solid #d4c49d; border-radius:4px 7px 10px 5px; box-shadow:2px 5px 0 #d8cba64d; }
+.home-letter::before { content:''; position:absolute; width:68px; height:19px; top:-9px; left:calc(50% - 34px); background:#ddd2b4ad; border:1px solid #cabe9c55; transform:rotate(-3deg); pointer-events:none; }
+.home-kicker { display:block; font:600 11px/1.5 system-ui,sans-serif; text-transform:uppercase; letter-spacing:.14em; color:#6c745d; }
+.home-letter h2 { font-size:clamp(32px,3.3vw,56px); margin:16px 0 22px; line-height:1.1; letter-spacing:-.035em; }
+.home-letter p { line-height:1.8; font-size:15px; max-width:60ch; }
+.home-letter .home-lead { font-size:18px; line-height:1.6; }
+.home-link { display:inline-flex; align-items:center; gap:20px; text-decoration:none; padding:12px 18px; margin-top:14px; min-height:48px; }
+.home-photo-pair { position:relative; padding:6px 12px 20px; }
+.home-print { position:relative; margin:0; min-width:0; padding:12px 12px 0; border:1px solid #d1c4a5; border-radius:2px 4px 3px 2px; background:#fffcf3; box-shadow:2px 5px 10px #4e49301c; transform:rotate(-1deg); }
+.home-print img { display:block; width:100%; height:auto; aspect-ratio:4/3; object-fit:cover; background:#e6e1d1; }
+.home-print figcaption { padding:14px 5px 16px; color:#455b49; font-family:'Bradley Hand','Segoe Print',Georgia,cursive; font-style:italic; font-size:17px; line-height:1.4; }
+.home-print::before { content:''; position:absolute; width:60px; height:18px; top:-8px; left:calc(50% - 30px); background:#d8cfb49c; border:1px solid #cabe9c50; transform:rotate(3deg); pointer-events:none; z-index:1; }
+.home-print-hero { transform:rotate(1.4deg); }
+.home-print-hero img { aspect-ratio:1.45; }
+.home-note { position:relative; padding:22px 26px; border:1px solid #cbb77d; border-radius:3px 5px 9px 2px; background:linear-gradient(130deg,#f9edb6,#f0dfa0); box-shadow:1px 5px 0 #ccbb8740; }
+.home-note::before { content:''; position:absolute; top:8px; right:16px; width:10px; height:10px; border-radius:50%; background:#a96b45; border:2px solid #e0b577; box-shadow:1px 2px 2px #55482f38; pointer-events:none; }
+.home-photo-pair > .home-note { width:85%; margin:22px auto 0; transform:rotate(-1deg); }
+.home-note-label { font:600 11px/1.5 system-ui,sans-serif; text-transform:uppercase; letter-spacing:.12em; color:#746238; }
+.home-note p { font:italic 25px/1.35 Georgia,serif; margin:8px 0; }
+.home-note > span:last-child { color:#62634e; font-size:12px; }
+.home-chapter { margin:30px 0 40px; padding:24px 16px; }
+.home-chapter-heading { max-width:760px; margin:0 0 24px; }
+.home-chapter-heading h2 { font-size:clamp(28px,2.4vw,38px); margin:8px 0 12px; }
+.home-chapter-heading > p { color:var(--muted); font-size:15px; line-height:1.7; }
+.home-about-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:22px; }
+.home-paper { min-width:0; padding:26px; background:#f8edc5; border:1px solid #cebe91; border-radius:4px 7px 9px 3px; box-shadow:1px 4px 0 #d8cba64d; }
+.home-paper-sage { background:#e9ecd6; border-color:#c0c6a7; }
+.home-paper-blue { background:#e4ece4; border-color:#bdcbbc; }
+.home-paper h3 { font-size:27px; margin:0 0 14px; }
+.home-paper p { line-height:1.75; margin:0 0 14px; }
+.home-photo-strip { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:32px; padding:16px 24px 22px; align-items:start; }
+.home-photo-strip .home-print:nth-child(2) { transform:rotate(1.3deg); margin-top:24px; }
+.home-photo-strip .home-print:nth-child(3) { transform:rotate(-.7deg); }
+.home-photo-strip img { aspect-ratio:1.2; }
+.home-workflow { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); list-style:none; margin:0; padding:0; gap:22px; }
+.home-workflow li { position:relative; min-width:0; padding:22px 24px; border-top:1px dashed #bdb398; background:#fff9e8; }
+.home-step { display:flex; align-items:center; justify-content:center; width:36px; height:36px; border:1px solid #9da486; border-radius:48% 43% 47% 42%; font:italic 22px/1 Georgia,serif; color:var(--green); background:#e8ecd7; }
+.home-workflow h3 { margin:14px 0 10px; font-size:25px; }
+.home-workflow p { margin:0; line-height:1.75; }
+.home-accuracy { margin:26px 0 0; max-width:850px; }
+.home-accuracy h3 { font-size:23px; margin:0 0 8px; }
+.home-accuracy p { font:14px/1.75 system-ui,sans-serif; margin:0; }
+.home-next { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:48px; align-items:center; }
+.home-next .home-letter h2 { font-size:36px; }
+.home-letter-ending { font:italic 19px/1.7 Georgia,serif!important; color:#57664e; }
+.home-print-feature { transform:rotate(1deg); }
+.home-last-prints { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:40px; padding:20px 6% 24px; }
+.home-last-prints .home-print:last-child { transform:rotate(1.1deg); }
+body[data-page=home] .heading::before { background-image:url('fish/mobile/kabeljo.png'); }
+@container(max-width:850px) {
+ .home-opening,.home-next { grid-template-columns:minmax(0,1fr); gap:30px; padding:16px 8px 24px; }
+ .home-about-grid,.home-workflow { grid-template-columns:minmax(0,1fr); gap:16px; }
+ .home-photo-strip { gap:20px; padding:16px 8px 24px; }
+ .home-print { padding:8px 8px 0; }
+ .home-print figcaption { font-size:14px; padding:10px 2px 12px; }
+ .home-letter h2 { font-size:38px; }
+ .home-chapter { padding:20px 8px; margin:20px 0; }
+ .home-last-prints { padding:16px 8px; gap:20px; }
+}
+@media(max-width:950px) {
+ .home-opening,.home-next { grid-template-columns:minmax(0,1fr); gap:30px; padding:16px 8px 24px; }
+ .home-about-grid,.home-workflow { grid-template-columns:minmax(0,1fr); gap:16px; }
+ .home-chapter { padding:20px 8px; }
+}
+@media(max-width:600px) {
+ .tabs { grid-template-columns:repeat(6,minmax(0,1fr)); }
+ .tabs a { font-size:9px; }
+ .home-book { margin-top:12px; }
+ .home-opening { padding:14px 5px 24px; }
+ .home-letter { padding:24px 20px; }
+ .home-letter h2 { font-size:34px; }
+ .home-letter .home-lead { font-size:16px; }
+ .home-photo-pair { padding:6px 5px 16px; }
+ .home-note { padding:20px; }
+ .home-note p { font-size:22px; }
+ .home-chapter { padding:16px 5px; margin:16px 0 24px; }
+ .home-paper { padding:22px; }
+ .home-photo-strip { grid-template-columns:minmax(0,1fr); gap:28px; padding:16px 12px 24px; }
+ .home-photo-strip .home-print:nth-child(2) { margin-top:0; }
+ .home-photo-strip img { aspect-ratio:4/3; }
+ .home-print figcaption { font-size:16px; }
+ .home-last-prints { grid-template-columns:minmax(0,1fr); gap:28px; padding:16px 12px; }
+ .home-next { padding:16px 5px; }
+ .home-next .home-letter h2 { font-size:31px; }
+}
+/* Keep each supplied photograph complete inside its paper print. */
+.home-print img { aspect-ratio:auto; object-fit:contain; }

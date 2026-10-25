@@ -1596,18 +1596,19 @@ async function showDetail(c) {
     }
   }
 }
-const viewKeys = ['map', 'totals', 'days', 'trips', 'spots'];
-const viewNames = {map:'Map', totals:'Species', days:'Days', trips:'Trips', spots:'Spots'};
+const viewKeys = ['home', 'map', 'totals', 'days', 'trips', 'spots'];
+const viewNames = {home:'Home', map:'Map', totals:'Species', days:'Days', trips:'Trips', spots:'Spots'};
 const desktopViews = matchMedia('(min-width: 951px) and (hover: hover) and (pointer: fine)');
 function selectedPages() {
   const pages = [...new Set(location.hash.slice(1).split(',').filter(key => viewKeys.includes(key)))];
-  return pages.length>2 ? [pages[0],pages.at(-1)] : pages.length ? pages : ['map'];
+  return pages.length>2 ? [pages[0],pages.at(-1)] : pages.length ? pages : ['home'];
 }
 function route() {
   const requested = selectedPages();
   const page = requested[requested.length-1];
   const pages = desktopViews.matches ? requested : [page];
   document.body.classList.toggle('multiple-views', pages.length>1);
+  document.body.classList.toggle('home-only',pages.length===1 && pages[0]==='home');
   for (const key of viewKeys) {
     const section = $(`${key}-page`);
     section.hidden = !pages.includes(key);
