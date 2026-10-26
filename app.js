@@ -197,32 +197,6 @@ function fishImage(id, large = false) {
     }">`
     : "";
 }
-// Reuse the supplied artwork; plate numbers are stable catalogue positions, not measurements.
-function fishAssetURL(id) {
-  const extension = fishPreviews[id]?.startsWith("data:image/png;") ? "png" : "jpg";
-  return new URL(`fish/mobile/${id}.${extension}`, document.baseURI).href;
-}
-function plateNumber(id) {
-  return String(Object.keys(species).indexOf(id) + 1).padStart(2, "0");
-}
-function speciesPlateHTML(id, count) {
-  if (!species[id]) return "";
-  return `<article class="species-plate"><header class="plate-heading"><div><span class="plate-kicker">Saltwater field guide</span><h2>${
-    esc(species[id][0])
-  }</h2>${scientificCaption(id)}</div><span class="plate-number">Plate<br><b>${
-    plateNumber(id)
-  }</b></span></header><button type="button" class="plate-art" data-profile="${
-    esc(id)
-  }" aria-label="Open the ${esc(species[id][0])} field guide"><img src="${
-    esc(fishAssetURL(id))
-  }" alt="${
-    esc(species[id][0])
-  } illustration" width="640" height="320"><span class="plate-baseline" aria-hidden="true"></span></button><footer class="plate-footer"><span>${count} ${
-    count === 1 ? "catch" : "catches"
-  } in this selection</span><button type="button" class="text-action" data-profile="${
-    esc(id)
-  }">Open field guide →</button></footer></article>`;
-}
 function upgradeFishPortrait(id) {
   const portrait = $("detail-body").querySelector(".fish-portrait");
   if (!portrait || !species[id]) return;
@@ -231,7 +205,10 @@ function upgradeFishPortrait(id) {
   full.onload = () => {
     if (portrait.isConnected) portrait.src = full.src;
   };
-  full.src = fishAssetURL(id);
+  full.src = new URL(
+    `fish/mobile/${id}.${fishPreviews[id]?.startsWith("data:image/png;") ? "png" : "jpg"}`,
+    document.baseURI,
+  ).href;
 }
 let client,
   session,
@@ -273,7 +250,6 @@ function resetPrivateView() {
   for (
     const id of [
       "totals",
-      "species-plate",
       "days",
       "detail-body",
       "legend",
@@ -1753,14 +1729,9 @@ function showSpeciesProfile(id) {
   conditionsGeneration++;
   $("detail-label").textContent = "Species guide";
   $("details").dataset.view = "species";
-  $("detail-body").innerHTML =
-    `<header class="plate-heading"><div><span class="plate-kicker">Saltwater field guide</span><h2>${
-      esc(species[id][0])
-    }</h2>${scientificCaption(id)}</div><span class="plate-number">Plate<br><b>${
-      plateNumber(id)
-    }</b></span></header><div class="reference-plate-art">${
-      fishImage(id, true)
-    }<span class="plate-baseline" aria-hidden="true"></span></div>${fishProfileHTML(id)}`;
+  $("detail-body").innerHTML = `${fishImage(id, true)}<h2>${esc(species[id][0])}</h2>${
+    scientificCaption(id)
+  }${fishProfileHTML(id)}`;
   upgradeFishPortrait(id);
   if (!$("details").open) $("details").showModal();
   $("details").scrollTop = 0;
@@ -1785,8 +1756,6 @@ function renderTotals() {
     (species[a[0]]?.[0] || a[0]).localeCompare(species[b[0]]?.[0] || b[0])
   );
   const max = Math.max(1, ...rows.map((row) => row[1]));
-  const featured = $("species").value || rows[0]?.[0];
-  $("species-plate").innerHTML = speciesPlateHTML(featured, counts.get(featured) || 0);
   $("totals").innerHTML = rows.map(([id, count]) =>
     `<tr class="species-row" style="--species-colour:${
       species[id]?.[1] || "#11543e"
@@ -1794,11 +1763,9 @@ function renderTotals() {
       esc(id)
     }" aria-label="Read about ${esc(species[id]?.[0] || id)}"><span class="species-cell">${
       fishImage(id)
-    }<span>${esc(species[id]?.[0] || id)}${
-      scientificCaption(id)
-    }<span class="species-plate-index">Plate ${
-      plateNumber(id)
-    }</span></span></span></button></td><td><strong>${count}</strong></td><td>${
+    }<span>${
+      esc(species[id]?.[0] || id)
+    }</span></span></button></td><td><strong>${count}</strong></td><td>${
       visible.length ? Math.round(count / visible.length * 100) : 0
     }%</td></tr><tr class="species-bar-row" aria-hidden="true" style="--species-colour:${
       species[id]?.[1] || "#11543e"
