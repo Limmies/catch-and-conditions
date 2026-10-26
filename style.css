@@ -2212,3 +2212,11 @@ body[data-page=home] .heading::before { background-image:url('fish/mobile/kabelj
  .album-controls button { padding:10px 12px; font-size:12px; }
  #album-position { font-size:13px; }
 }
+
+/* Keep the release and its following splash together as a little photo sequence. */
+.home-release-sequence { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; align-items:start; }
+.home-release-sequence .home-print { transform:rotate(-.7deg); }
+.home-release-sequence .home-print + .home-print { transform:rotate(1deg); margin-top:24px; }
+.home-release-sequence figcaption { font-size:15px; }
+@container(max-width:600px) { .home-release-sequence { grid-template-columns:minmax(0,1fr); gap:24px; }.home-release-sequence .home-print + .home-print { margin-top:0; } }
+@media(max-width:600px) { .home-release-sequence { grid-template-columns:minmax(0,1fr); gap:24px; }.home-release-sequence .home-print + .home-print { margin-top:0; } }
