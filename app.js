@@ -1802,6 +1802,46 @@ async function start() {
     if (event === 'TOKEN_REFRESHED') session = next;
   });
 }
+
+function setupHomeAlbum() {
+  const book=$('home-album');
+  if(!book)return;
+  const pages=[...book.querySelectorAll('[data-album-page]')];
+  let index=0,gesture=null;
+  function turn(next) {
+    index=Math.max(0,Math.min(pages.length-1,next));
+    pages.forEach((page,i)=>{
+      page.hidden=i!==index;
+      page.setAttribute('role','group');
+      page.setAttribute('aria-roledescription','slide');
+      page.setAttribute('aria-label',`${i+1} of ${pages.length}`);
+    });
+    pages[index].querySelector('img').loading='eager';
+    $('album-prev').disabled=index===0;
+    $('album-next').disabled=index===pages.length-1;
+    $('album-position').textContent=`Photo ${index+1} of ${pages.length}`;
+  }
+  $('album-prev').onclick=()=>turn(index-1);
+  $('album-next').onclick=()=>turn(index+1);
+  book.addEventListener('keydown',event=>{
+    if(event.altKey || event.ctrlKey || event.metaKey)return;
+    const next={ArrowLeft:index-1,ArrowRight:index+1,Home:0,End:pages.length-1}[event.key];
+    if(next===undefined)return;
+    event.preventDefault();turn(next);
+  });
+  book.addEventListener('pointerdown',event=>{
+    if(event.pointerType==='touch' || event.pointerType==='pen')gesture={id:event.pointerId,x:event.clientX,y:event.clientY};
+  });
+  book.addEventListener('pointerup',event=>{
+    if(!gesture || gesture.id!==event.pointerId)return;
+    const dx=event.clientX-gesture.x,dy=event.clientY-gesture.y;gesture=null;
+    if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)*1.5)turn(index+(dx<0?1:-1));
+  });
+  book.addEventListener('pointercancel',()=>{gesture=null;});
+  book.querySelectorAll('img').forEach(img=>img.draggable=false);
+  turn(0);
+}
+setupHomeAlbum();
 start();
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   // Updates apply on the next opening; never interrupt a login or unsaved form.

@@ -2183,3 +2183,32 @@ body[data-page=home] .heading::before { background-image:url('fish/mobile/kabelj
 }
 /* Keep each supplied photograph complete inside its paper print. */
 .home-print img { aspect-ratio:auto; object-fit:contain; }
+
+/* Loose scrapbook pages: an intentional, manual flip-through with no autoplay. */
+.home-album { margin:48px 0 24px; padding:24px 20px; }
+.home-album > .home-chapter-heading { max-width:760px; }
+.album-book { position:relative; max-width:1120px; margin:26px auto 0; padding:18px; background:#e3d9bd; border:1px solid #c3b48c; border-radius:6px 11px 9px 5px; box-shadow:3px 6px 0 #d4c6a34d; touch-action:pan-y pinch-zoom; }
+.album-book::before,.album-book::after { content:''; position:absolute; inset:8px 6px -5px 10px; border:1px solid #cec2a2; border-radius:4px; background:#f9f2de; z-index:-1; transform:rotate(.6deg); pointer-events:none; }
+.album-book::after { inset:10px 10px -9px 4px; transform:rotate(-.4deg); }
+.album-book:focus-visible { outline:3px solid #b89951; outline-offset:5px; }
+.album-page { transform:none; padding:16px 16px 0; animation:album-turn .22s ease-out; }
+.album-page::before { width:74px; height:18px; left:calc(50% - 37px); }
+.album-page img { width:100%; height:clamp(280px,60vh,650px); aspect-ratio:auto; object-fit:contain; background:#f8f2e2; }
+.album-page figcaption { min-height:62px; display:flex; align-items:center; padding:14px 8px; }
+.album-controls { max-width:1120px; margin:18px auto 0; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.album-controls button { min-height:44px; padding:10px 16px; }
+.album-controls button:disabled { cursor:default; }
+#album-position { font:italic 16px/1.4 Georgia,serif; text-align:center; color:var(--muted); }
+.home-print:not(.album-page) figcaption { line-height:1.6; }
+@keyframes album-turn { from { opacity:.4; transform:translateX(6px) rotate(.25deg); } to { opacity:1; transform:none; } }
+@media(prefers-reduced-motion:reduce) { .album-page { animation:none; } }
+@container(max-width:650px) { .home-album { padding:20px 6px; }.album-book { padding:10px; }.album-page { padding:10px 10px 0; } }
+@media(max-width:600px) {
+ .home-album { margin-top:28px; padding:20px 5px; }
+ .album-book { padding:10px; }
+ .album-page { padding:8px 8px 0; }
+ .album-page img { height:48vh; min-height:250px; max-height:480px; }
+ .album-controls { gap:8px; }
+ .album-controls button { padding:10px 12px; font-size:12px; }
+ #album-position { font-size:13px; }
+}

@@ -1,12 +1,12 @@
 // Cache the public app shell only. Never cache Auth, database requests or maps.
-const CACHE = 'catch-conditions-shell-v62';
+const CACHE = 'catch-conditions-shell-v63';
 const IMAGE_CACHE = 'catch-conditions-fish-mobile-v6';
 // Both styles keep their background illustrations with the public shell.
 const FILES = [
   './',
   './index.html',
-  './style.css?v=62',
-  './app.js?v=62',
+  './style.css?v=63',
+  './app.js?v=63',
   './config.js',
   './photos/offshore-memory.jpg',
   './photos/bass-closeup.jpg',
@@ -43,6 +43,7 @@ const FILES = [
 const ROOT = new URL('./', self.location.href);
 const SHELL_PATHS = new Set(FILES.map((file) => new URL(file, ROOT).pathname));
 const IMAGE_PATH = new URL('fish/mobile/', ROOT).pathname;
+const PHOTO_PATH = new URL('photos/', ROOT).pathname;
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(FILES)));
   self.skipWaiting();
@@ -102,7 +103,9 @@ self.addEventListener('fetch', (event) => {
     event.waitUntil(response.then(() => cacheWrite).catch(() => {}));
     return;
   }
-  if (!SHELL_PATHS.has(url.pathname)) {
+  // Album pages are fetched and cached only when opened, not during installation.
+  const albumPhoto=url.pathname.startsWith(PHOTO_PATH) && /^album-\d{2}\.jpg$/.test(url.pathname.slice(PHOTO_PATH.length));
+  if (!SHELL_PATHS.has(url.pathname) && !albumPhoto) {
     return;
   }
   event.respondWith(
