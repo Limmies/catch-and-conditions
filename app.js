@@ -1632,6 +1632,7 @@ document.querySelectorAll('.tabs [data-page]').forEach(tab => {
   tab.addEventListener('click', event => {
     if (!desktopViews.matches || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
+    if(event.detail>1)return;
     const key = tab.dataset.page;
     let pages = selectedPages();
     pages = pages.includes(key) ? (pages.length>1 ? pages.filter(page=>page!==key) : [key]) : pages.length===2 ? [pages[0],key] : [...pages,key];
@@ -1824,7 +1825,20 @@ function setupHomeAlbum() {
   document.addEventListener('visibilitychange',schedule);
   motion.addEventListener('change',event=>{if(event.matches){paused=true;schedule();}});
   function turn(next) {
-    index=Math.max(0,Math.min(pages.length-1,next));
+    const target=Math.max(0,Math.min(pages.length-1,next));
+    book.querySelector('.album-ghost')?.remove();
+    if(target!==index && !motion.matches) {
+      const outgoing=pages[index].cloneNode(true);
+      outgoing.removeAttribute('data-album-page');
+      outgoing.removeAttribute('role');
+      outgoing.removeAttribute('aria-label');
+      outgoing.setAttribute('aria-hidden','true');
+      outgoing.classList.add('album-ghost');
+      outgoing.inert=true;
+      book.querySelector('.album-pages').append(outgoing);
+      setTimeout(()=>outgoing.remove(),1200);
+    }
+    index=target;
     pages.forEach((page,i)=>{
       page.hidden=i!==index;
       page.setAttribute('role','group');

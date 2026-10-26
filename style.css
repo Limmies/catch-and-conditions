@@ -2227,3 +2227,21 @@ body[data-page=home] .heading::before { background-image:url('fish/mobile/kabelj
 #album-position { text-align:center; }
 .home-opening { align-items:start; }
 .home-print-hero img { width:100%; height:clamp(320px,65vh,720px); max-height:none; object-fit:cover; object-position:50% 60%; }
+
+/* The desktop page bar never moves when a second view changes the heading. */
+@media(min-width:951px) {
+ #journal { padding-top:76px; }
+ #journal > .tabs { position:fixed; top:0; bottom:auto; left:24px; right:24px; z-index:1000; margin:0; border-radius:0 0 10px 10px; box-shadow:0 4px 14px #3b39251a; }
+ .multiple-views #map-page { top:80px; }
+ html { scroll-padding-top:84px; }
+}
+.fishing-mode-label { display:block; margin:0 0 8px; color:var(--muted); font-size:12px; letter-spacing:.03em; }
+.fishing-modes { border-style:solid; padding:4px; gap:4px; }
+.fishing-modes button { min-height:44px; }
+.fishing-modes button[aria-pressed=true] { box-shadow:0 2px 4px #293f3825; font-weight:700; }
+.album-pages { position:relative; }
+.album-page { animation:album-blend-in 1.2s ease-in-out; }
+.album-page.album-ghost { position:absolute; inset:0; margin:0; z-index:2; pointer-events:none; animation:album-blend-out 1.2s ease-in-out forwards; }
+@keyframes album-blend-in { from { opacity:0; } to { opacity:1; } }
+@keyframes album-blend-out { from { opacity:1; } to { opacity:0; } }
+@media(prefers-reduced-motion:reduce) { .album-page { animation:none; } }
