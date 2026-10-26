@@ -599,15 +599,16 @@ function renderSpotProductivity(rows) {
   const spots=new Map(); let unlocated=0;
   for (const {trip} of rows) for (const s of storedSessions(trip)) {
     if (!s.spot_archive_id) {unlocated++;continue;}
-    if (!spots.has(s.spot_archive_id)) spots.set(s.spot_archive_id,{session:s,count:0,seconds:0,sessions:0,anglerSeconds:0,lineSeconds:0,knownAnglers:true,knownLines:true});
+    if (!spots.has(s.spot_archive_id)) spots.set(s.spot_archive_id,{session:s,count:0,seconds:0,sessions:0,anglerSeconds:0,lineSeconds:0,knownAnglers:true,knownLines:true,lastVisit:s.ended_at || s.started_at});
     const spot=spots.get(s.spot_archive_id);
     spot.count+=sessionCatchCount(s);spot.seconds+=s.fishing_seconds;spot.sessions++;
+    const visit=s.ended_at || s.started_at;if(Date.parse(visit)>Date.parse(spot.lastVisit))spot.lastVisit=visit;
     if(s.angler_seconds===null || s.angler_seconds===undefined)spot.knownAnglers=false;else spot.anglerSeconds+=s.angler_seconds;
     if(s.line_seconds===null || s.line_seconds===undefined)spot.knownLines=false;else spot.lineSeconds+=s.line_seconds;
   }
   const ranked=[...spots.values()].sort((a,b)=>b.count/b.seconds-a.count/a.seconds || b.seconds-a.seconds);
   const maximum=Math.max(1,...ranked.map(s=>s.count*3600/s.seconds));
-  $('spot-productivity').innerHTML=`<div class="section-heading"><h3>Productivity by spot</h3><span class="small muted">20 metre matching radius</span></div>${ranked.length ? `<div class="spot-productivity-list">${ranked.map(spot=>`<article class="spot-productivity-card"><div><button type="button" class="spot-title" ${mapSpotAttributes(spot.session)}>${esc(sessionSpotLabel(spot.session))}</button>${spotCoordinatesHTML(spot.session)}<span class="small muted">${spot.sessions} ${spot.sessions===1 ? 'session' : 'sessions'} · ${durationLabel(spot.seconds)} · ${spot.count} catches</span></div><div class="spot-productivity-rate"><strong>${(spot.count*3600/spot.seconds).toFixed(1)}</strong><span>catches / hour</span></div><div class="session-rate-track"><i style="width:${spot.count*3600/spot.seconds/maximum*100}%"></i></div><div class="session-location">${sessionLocationHTML(spot.session)}</div>${(spot.knownAnglers && spot.anglerSeconds>0) || (spot.knownLines && spot.lineSeconds>0) ? `<details class="spot-extra"><summary>Effort</summary><p class="small muted">${spot.knownAnglers && spot.anglerSeconds>0 ? (spot.count*3600/spot.anglerSeconds).toFixed(1)+' / angler-hour' : 'Angler effort unavailable'} · ${spot.knownLines && spot.lineSeconds>0 ? (spot.count*3600/spot.lineSeconds).toFixed(1)+' / line-hour' : 'Line effort unavailable'}</p></details>` : ''}</article>`).join('')}</div>` : '<p class="small muted">No located fishing sessions match these dates and fishing style.</p>'}${unlocated ? `<p class="small muted">${unlocated} session${unlocated===1?'':'s'} without a location remain in the trip records and are excluded from spot rates.</p>` : ''}`;
+  $('spot-productivity').innerHTML=`<div class="section-heading"><h3>Productivity by spot</h3><span class="small muted">20 metre matching radius</span></div>${ranked.length ? `<div class="spot-productivity-list">${ranked.map(spot=>`<article class="spot-productivity-card"><div class="spot-cover" aria-hidden="true"><svg viewBox="0 0 300 120"><path d="M0 92q20-9 40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0M0 105q20-7 40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0M0 76l45-34 30 22 38-49 49 52 27-25 47 34 64-19M71 64l13-10 13 5M113 15l-8 23 16-4 13 12M235 76l20-9M225 23a9 9 0 1 0 18 0 9 9 0 1 0-18 0"/></svg></div><div><button type="button" class="spot-title" ${mapSpotAttributes(spot.session)}>${esc(sessionSpotLabel(spot.session))}</button>${spotCoordinatesHTML(spot.session)}<span class="small muted">${spot.sessions} ${spot.sessions===1 ? 'session' : 'sessions'} · ${durationLabel(spot.seconds)} · ${spot.count} catches</span></div><div class="spot-productivity-rate"><strong>${(spot.count*3600/spot.seconds).toFixed(1)}</strong><span>catches / fishing hour</span><span class="spot-last-visit">Last visit ${esc(dateLabel(spot.lastVisit))}</span></div><div class="session-rate-track"><i style="width:${spot.count*3600/spot.seconds/maximum*100}%"></i></div><div class="session-location">${sessionLocationHTML(spot.session)}</div>${(spot.knownAnglers && spot.anglerSeconds>0) || (spot.knownLines && spot.lineSeconds>0) ? `<details class="spot-extra"><summary>Effort</summary><p class="small muted">${spot.knownAnglers && spot.anglerSeconds>0 ? (spot.count*3600/spot.anglerSeconds).toFixed(1)+' / angler-hour' : 'Angler effort unavailable'} · ${spot.knownLines && spot.lineSeconds>0 ? (spot.count*3600/spot.lineSeconds).toFixed(1)+' / line-hour' : 'Line effort unavailable'}</p></details>` : ''}</article>`).join('')}</div>` : '<p class="small muted">No located fishing sessions match these dates and fishing style.</p>'}${unlocated ? `<p class="small muted">${unlocated} session${unlocated===1?'':'s'} without a location remain in the trip records and are excluded from spot rates.</p>` : ''}`;
   restoreDisclosures($('spot-productivity'),expanded);
 }
 function disclosureState(container) {
@@ -619,14 +620,14 @@ function restoreDisclosures(container,state) {
 function tripCardHTML(t,m) {
   const key=t.archive_id || t.device_id+':'+t.watch_trip_id;
   const sessions=storedSessions(t);
-  return `<tr><td colspan="8"><article class="trip-card"><header><div><h3>${esc(dateLabel(t.started_at))}</h3><p class="small muted">${esc(fishingModeLabels[recordFishingMode(t)] || recordFishingMode(t))} · ${esc(timeLabel(t.started_at))}–${esc(timeLabel(t.ended_at))}</p></div><strong>${durationLabel(m.total)}<span class="small muted">total trip</span></strong></header>
+  return `<tr><td colspan="8"><article class="trip-card"><details class="trip-record" data-disclosure="${esc(key)}:card"><summary class="trip-card-summary"><span><strong>${esc(dateLabel(t.started_at))}</strong><span class="small muted">${esc(fishingModeLabels[recordFishingMode(t)])} · ${esc(timeLabel(t.started_at))}–${esc(timeLabel(t.ended_at))}</span></span><span class="record-metrics"><span><b>${m.rate===null?'—':m.rate.toFixed(1)}</b> catches / fishing hour</span><span><b>${durationLabel(m.fishing)}</b> fishing</span></span></summary><header><div><h3>${esc(dateLabel(t.started_at))}</h3><p class="small muted">${esc(fishingModeLabels[recordFishingMode(t)] || recordFishingMode(t))} · ${esc(timeLabel(t.started_at))}–${esc(timeLabel(t.ended_at))}</p></div><strong>${durationLabel(m.total)}<span class="small muted">total trip</span></strong></header>
     <dl class="trip-at-a-glance"><div><dt>Fishing estimate</dt><dd>${durationLabel(m.fishing)}</dd></div><div><dt>Travelling</dt><dd>${durationLabel(m.travelling)}</dd></div><div><dt>Unclassified</dt><dd>${durationLabel(m.unclassified)}</dd></div><div><dt>Catches / fishing hour</dt><dd>${m.rate===null?'—':m.rate.toFixed(1)}</dd></div></dl>
     <div class="trip-time-strip" role="img" aria-label="Fishing ${esc(durationLabel(m.fishing))}, travelling ${esc(durationLabel(m.travelling))}, unclassified ${esc(durationLabel(m.unclassified))}">${[['fishing',m.fishing],['travelling',m.travelling],['unclassified',m.unclassified]].map(([mode,value])=>`<span class="${mode}" style="width:${m.total>0?value/m.total*100:0}%"></span>`).join('')}</div>
     <div class="trip-time-key" aria-hidden="true">${[['fishing','Fishing',m.fishing],['travelling','Travelling',m.travelling],['unclassified','Unclassified',m.unclassified]].map(([mode,name,value])=>`<span><i class="${mode}"></i>${name} <b>${m.total ? Math.round(value/m.total*100) : 0}%</b></span>`).join('')}</div>
     <div class="trip-outcomes"><span><strong>${m.count}</strong> catches</span><span><strong>${m.sessions}</strong> sessions</span></div>
     <details class="trip-disclosure" data-disclosure="${esc(key)}:sessions"><summary><span>Fishing sessions</span><span class="disclosure-count">${sessions.length} saved</span></summary>${sessionProductivityHTML(t)}</details>
     <details class="trip-disclosure" data-disclosure="${esc(key)}:recording"><summary><span>Activity timeline &amp; GPS</span><span class="disclosure-count">${m.total?Math.round((m.fishing+m.travelling)/m.total*100):0}% classified</span></summary><div class="recording-extra"><div class="trip-outcomes"><span><strong>${m.count}</strong> catches</span><span><strong>${m.sessions}</strong> fishing sessions</span>${m.anglerRate===null?'':`<span>${m.anglerRate.toFixed(1)} / angler-hour</span>`}${m.lineRate===null?'':`<span>${m.lineRate.toFixed(1)} / line-hour</span>`}<span>${m.distance===null?'No catch distance':m.distance.toFixed(2)+' km between catches · '+m.averageDistance.toFixed(2)+' km average'}</span></div></div>${tripVisuals(t,m).replace('<details class="trip-diagnostics">',`<details class="trip-diagnostics" data-disclosure="${esc(key)}:feedback">`)}</details>
-  </article></td></tr>`;
+  </details></article></td></tr>`;
 }
 function renderTrips() {
   const expanded=disclosureState($('trip-rows'));
@@ -1246,14 +1247,15 @@ function renderDays() {
     for (const c of rows) {
       totals.set(nameOf(c), (totals.get(nameOf(c)) || 0) + 1);
     }
-    section.innerHTML = `<div class="day-header"><h3>${
+    section.innerHTML = `<details class="day-record" data-disclosure="day-card:${esc(key)}"><summary class="day-card-summary"><strong>${esc(dateLabel(rows[0].caught_at))}</strong><span class="record-metrics"><span><b>${rows.length}</b> catches</span><span><b>${totals.size}</b> species</span></span></summary><div class="day-record-body"><div class="day-header"><h3>${
       esc(dateLabel(rows[0].caught_at))
     }</h3><span class="day-total">${rows.length} ${
       rows.length === 1 ? 'catch' : 'catches'
     }</span></div><div class="day-summary">${
       [...totals].map(([name, count]) => `<button type="button" class="fish-name-link" data-profile="${esc(rows.find(c => nameOf(c) === name)?.species_id || '')}">${esc(name)} · ${count}</button>`)
         .join('')
-    }</div>`;
+    }</div></div></details>`;
+    const body=section.querySelector('.day-record-body');
     const weather = document.createElement('button');
     weather.className = 'quiet day-weather';
     weather.textContent = 'View day conditions';
@@ -1262,10 +1264,10 @@ function renderDays() {
     rate.type='button';rate.className='quiet day-rate';rate.textContent='Rate this day';
     rate.onclick=()=>showDayObservations(rows[0]);
     const actions=document.createElement('div');actions.className='day-actions';actions.append(weather,rate);
-    section.append(actions);
+    body.append(actions);
     const list=document.createElement('details');list.className='day-catch-list';list.dataset.disclosure='day:'+key;
-    list.open=$('days').children.length===0;list.innerHTML=`<summary><span>Catch list</span><span>${rows.length} saved</span></summary>`;
-    section.append(list);
+    list.open=false;list.innerHTML=`<summary><span>Catch list</span><span>${rows.length} saved</span></summary>`;
+    body.append(list);
     for (const c of rows) {
       const button = document.createElement('button');
       button.className = 'catch-row';
@@ -1608,6 +1610,8 @@ function route() {
   const page = requested[requested.length-1];
   const pages = desktopViews.matches ? requested : [page];
   document.body.classList.toggle('multiple-views', pages.length>1);
+  document.body.classList.toggle('map-left',pages.length===2 && pages[0]==='map');
+  document.body.classList.toggle('map-right',pages.length===2 && pages[1]==='map');
   document.body.classList.toggle('home-only',pages.length===1 && pages[0]==='home');
   for (const key of viewKeys) {
     const section = $(`${key}-page`);
