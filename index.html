@@ -17,12 +17,12 @@
     <link rel="stylesheet" href="vendor/leaflet.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.Default.css">
-    <link rel="stylesheet" href="style.css?v=69">
+    <link rel="stylesheet" href="style.css?v=70">
     <script defer src="vendor/supabase.js"></script>
     <script defer src="vendor/leaflet.js"></script>
     <script defer src="vendor/leaflet.markercluster.js"></script>
     <script defer src="config.js"></script>
-    <script defer src="app.js?v=69"></script>
+    <script defer src="app.js?v=70"></script>
   </head>
   <body>
     <header
@@ -44,8 +44,7 @@
           <a href="#home" data-page="home"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 11 12 3l9 8M5 10v11h14V10M9 21v-7h6v7"/></svg></span><span>Home</span></a>
           <a href="#map" data-page="map"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></span><span>Map</span></a>
           <a href="#totals" data-page="totals"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M18 12c-4-7-11-7-16 0 5 7 12 7 16 0Zm0 0 4-5v10l-4-5Z"/><circle cx="7" cy="11" r=".7"/></svg></span><span>Species</span></a>
-          <a href="#days" data-page="days"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18m-13 5h2m4 0h2"/></svg></span><span>Days</span></a>
-          <a href="#trips" data-page="trips"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="5" cy="5" r="2"/><circle cx="19" cy="19" r="2"/><path d="M5 7v7a4 4 0 0 0 4 4h8M19 17v-7a4 4 0 0 0-4-4h-3m3-3-3 3 3 3"/></svg></span><span>Trips</span></a>
+          <a href="#diary" data-page="diary"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18m-13 5h2m4 0h2"/></svg></span><span>Diary</span></a>
           <a href="#spots" data-page="spots"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v3m0 16v3M1 12h3m16 0h3"/></svg></span><span>Spots</span></a>
         </nav>
         <div class="journal-controls">
@@ -89,7 +88,7 @@
               <div class="home-chapter-heading"><span class="home-kicker">01 / About the journal</span><h2 id="home-about-title">More than a catch count.</h2></div>
               <div class="home-about-grid">
                 <article class="home-paper"><h3>The catch</h3><p>Log the species on the watch and save its time and GPS position when a usable fix is available. Review catches on the map, browse the fish guide or look back by day.</p><a href="#totals" class="text-action">Explore species →</a></article>
-                <article class="home-paper home-paper-sage"><h3>The effort</h3><p>See fishing time, travel time and individual fishing sessions. Compare catches per fishing hour, including sessions when nothing was caught.</p><a href="#trips" class="text-action">Read the trip log →</a></article>
+                <article class="home-paper home-paper-sage"><h3>The effort</h3><p>See fishing time, travel time and individual fishing sessions. Compare catches per fishing hour, including sessions when nothing was caught.</p><a href="#diary" class="text-action">Open the fishing diary →</a></article>
                 <article class="home-paper home-paper-blue"><h3>The place & conditions</h3><p>See which species you catch at each spot and in which conditions. Locations within 20 metres of a spot’s saved position are grouped together, with catch-time weather and your own day ratings alongside them.</p><a href="#spots" class="text-action">Find the fishing spots →</a></article>
               </div>
             </section>
@@ -117,7 +116,7 @@
             </div>
 
             <section class="home-chapter home-next" aria-labelledby="home-next-title">
-              <article class="home-letter"><span class="home-kicker">03 / The plan</span><h2 id="home-next-title">Build a better picture over time.</h2><p>If you can only fish on holidays or the occasional weekend, every day on the water matters. Keeping an easy, consistent record means you can learn from past trips instead of starting from memory each time. The quiet sessions count too: they help show how much fishing went into each catch.</p><p>The long-term goal is to choose a date and get a useful suggestion: which spot to try, which species to target and why the conditions might suit it. Those predictions are still ahead of us. For now, we’re building the catch, effort and conditions history needed to find meaningful patterns over time.</p><p class="home-letter-ending">Less time entering data. More to learn from the time we get to fish.</p><a class="text-action" href="#days">Open the diary →</a></article>
+              <article class="home-letter"><span class="home-kicker">03 / The plan</span><h2 id="home-next-title">Build a better picture over time.</h2><p>If you can only fish on holidays or the occasional weekend, every day on the water matters. Keeping an easy, consistent record means you can learn from past trips instead of starting from memory each time. The quiet sessions count too: they help show how much fishing went into each catch.</p><p>The long-term goal is to choose a date and get a useful suggestion: which spot to try, which species to target and why the conditions might suit it. Those predictions are still ahead of us. For now, we’re building the catch, effort and conditions history needed to find meaningful patterns over time.</p><p class="home-letter-ending">Less time entering data. More to learn from the time we get to fish.</p><a class="text-action" href="#diary">Open the diary →</a></article>
               <figure class="home-print home-print-feature"><img src="photos/mentor-steenbras.jpg" width="1600" height="1067" alt="Fishing mentor Johnny McSeveny holding a red steenbras" loading="lazy"><figcaption>Johnny McSeveny with a red steenbras. My all-time fishing mentor—the person who taught me so much of what I know, and someone I’ll always look up to.</figcaption></figure>
             </section>
             <div class="home-last-prints" aria-label="More pages from the diary">
@@ -155,25 +154,14 @@
             </table>
           </div>
         </section>
-        <section id="days-page" hidden aria-label="Daily catches">
-
-          <div id="days"></div>
-        </section>
-        <section id="trips-page" hidden aria-label="Trip summaries">
-          <div
-            class="section-heading"><h2>Completed trips</h2><a href="#spots" class="text-action">Compare spots →</a></div>
+        <section id="diary-page" hidden aria-label="Fishing diary">
+          <div class="section-heading"><h2>Fishing diary</h2><a href="#spots" class="text-action">Compare spots →</a></div>
           <p id="trip-status" role="status" class="muted"></p>
           <div id="trip-summary" class="trip-summary"></div>
-
-          <div class="table-wrap">
-            <table>
-              <caption class="sr-only">Time and catches per trip</caption>
-              <tbody id="trip-rows"></tbody>
-            </table>
-          </div>
+          <div id="trip-rows"><div id="days"></div></div>
         </section>
         <section id="spots-page" hidden aria-label="Fishing spot productivity">
-          <div class="section-heading"><h2>Saved spots</h2><a href="#trips" class="text-action">View sessions by trip →</a></div>
+          <div class="section-heading"><h2>Saved spots</h2><a href="#diary" class="text-action">View fishing diary →</a></div>
           <section id="spot-productivity" class="spot-productivity" aria-label="Productivity by fishing spot"></section>
         </section>
         <p id="empty" class="empty"

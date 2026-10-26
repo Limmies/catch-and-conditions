@@ -255,7 +255,6 @@ function resetPrivateView() {
       "legend",
       "trip-summary",
       "spot-productivity",
-      "trip-rows",
       "trip-status",
     ]
   ) $(id).replaceChildren();
@@ -435,7 +434,7 @@ function render() {
   $("day-count").textContent = new Set(visible.map((c) => dayKey(c.caught_at))).size;
   $("empty").hidden =
     !(desktopViews.matches ? selectedPages() : [selectedPages().at(-1)]).some((key) =>
-      ["map", "totals", "days"].includes(key)
+      ["map", "totals"].includes(key)
     ) || visible.length > 0;
   $("empty").textContent = catches.length
     ? "No catches match these filters."
@@ -444,7 +443,6 @@ function render() {
     message("The start date must be before the end date.", true, "filter");
   } else if ($("status").dataset.kind === "filter") message("");
   renderTotals();
-  renderDays();
   if (!$("journal").hidden && !$("map-page").hidden) renderMap();
   renderTrips();
 }
@@ -1066,13 +1064,7 @@ function renderTrips() {
       a.created.localeCompare(b.created) || a.id.localeCompare(b.id)
     ).map((s, i) => [s.id, "Spot " + (i + 1)]),
   );
-  const eligible = trips.filter(matchesFishingMode).map((t) => ({
-    trip: t,
-    metrics: tripMetrics(t),
-  })).filter(({ trip }) => {
-    const day = dayKey(trip.started_at);
-    return (!$("from").value || day >= $("from").value) && (!$("to").value || day <= $("to").value);
-  });
+  const eligible = diaryTripRows(false);
   const rows = eligible.filter(({ metrics }) => !$("species").value || metrics.count > 0);
   renderSpotProductivity(eligible);
   const totals = rows.reduce(
@@ -1103,9 +1095,7 @@ function renderTrips() {
     remaining.map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`).join("")
   }</dl></details>`;
   restoreDisclosures($("trip-summary"), summaryExpanded);
-  $("trip-rows").innerHTML =
-    rows.map(({ trip, metrics }) => tripCardHTML(trip, metrics)).join("") ||
-    '<tr><td colspan="8">No completed trips match these filters.</td></tr>';
+  renderDays(rows);
   restoreDisclosures($("trip-rows"), expanded);
 }
 function applyChartStyle() {
@@ -1115,7 +1105,7 @@ function initMap() {
   if (map || $("map-page").hidden) return;
   if (!window.L || !L.markerClusterGroup) {
     $("map").textContent =
-      "The map could not load. Your catches are still available in Species and Days.";
+      "The map could not load. Your catches are still available in Species and the Fishing diary.";
     return;
   }
   map = L.map("map", {
@@ -1784,7 +1774,16 @@ function renderTotals() {
     }%"></span></span></td></tr>`
   ).join("");
 }
-function renderDays() {
+function diaryTripRows(filterSpecies = true) {
+  return trips.filter(matchesFishingMode).map((trip) => ({ trip, metrics: tripMetrics(trip) }))
+    .filter(({ trip, metrics }) => {
+      const day = dayKey(trip.started_at);
+      return (!$("from").value || day >= $("from").value) &&
+        (!$("to").value || day <= $("to").value) &&
+        (!filterSpecies || !$("species").value || metrics.count > 0);
+    });
+}
+function renderDays(tripRows = diaryTripRows()) {
   const expanded = disclosureState($("days"));
   const groups = new Map();
   for (const c of visible) {
@@ -1792,8 +1791,17 @@ function renderDays() {
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(c);
   }
+  for (const { trip } of tripRows) {
+    const key = dayKey(trip.started_at);
+    if (!groups.has(key)) groups.set(key, []);
+  }
   $("days").replaceChildren();
-  for (const [key, rows] of groups) {
+  for (const [key, rows] of [...groups].sort(([a], [b]) => b.localeCompare(a))) {
+    const dayTrips = tripRows.filter(({ trip }) => dayKey(trip.started_at) === key);
+    const fishing = dayTrips.reduce((sum, { metrics }) => sum + metrics.fishing, 0);
+    const tripCatches = dayTrips.reduce((sum, { metrics }) => sum + metrics.count, 0);
+    const productivity = fishing > 0 ? tripCatches * 3600 / fishing : null;
+    const reference = rows[0] || { caught_at: dayTrips[0].trip.started_at };
     const section = document.createElement("section");
     section.className = "day-card";
     const totals = new Map();
@@ -1803,8 +1811,10 @@ function renderDays() {
     section.innerHTML = `<details class="day-record" data-disclosure="day-card:${
       esc(key)
     }"><summary class="day-card-summary"><strong>${
-      esc(dateLabel(rows[0].caught_at))
-    }</strong><span class="record-metrics"><span><b>${rows.length}</b> catches</span><span><b>${totals.size}</b> species</span></span></summary><div class="day-record-body"><div class="day-summary">${
+      esc(dateLabel(reference.caught_at))
+    }</strong><span class="record-metrics"><span title="Based on completed trips starting on this date"><b>${
+      productivity === null ? "—" : productivity.toFixed(1)
+    }</b> catches / fishing hour</span><span><b>${rows.length}</b> catches</span></span></summary><div class="day-record-body"><div class="day-summary">${
       [...totals].map(([name, count]) =>
         `<button type="button" class="fish-name-link" data-profile="${
           esc(rows.find((c) => nameOf(c) === name)?.species_id || "")
@@ -1817,15 +1827,36 @@ function renderDays() {
     weather.className = "quiet day-weather";
     weather.textContent = "View day conditions";
     weather.onclick = () => showDayConditions(rows);
+    weather.disabled = !rows.length;
+    if (!rows.length) weather.title = "Conditions are available with saved catches.";
     const rate = document.createElement("button");
     rate.type = "button";
     rate.className = "quiet day-rate";
     rate.textContent = "Rate this day";
-    rate.onclick = () => showDayObservations(rows[0]);
+    rate.onclick = () => showDayObservations(reference);
     const actions = document.createElement("div");
     actions.className = "day-actions";
     actions.append(weather, rate);
     body.append(actions);
+    const effort = document.createElement("p");
+    effort.className = "small muted";
+    effort.textContent = `${dayTrips.length} ${dayTrips.length === 1 ? "trip" : "trips"} · ${
+      durationLabel(fishing)
+    } fishing · ${totals.size} species`;
+    body.append(effort);
+    if (dayTrips.length) {
+      const records = document.createElement("div");
+      records.className = "diary-trips";
+      records.innerHTML = `<table><caption class="sr-only">Trips for this date</caption><tbody>${
+        dayTrips.map(({ trip, metrics }) => tripCardHTML(trip, metrics)).join("")
+      }</tbody></table>`;
+      body.append(records);
+    } else {
+      const note = document.createElement("p");
+      note.className = "small muted";
+      note.textContent = "Catches saved without a completed trip. Fishing effort is unavailable.";
+      body.append(note);
+    }
     const list = document.createElement("details");
     list.className = "day-catch-list";
     list.dataset.disclosure = "day:" + key;
@@ -1844,6 +1875,9 @@ function renderDays() {
       list.append(button);
     }
     $("days").append(section);
+  }
+  if (!groups.size) {
+    $("days").innerHTML = '<p class="empty">No fishing records match these filters.</p>';
   }
   restoreDisclosures($("days"), expanded);
 }
@@ -2629,19 +2663,22 @@ async function showDetail(c) {
     }
   }
 }
-const viewKeys = ["home", "map", "totals", "days", "trips", "spots"];
+const viewKeys = ["home", "map", "totals", "diary", "spots"];
 const viewNames = {
   home: "Home",
   map: "Map",
   totals: "Species",
-  days: "Days",
-  trips: "Trips",
+  diary: "Fishing diary",
   spots: "Spots",
 };
 const desktopViews = matchMedia("(min-width: 951px) and (hover: hover) and (pointer: fine)");
 function selectedPages() {
   const pages = [
-    ...new Set(location.hash.slice(1).split(",").filter((key) => viewKeys.includes(key))),
+    ...new Set(
+      location.hash.slice(1).split(",").map((key) =>
+        key === "days" || key === "trips" ? "diary" : key
+      ).filter((key) => viewKeys.includes(key)),
+    ),
   ];
   return pages.length > 2 ? [pages[0], pages.at(-1)] : pages.length ? pages : ["home"];
 }
@@ -2664,7 +2701,7 @@ function route() {
   }
   document.body.dataset.page = page;
   $("page-title").textContent = pages.map((key) => viewNames[key]).join(" + ");
-  $("empty").hidden = !pages.some((key) => ["map", "totals", "days"].includes(key)) ||
+  $("empty").hidden = !pages.some((key) => ["map", "totals"].includes(key)) ||
     visible.length > 0;
   document.title = $("page-title").textContent + " · Catch and Conditions";
   if (pages.includes("map") && session && !$("journal").hidden) {

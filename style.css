@@ -648,17 +648,17 @@ dialog {
     font-size: 22px;
     overflow-wrap: anywhere;
   }
-  #trips-page .table-wrap {
+  #diary-page .table-wrap {
     border: 0;
     background: none;
     overflow: visible;
   }
-  #trips-page table,
-  #trips-page tbody {
+  #diary-page table,
+  #diary-page tbody {
     display: block;
     width: 100%;
   }
-  #trips-page thead {
+  #diary-page thead {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -1600,10 +1600,10 @@ h3 {
 body[data-page=totals] .heading::before {
   background-image:url('fish/mobile/red_steenbras.png');
 }
-body[data-page=days] .heading::before {
+body[data-page=diary] .heading::before {
   background-image:url('fish/mobile/miss_lucy.png');
 }
-body[data-page=trips] .heading::before {
+body[data-page=diary] .heading::before {
   background-image:url('fish/mobile/kabeljo.png');
 }
 .heading h1 {
@@ -2020,7 +2020,7 @@ body[data-fishing-mode=shore] .heading::before {
 body[data-fishing-mode=shore][data-page=totals] .heading::before {
   background-image: url('fish/mobile/galjoen.png');
 }
-body[data-fishing-mode=shore][data-page=days] .heading::before {
+body[data-fishing-mode=shore][data-page=diary] .heading::before {
   background-image: url('fish/mobile/blacktail.png');
 }
 .pressure-card {
@@ -2035,13 +2035,13 @@ body[data-fishing-mode=shore][data-page=days] .heading::before {
   align-items:stretch;
   text-align:left;
 }
-#trips-page .table-wrap {
+#diary-page .table-wrap {
   background:transparent;
   border:0;
   box-shadow:none;
   overflow:visible;
 }
-#trips-page table {
+#diary-page table {
   width:100%;
   table-layout:fixed;
   border-collapse:separate;
@@ -2872,7 +2872,7 @@ main {
   letter-spacing:-.03em;
   overflow-wrap:anywhere;
 }
-#trips-page table {
+#diary-page table {
   border-spacing:0;
 }
 #trip-rows tr {
@@ -3598,7 +3598,7 @@ dialog {
 .spot-productivity > .section-heading {
   display:none;
 }
-#spots-page > .section-heading h2,#trips-page > .section-heading h2 {
+#spots-page > .section-heading h2,#diary-page > .section-heading h2 {
   font-family:inherit;
   font-size:15px;
   font-weight:600;
@@ -5865,3 +5865,12 @@ body[data-page=home] .heading::before {
 }
 .record-total { margin:18px 0 12px; padding-top:14px; border-top:1px dashed var(--line); color:var(--muted); font-size:13px; }
 .record-total strong { color:var(--ink); font-variant-numeric:tabular-nums; }
+
+/* One diary date groups its catches, ratings and completed trips. */
+@media(max-width:600px) { .tabs { grid-template-columns:repeat(5,minmax(0,1fr)); } }
+.diary-trips { margin:18px 0; }
+.diary-trips table { width:100%; table-layout:fixed; }
+.diary-trips td { padding:0 0 12px; border:0; }
+.diary-trips .trip-card { margin:0; box-shadow:none; background:#f5f0df; }
+.diary-trips .trip-card-summary > span:first-child > strong { font-size:18px; }
+.diary-trips .record-metrics b { font-size:20px; }
