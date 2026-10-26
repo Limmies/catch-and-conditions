@@ -17,12 +17,12 @@
     <link rel="stylesheet" href="vendor/leaflet.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.Default.css">
-    <link rel="stylesheet" href="style.css?v=70">
+    <link rel="stylesheet" href="style.css?v=72">
     <script defer src="vendor/supabase.js"></script>
     <script defer src="vendor/leaflet.js"></script>
     <script defer src="vendor/leaflet.markercluster.js"></script>
     <script defer src="config.js"></script>
-    <script defer src="app.js?v=70"></script>
+    <script defer src="app.js?v=72"></script>
   </head>
   <body>
     <header
@@ -155,9 +155,9 @@
           </div>
         </section>
         <section id="diary-page" hidden aria-label="Fishing diary">
-          <div class="section-heading"><h2>Fishing diary</h2><a href="#spots" class="text-action">Compare spots →</a></div>
+          <div class="section-heading"><h2>By date</h2><a href="#spots" class="text-action">Compare spots →</a></div>
           <p id="trip-status" role="status" class="muted"></p>
-          <div id="trip-summary" class="trip-summary"></div>
+          <details class="diary-totals"><summary>Trip totals</summary><div id="trip-summary" class="trip-summary"></div></details>
           <div id="trip-rows"><div id="days"></div></div>
         </section>
         <section id="spots-page" hidden aria-label="Fishing spot productivity">
