@@ -2191,7 +2191,7 @@ body[data-page=home] .heading::before { background-image:url('fish/mobile/kabelj
 .album-book::before,.album-book::after { content:''; position:absolute; inset:8px 6px -5px 10px; border:1px solid #cec2a2; border-radius:4px; background:#f9f2de; z-index:-1; transform:rotate(.6deg); pointer-events:none; }
 .album-book::after { inset:10px 10px -9px 4px; transform:rotate(-.4deg); }
 .album-book:focus-visible { outline:3px solid #b89951; outline-offset:5px; }
-.album-page { transform:none; padding:16px 16px 0; animation:album-turn .22s ease-out; }
+.album-page { transform:none; padding:16px 16px 0; animation:album-turn .9s ease-in-out; }
 .album-page::before { width:74px; height:18px; left:calc(50% - 37px); }
 .album-page img { width:100%; height:clamp(280px,60vh,650px); aspect-ratio:auto; object-fit:contain; background:#f8f2e2; }
 .album-page figcaption { min-height:62px; display:flex; align-items:center; padding:14px 8px; }
@@ -2220,3 +2220,10 @@ body[data-page=home] .heading::before { background-image:url('fish/mobile/kabelj
 .home-release-sequence figcaption { font-size:15px; }
 @container(max-width:600px) { .home-release-sequence { grid-template-columns:minmax(0,1fr); gap:24px; }.home-release-sequence .home-print + .home-print { margin-top:0; } }
 @media(max-width:600px) { .home-release-sequence { grid-template-columns:minmax(0,1fr); gap:24px; }.home-release-sequence .home-print + .home-print { margin-top:0; } }
+
+/* Keep the later release sequence together as a pair of scrapbook prints. */
+.home-last-prints { align-items:start; }
+.album-controls { flex-wrap:wrap; }
+#album-position { text-align:center; }
+.home-opening { align-items:start; }
+.home-print-hero img { max-height:70vh; object-fit:contain; }

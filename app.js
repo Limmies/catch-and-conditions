@@ -1807,7 +1807,22 @@ function setupHomeAlbum() {
   const book=$('home-album');
   if(!book)return;
   const pages=[...book.querySelectorAll('[data-album-page]')];
-  let index=0,gesture=null;
+  let index=0,gesture=null,timer=null,visible=false;
+  const motion=matchMedia('(prefers-reduced-motion: reduce)');
+  let paused=motion.matches;
+  const play=$('album-play');
+  function schedule() {
+    clearTimeout(timer);
+    play.textContent=paused?'Play':'Pause';
+    play.setAttribute('aria-label',paused?'Play photo album':'Pause photo album');
+    $('album-position').setAttribute('aria-live',paused?'polite':'off');
+    if(!paused && visible && !document.hidden)timer=setTimeout(()=>{turn((index+1)%pages.length);schedule();},3000);
+  }
+  function manual(next) { paused=true;turn(next);schedule(); }
+  play.onclick=()=>{paused=!paused;schedule();};
+  new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;schedule();},{threshold:.25}).observe(book);
+  document.addEventListener('visibilitychange',schedule);
+  motion.addEventListener('change',event=>{if(event.matches){paused=true;schedule();}});
   function turn(next) {
     index=Math.max(0,Math.min(pages.length-1,next));
     pages.forEach((page,i)=>{
@@ -1821,13 +1836,13 @@ function setupHomeAlbum() {
     $('album-next').disabled=index===pages.length-1;
     $('album-position').textContent=`Photo ${index+1} of ${pages.length}`;
   }
-  $('album-prev').onclick=()=>turn(index-1);
-  $('album-next').onclick=()=>turn(index+1);
+  $('album-prev').onclick=()=>manual(index-1);
+  $('album-next').onclick=()=>manual(index+1);
   book.addEventListener('keydown',event=>{
     if(event.altKey || event.ctrlKey || event.metaKey)return;
     const next={ArrowLeft:index-1,ArrowRight:index+1,Home:0,End:pages.length-1}[event.key];
     if(next===undefined)return;
-    event.preventDefault();turn(next);
+    event.preventDefault();manual(next);
   });
   book.addEventListener('pointerdown',event=>{
     if(event.pointerType==='touch' || event.pointerType==='pen')gesture={id:event.pointerId,x:event.clientX,y:event.clientY};
@@ -1835,11 +1850,12 @@ function setupHomeAlbum() {
   book.addEventListener('pointerup',event=>{
     if(!gesture || gesture.id!==event.pointerId)return;
     const dx=event.clientX-gesture.x,dy=event.clientY-gesture.y;gesture=null;
-    if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)*1.5)turn(index+(dx<0?1:-1));
+    if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)*1.5)manual(index+(dx<0?1:-1));
   });
   book.addEventListener('pointercancel',()=>{gesture=null;});
   book.querySelectorAll('img').forEach(img=>img.draggable=false);
   turn(0);
+  schedule();
 }
 setupHomeAlbum();
 start();
