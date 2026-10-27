@@ -369,7 +369,7 @@ async function refreshJournal() {
       ),
       readRecords(
         "fishing_trips",
-        "archive_id,device_id,watch_trip_id,started_at,ended_at,fishing_seconds,travelling_seconds,unclassified_seconds,raw_payload,fishing_mode,fishing_sessions(archive_id,session_number,started_at,ended_at,fishing_seconds,catch_count,no_bite_count,species_counts,angler_seconds,line_seconds,latitude,longitude,location_source,spot_archive_id,fishing_spots(archive_id,latitude,longitude,created_at))",
+        "archive_id,device_id,watch_trip_id,started_at,ended_at,fishing_seconds,travelling_seconds,unclassified_seconds,raw_payload,fishing_mode,fishing_sessions(archive_id,session_number,started_at,ended_at,fishing_seconds,catch_count,no_bite_count,species_counts,angler_seconds,line_seconds,latitude,longitude,location_source,spot_archive_id,fishing_spots(archive_id,name,latitude,longitude,created_at))",
         "started_at",
         "trip",
         owner,
@@ -959,6 +959,76 @@ function collectSpotProductivity(rows) {
   );
   return { ranked, unlocated };
 }
+function showSpotRename(id) {
+  if (!session) return;
+  const saved = trips.flatMap(storedSessions).find((s) => s.spot_archive_id === id)?.fishing_spots;
+  if (!saved) return;
+  const owner = session.user.id, generation = ++conditionsGeneration;
+  $("detail-label").textContent = "Rename spot";
+  $("details").dataset.view = "spot-name";
+  $("detail-body").innerHTML =
+    `<form id="spot-name-form" class="spot-name-form"><label for="spot-name">Spot name</label><input id="spot-name" name="name" type="text" maxlength="80" autocomplete="off" value="${
+      esc(saved.name || "")
+    }" placeholder="${
+      esc(sessionSpotLabels.get(id))
+    }"><p class="small muted">Leave blank to use the original spot number.</p><div class="spot-name-actions"><button type="submit">Save name</button><button type="button" class="quiet" id="cancel-spot-name">Cancel</button></div><p id="spot-name-status" class="small" role="status"></p></form>`;
+  if (!$("details").open) $("details").showModal();
+  $("details").scrollTop = 0;
+  const form = $("spot-name-form"), input = $("spot-name"), status = $("spot-name-status");
+  const current = () =>
+    generation === conditionsGeneration && session?.user.id === owner && form.isConnected &&
+    $("details").open;
+  $("cancel-spot-name").onclick = () => $("details").close();
+  input.focus();
+  form.onsubmit = async (event) => {
+    event.preventDefault();
+    if (!current() || form.dataset.saving) return;
+    const name = input.value.trim() || null;
+    if (name && [...name].length > 80) {
+      status.textContent = "Use 80 characters or fewer.";
+      return;
+    }
+    form.dataset.saving = "true";
+    form.querySelector('[type="submit"]').disabled = true;
+    status.textContent = "Saving…";
+    try {
+      const { data, error } = await client.from("fishing_spots").update({ name }).eq(
+        "archive_id",
+        id,
+      ).eq("owner_id", owner).select("archive_id,name").single();
+      if (error || !data || data.archive_id !== id) throw Error("save failed");
+      if (session?.user.id !== owner) return;
+      for (const trip of trips) {
+        for (const s of storedSessions(trip)) {
+          if (s.spot_archive_id === id && s.fishing_spots) s.fishing_spots.name = data.name;
+        }
+      }
+      if (
+        focusedSpot && focusedSpot.latitude === saved.latitude &&
+        focusedSpot.longitude === saved.longitude
+      ) {
+        if (spotLayer) {
+          map.removeLayer(spotLayer);
+          spotLayer = null;
+        }
+        focusedSpot = null;
+      }
+      render();
+      if (current()) $("details").close();
+    } catch {
+      if (current()) status.textContent = "Could not save the name. Please try again.";
+    } finally {
+      if (current()) {
+        delete form.dataset.saving;
+        form.querySelector('[type="submit"]').disabled = false;
+      }
+    }
+  };
+}
+document.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-rename-spot]");
+  if (button) showSpotRename(button.dataset.renameSpot);
+});
 function renderSpotProductivity(rows) {
   const expanded = disclosureState($("spot-productivity"));
   const { ranked, unlocated } = collectSpotProductivity(rows);
@@ -984,7 +1054,9 @@ function renderSpotProductivity(rows) {
               spot.sessions === 1 ? "session" : "sessions"
             } · ${durationLabel(spot.seconds)} fishing · ${spot.count} ${
               spot.count === 1 ? "catch" : "catches"
-            }</p><dl class="spot-species-counts">${
+            }</p><button type="button" class="quiet" data-rename-spot="${
+              esc(spot.session.spot_archive_id)
+            }">Rename spot</button><dl class="spot-species-counts">${
               leadingSpotSpecies(spot.speciesCounts).map(([id, count]) =>
                 `<div><dt><button type="button" class="fish-name-link" data-profile="${esc(id)}">${
                   esc(species[id][0])
@@ -1112,6 +1184,7 @@ function renderTrips() {
         locations.set(s.spot_archive_id, {
           id: s.spot_archive_id,
           created: spot?.created_at || s.started_at,
+          name: spot?.name,
         });
       }
     }
@@ -1119,7 +1192,7 @@ function renderTrips() {
   sessionSpotLabels = new Map(
     [...locations.values()].sort((a, b) =>
       a.created.localeCompare(b.created) || a.id.localeCompare(b.id)
-    ).map((s, i) => [s.id, "Spot " + (i + 1)]),
+    ).map((s, i) => [s.id, s.name || "Spot " + (i + 1)]),
   );
   const eligible = diaryTripRows(false);
   const rows = eligible.filter(({ metrics }) => !$("species").value || metrics.count > 0);

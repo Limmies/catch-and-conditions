@@ -5998,3 +5998,8 @@ body::before { opacity:.075; }
 .day-rating-status.is-done { color:#32634a; background:#e7eee0; border-color:#b4c7aa; }
 .day-rating-status.is-partial { color:#8b692e; background:#f5edd8; border-color:#d9c79e; }
 .day-rating-status.is-error { color:#866443; }
+
+.spot-name-form { display: grid; gap: 12px; }
+.spot-name-form input { width: 100%; min-width: 0; }
+.spot-name-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.spot-title { overflow-wrap: anywhere; }
