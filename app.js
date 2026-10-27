@@ -877,6 +877,33 @@ function sessionProductivityHTML(t) {
     }).join("")
   }</div></section>`;
 }
+// The cover reflects real catches in the current spot/date/species selection.
+function leadingSpotSpecies(counts) {
+  return Object.entries(counts || {}).filter(([id, count]) =>
+    Object.hasOwn(species, id) && Number.isFinite(count) && count > 0
+  )
+    .sort(([a, ac], [b, bc]) =>
+      bc - ac || species[a][0].localeCompare(species[b][0]) || a.localeCompare(b)
+    );
+}
+function spotCoverHTML(counts) {
+  const leaders = leadingSpotSpecies(counts);
+  if (!leaders.length) {
+    return `<div class="spot-cover" aria-hidden="true"><svg viewBox="0 0 300 120"><path d="M0 92q20-9 40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0M0 105q20-7 40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0M0 76l45-34 30 22 38-49 49 52 27-25 47 34 64-19M71 64l13-10 13 5M113 15l-8 23 16-4 13 12M235 76l20-9M225 23a9 9 0 1 0 18 0 9 9 0 1 0-18 0"/></svg></div>`;
+  }
+  const [id, count] = leaders[0];
+  const tied = leaders.length > 1 && leaders[1][1] === count;
+  const extension = fishPreviews[id]?.startsWith("data:image/png;") ? "png" : "jpg";
+  return `<div class="spot-cover spot-cover-fish"><button type="button" class="spot-fish-link" data-profile="${
+    esc(id)
+  }" aria-label="Read about ${esc(species[id][0])}"><img class="spot-fish" src="fish/mobile/${
+    esc(id)
+  }.${extension}" alt="${
+    esc(species[id][0])
+  } illustration" width="640" height="240" loading="lazy"><span class="spot-fish-caption">${
+    tied ? "Joint most caught" : "Most caught"
+  } · ${esc(species[id][0])}</span></button></div>`;
+}
 function renderSpotProductivity(rows) {
   const expanded = disclosureState($("spot-productivity"));
   const spots = new Map();
@@ -898,10 +925,19 @@ function renderSpotProductivity(rows) {
           knownAnglers: true,
           knownLines: true,
           lastVisit: s.ended_at || s.started_at,
+          speciesCounts: {},
         });
       }
       const spot = spots.get(s.spot_archive_id);
       spot.count += sessionCatchCount(s);
+      for (const [id, count] of Object.entries(s.species_counts || {})) {
+        if (
+          Object.hasOwn(species, id) && Number.isFinite(count) && count > 0 &&
+          (!$("species").value || $("species").value === id)
+        ) {
+          spot.speciesCounts[id] = (spot.speciesCounts[id] || 0) + count;
+        }
+      }
       spot.seconds += s.fishing_seconds;
       spot.sessions++;
       const visit = s.ended_at || s.started_at;
@@ -921,9 +957,11 @@ function renderSpotProductivity(rows) {
       ranked.length
         ? `<div class="spot-productivity-list">${
           ranked.map((spot) =>
-            `<article class="spot-productivity-card"><div class="spot-cover" aria-hidden="true"><svg viewBox="0 0 300 120"><path d="M0 92q20-9 40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0M0 105q20-7 40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0M0 76l45-34 30 22 38-49 49 52 27-25 47 34 64-19M71 64l13-10 13 5M113 15l-8 23 16-4 13 12M235 76l20-9M225 23a9 9 0 1 0 18 0 9 9 0 1 0-18 0"/></svg></div><div><button type="button" class="spot-title" ${
-              mapSpotAttributes(spot.session)
-            }>${esc(sessionSpotLabel(spot.session))}</button>${
+            `<article class="spot-productivity-card">${
+              spotCoverHTML(spot.speciesCounts)
+            }<div><button type="button" class="spot-title" ${mapSpotAttributes(spot.session)}>${
+              esc(sessionSpotLabel(spot.session))
+            }</button>${
               spotCoordinatesHTML(spot.session)
             }</div><div class="spot-productivity-rate"><strong>${
               (spot.count * 3600 / spot.seconds).toFixed(1)
@@ -935,7 +973,13 @@ function renderSpotProductivity(rows) {
               spot.sessions === 1 ? "session" : "sessions"
             } · ${durationLabel(spot.seconds)} fishing · ${spot.count} ${
               spot.count === 1 ? "catch" : "catches"
-            }</p><div class="session-rate-track"><i style="width:${
+            }</p><dl class="spot-species-counts">${
+              leadingSpotSpecies(spot.speciesCounts).map(([id, count]) =>
+                `<div><dt><button type="button" class="fish-name-link" data-profile="${esc(id)}">${
+                  esc(species[id][0])
+                }</button></dt><dd>${count} ${count === 1 ? "catch" : "catches"}</dd></div>`
+              ).join("")
+            }</dl><div class="session-rate-track"><i style="width:${
               spot.count * 3600 / spot.seconds / maximum * 100
             }%"></i></div><div class="session-location">${sessionLocationHTML(spot.session)}</div>${
               (spot.knownAnglers && spot.anglerSeconds > 0) ||

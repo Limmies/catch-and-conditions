@@ -5962,3 +5962,20 @@ body::before { opacity:.075; }
 .spot-effort-summary { font-size:13px; line-height:1.7; color:var(--muted); }
 .spot-detail-content .session-location { margin:14px 0; }
 .spot-detail-content .spot-extra { margin:14px 0 0; border-top:1px dashed #d4cab4; padding-top:10px; }
+
+/* Personal labels use the photo-caption hand; recorded figures stay in print. */
+#totals-page .species-cell > span:last-child,
+#legend > .fish-name-link,#legend > span,
+.day-card-summary > strong,.trip-card-summary > span:first-child > strong,
+.spot-fish-caption { font-family:var(--diary-hand); font-style:italic; font-weight:400; }
+#totals-page .species-cell > span:last-child { font-size:20px; line-height:1.45; }
+#legend > .fish-name-link,#legend > span { font-size:17px; line-height:1.5; }
+.spot-cover-fish { padding:10px 8px 0; background:linear-gradient(150deg,#f9f6e9,#eee9d8); }
+.spot-fish-link { display:block; width:100%; padding:0; border:0; border-radius:0; background:transparent; color:#455f4c; text-align:left; }
+.spot-fish { display:block; width:100%; height:150px; object-fit:contain; mix-blend-mode:multiply; }
+.spot-fish-caption { display:block; padding:12px 6px 14px; font-size:16px; line-height:1.5; border-top:1px solid #d6cfb9; }
+.spot-species-counts { margin:12px 0; }
+.spot-species-counts > div { display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:5px 0; }
+.spot-species-counts dt { font-size:13px; }
+.spot-species-counts dd { margin:0; font:13px/1.5 system-ui,sans-serif; white-space:nowrap; font-variant-numeric:tabular-nums; }
+@media(max-width:600px) { #totals-page .species-cell > span:last-child { font-size:18px; } .spot-fish { height:145px; } }
