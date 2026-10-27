@@ -17,12 +17,12 @@
     <link rel="stylesheet" href="vendor/leaflet.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.Default.css">
-    <link rel="stylesheet" href="style.css?v=74">
+    <link rel="stylesheet" href="style.css?v=75">
     <script defer src="vendor/supabase.js"></script>
     <script defer src="vendor/leaflet.js"></script>
     <script defer src="vendor/leaflet.markercluster.js"></script>
     <script defer src="config.js"></script>
-    <script defer src="app.js?v=74"></script>
+    <script defer src="app.js?v=75"></script>
   </head>
   <body>
     <header
@@ -134,9 +134,9 @@
           </div>
         </section>
         <section id="map-page" hidden aria-label="Catch map">
-          <div class="map-toolbar"><button id="fit" class="quiet">Show all spots</button><details class="map-options"><summary>Map options</summary><div class="map-options-panel"><label class="chart-style"><input id="chart-vintage" type="checkbox" checked>Old chart style</label><label>Colour by <select id="colour"><option value="species">Species</option><option value="day">Day</option></select></label></div></details></div>
+          <div class="map-toolbar"><div class="map-view-tabs" role="group" aria-label="Show on map"><button type="button" data-map-view="catches" aria-pressed="true">Catches</button><button type="button" data-map-view="spots" aria-pressed="false">Spots</button><button type="button" data-map-view="days" aria-pressed="false">Days</button></div><button id="fit" class="quiet">Show all catches</button><details class="map-options"><summary>Map options</summary><div class="map-options-panel"><label class="chart-style"><input id="chart-vintage" type="checkbox" checked>Old chart style</label><label id="catch-colour-control">Colour by <select id="colour"><option value="species">Species</option><option value="day">Day</option></select></label></div></details></div>
           <div id="map" aria-label="Map of catch locations"></div>
-          <div id="legend" class="legend"></div>
+          <p id="map-view-summary" class="map-view-summary" role="status"></p><div id="legend" class="legend"></div>
         </section>
         <section id="totals-page" hidden aria-label="Species totals">
 

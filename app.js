@@ -242,6 +242,8 @@ function resetPrivateView() {
   sessionSpotLabels.clear();
   focusedSpot = null;
   spotLayer = null;
+  mapSummaryLayer = null;
+  mapViewMode = "catches";
   if (map) map.remove();
   map = null;
   markers = null;
@@ -253,6 +255,7 @@ function resetPrivateView() {
       "days",
       "detail-body",
       "legend",
+      "map-view-summary",
       "trip-summary",
       "spot-productivity",
       "trip-status",
@@ -432,10 +435,9 @@ function render() {
   $("catch-count").textContent = visible.length;
   $("species-count").textContent = new Set(visible.map((c) => c.species_id)).size;
   $("day-count").textContent = new Set(visible.map((c) => dayKey(c.caught_at))).size;
-  $("empty").hidden =
-    !(desktopViews.matches ? selectedPages() : [selectedPages().at(-1)]).some((key) =>
-      ["map", "totals"].includes(key)
-    ) || visible.length > 0;
+  $("empty").hidden = !(desktopViews.matches ? selectedPages() : [selectedPages().at(-1)]).some((
+    key,
+  ) => (key === "totals" || (key === "map" && mapViewMode === "catches"))) || visible.length > 0;
   $("empty").textContent = catches.length
     ? "No catches match these filters."
     : "No catches yet. Save one on your watch and sync it to see it here.";
@@ -443,8 +445,8 @@ function render() {
     message("The start date must be before the end date.", true, "filter");
   } else if ($("status").dataset.kind === "filter") message("");
   renderTotals();
-  if (!$("journal").hidden && !$("map-page").hidden) renderMap();
   renderTrips();
+  if (!$("journal").hidden && !$("map-page").hidden) renderMap();
 }
 
 function durationLabel(seconds) {
@@ -803,6 +805,7 @@ function openSpotOnMap(latitude, longitude, label) {
     !session || !Number.isFinite(latitude) || !Number.isFinite(longitude) ||
     Math.abs(latitude) > 90 || Math.abs(longitude) > 180
   ) return;
+  setMapView("spots");
   focusedSpot = { latitude, longitude, label };
   const pages = desktopViews.matches ? selectedPages() : [];
   if (!pages.includes("map")) {
@@ -904,8 +907,7 @@ function spotCoverHTML(counts) {
     tied ? "Joint most caught" : "Most caught"
   } · ${esc(species[id][0])}</span></button></div>`;
 }
-function renderSpotProductivity(rows) {
-  const expanded = disclosureState($("spot-productivity"));
+function collectSpotProductivity(rows) {
   const spots = new Map();
   let unlocated = 0;
   for (const { trip } of rows) {
@@ -951,17 +953,22 @@ function renderSpotProductivity(rows) {
   const ranked = [...spots.values()].sort((a, b) =>
     b.count / b.seconds - a.count / a.seconds || b.seconds - a.seconds
   );
+  return { ranked, unlocated };
+}
+function renderSpotProductivity(rows) {
+  const expanded = disclosureState($("spot-productivity"));
+  const { ranked, unlocated } = collectSpotProductivity(rows);
   const maximum = Math.max(1, ...ranked.map((s) => s.count * 3600 / s.seconds));
   $("spot-productivity").innerHTML =
     `<div class="section-heading"><h3>Productivity by spot</h3><span class="small muted">20 metre matching radius</span></div>${
       ranked.length
         ? `<div class="spot-productivity-list">${
           ranked.map((spot) =>
-            `<article class="spot-productivity-card">${
-              spotCoverHTML(spot.speciesCounts)
-            }<div><button type="button" class="spot-title" ${mapSpotAttributes(spot.session)}>${
-              esc(sessionSpotLabel(spot.session))
-            }</button>${
+            `<article class="spot-productivity-card" data-spot-id="${
+              esc(spot.session.spot_archive_id)
+            }">${spotCoverHTML(spot.speciesCounts)}<div><button type="button" class="spot-title" ${
+              mapSpotAttributes(spot.session)
+            }>${esc(sessionSpotLabel(spot.session))}</button>${
               spotCoordinatesHTML(spot.session)
             }</div><div class="spot-productivity-rate"><strong>${
               (spot.count * 3600 / spot.seconds).toFixed(1)
@@ -1144,6 +1151,197 @@ function renderTrips() {
   renderDays(rows);
   restoreDisclosures($("trip-rows"), expanded);
 }
+let mapViewMode = "catches";
+let mapSummaryLayer = null;
+function updateMapControls() {
+  document.querySelectorAll("[data-map-view]").forEach((button) =>
+    button.setAttribute("aria-pressed", String(button.dataset.mapView === mapViewMode))
+  );
+  $("catch-colour-control").hidden = mapViewMode !== "catches";
+  $("fit").textContent = "Show all " + mapViewMode;
+  if (selectedPages().includes("map") && !selectedPages().includes("totals")) {
+    $("empty").hidden = mapViewMode !== "catches" || visible.length > 0;
+  }
+  $("map").setAttribute(
+    "aria-label",
+    {
+      catches: "Map of catch locations",
+      spots: "Map of saved fishing spots",
+      days: "Map of fishing days",
+    }[mapViewMode],
+  );
+}
+function setMapView(mode, fit = false) {
+  if (!["catches", "spots", "days"].includes(mode)) return;
+  if (mode !== mapViewMode && spotLayer && map) {
+    map.removeLayer(spotLayer);
+    spotLayer = null;
+    focusedSpot = null;
+  }
+  mapViewMode = mode;
+  updateMapControls();
+  if (session && !$("journal").hidden && !$("map-page").hidden) renderMap();
+  if (fit) fitMap();
+  if (mode !== "catches" && !selectedPages().includes("totals")) $("empty").hidden = true;
+}
+function renderMap() {
+  initMap();
+  if (!markers) return;
+  updateMapControls();
+  if (mapViewMode === "catches") {
+    if (mapSummaryLayer) map.removeLayer(mapSummaryLayer);
+    if (!map.hasLayer(markers)) map.addLayer(markers);
+    renderCatchMap();
+  } else {
+    map.removeLayer(markers);
+    if (!mapSummaryLayer) mapSummaryLayer = L.featureGroup();
+    if (!map.hasLayer(mapSummaryLayer)) map.addLayer(mapSummaryLayer);
+    renderMapGroups();
+  }
+}
+function renderMapGroups() {
+  let entries;
+  if (mapViewMode === "spots") {
+    entries = collectSpotProductivity(diaryTripRows(false)).ranked.map((spot) => {
+      const position = spotPosition(spot.session);
+      return {
+        id: spot.session.spot_archive_id,
+        label: sessionSpotLabel(spot.session),
+        latitude: position.latitude,
+        longitude: position.longitude,
+        spot,
+      };
+    }).filter((entry) => Number.isFinite(entry.latitude) && Number.isFinite(entry.longitude));
+  } else {
+    const days = new Map();
+    for (const c of uniqueRecords(visible)) {
+      if (!Number.isFinite(c.latitude) || !Number.isFinite(c.longitude)) continue;
+      const day = dayKey(c.caught_at);
+      if (!days.has(day)) days.set(day, []);
+      days.get(day).push(c);
+    }
+    entries = [...days].sort(([a], [b]) => b.localeCompare(a)).map(([day, records]) => {
+      records.sort((a, b) => Date.parse(a.caught_at) - Date.parse(b.caught_at));
+      return {
+        id: day,
+        label: dateLabel(records[0].caught_at),
+        latitude: records[0].latitude,
+        longitude: records[0].longitude,
+        records,
+      };
+    });
+  }
+  $("map-view-summary").textContent = mapViewMode === "spots"
+    ? `${entries.length} saved ${
+      entries.length === 1 ? "spot" : "spots"
+    } · names match the Spots page`
+    : `${entries.length} ${entries.length === 1 ? "day" : "days"} · each pin marks its first catch`;
+  if (
+    mapViewMode === "spots" && focusedSpot &&
+    !entries.some((entry) =>
+      entry.latitude === focusedSpot.latitude && entry.longitude === focusedSpot.longitude
+    )
+  ) {
+    if (spotLayer) map.removeLayer(spotLayer);
+    spotLayer = null;
+    focusedSpot = null;
+  }
+  const signature = JSON.stringify([mapViewMode, entries]);
+  if (signature === mapSignature) return;
+  mapSignature = signature;
+  map.closePopup();
+  mapSummaryLayer.clearLayers();
+  for (const entry of entries) {
+    const colour = entry.records ? (dayPalette.get(entry.id) || "#456b60") : "#456b60";
+    const icon = L.divIcon({
+      className: `map-summary-pin map-${mapViewMode}-pin`,
+      html: entry.records
+        ? '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="6" width="16" height="15" rx="2"/><path d="M8 3v6m8-6v6M4 11h16"/></svg>'
+        : "",
+      iconSize: entry.records ? [26, 26] : [18, 18],
+      iconAnchor: entry.records ? [13, 13] : [9, 9],
+    });
+    const marker = L.marker([entry.latitude, entry.longitude], {
+      title: entry.label,
+      alt: entry.label,
+      icon,
+      keyboard: true,
+    });
+    marker.mapEntry = entry;
+    marker.bindTooltip(esc(entry.label), {
+      permanent: true,
+      direction: "top",
+      offset: [0, -12],
+      className: "map-entry-label",
+    });
+    if (entry.spot) {
+      const spot = entry.spot;
+      marker.bindPopup(
+        `<strong>${esc(entry.label)}</strong><p>${spot.count} ${
+          spot.count === 1 ? "catch" : "catches"
+        } · ${durationLabel(spot.seconds)} fishing<br>${entry.latitude.toFixed(5)}, ${
+          entry.longitude.toFixed(5)
+        }<br>20 m spot radius</p><button type="button" class="quiet" data-spot-card="${
+          esc(entry.id)
+        }">Open spot details</button>`,
+      );
+    } else {
+      marker.bindPopup(
+        `<strong>${esc(entry.label)}</strong><p>${entry.records.length} ${
+          entry.records.length === 1 ? "catch" : "catches"
+        }<br>Pin at the first catch location.</p><button type="button" class="quiet" data-map-day="${
+          esc(entry.id)
+        }">Show this day’s catches</button>`,
+      );
+    }
+    marker.on("add", () => marker.getElement()?.style.setProperty("--map-pin-colour", colour));
+    mapSummaryLayer.addLayer(marker);
+  }
+  $("legend").innerHTML =
+    entries.map((entry) =>
+      entry.spot
+        ? `<button type="button" class="fish-name-link" ${mapSpotAttributes(entry.spot.session)}>${
+          esc(entry.label)
+        }</button>`
+        : `<button type="button" class="fish-name-link" data-map-day="${esc(entry.id)}">${
+          esc(entry.label)
+        }</button>`
+    ).join("") || "<span>No matching locations.</span>";
+}
+function openSpotCard(id) {
+  const pages = desktopViews.matches ? selectedPages().filter((key) => key !== "spots") : [];
+  location.hash = [...pages.slice(-1), "spots"].join(",");
+  route();
+  requestAnimationFrame(() => {
+    const card = [...document.querySelectorAll("[data-spot-id]")].find((node) =>
+      node.dataset.spotId === id
+    );
+    if (!card) return;
+    document.querySelectorAll(".spot-map-selected").forEach((node) =>
+      node.classList.remove("spot-map-selected")
+    );
+    card.classList.add("spot-map-selected");
+    card.querySelector(".spot-details").open = true;
+    card.scrollIntoView({ block: "center", behavior: "instant" });
+  });
+}
+document.querySelectorAll("[data-map-view]").forEach((button) =>
+  button.addEventListener("click", () => setMapView(button.dataset.mapView, true))
+);
+document.addEventListener("click", (event) => {
+  const spot = event.target.closest("[data-spot-card]");
+  if (spot) {
+    openSpotCard(spot.dataset.spotCard);
+    return;
+  }
+  const day = event.target.closest("[data-map-day]");
+  if (day) {
+    $("from").value = day.dataset.mapDay;
+    $("to").value = day.dataset.mapDay;
+    render();
+    setMapView("catches", true);
+  }
+});
 function applyChartStyle() {
   if (map) $("map").classList.toggle("vintage-chart", $("chart-vintage").checked);
 }
@@ -1203,7 +1401,7 @@ function initMap() {
   map.on("zoomend", updateLabels);
 }
 function updateLabels() {
-  if (!map || !markers) return;
+  if (!map || !markers || mapViewMode !== "catches") return;
   const show = map.getZoom() >= 13;
   markers.eachLayer((marker) => {
     if (show && !marker.getTooltip()) {
@@ -1216,13 +1414,15 @@ function updateLabels() {
     } else if (!show && marker.getTooltip()) marker.unbindTooltip();
   });
 }
-function renderMap() {
-  initMap();
-  if (!markers) return;
+function renderCatchMap() {
   const records = uniqueRecords(visible).filter((c) =>
     Number.isFinite(c.latitude) && Number.isFinite(c.longitude)
   );
+  $("map-view-summary").textContent = `${records.length} ${
+    records.length === 1 ? "catch" : "catches"
+  } · numbered circles group nearby catches`;
   const signature = JSON.stringify([
+    "catches",
     $("colour").value,
     records.map(
       (c) => [
@@ -1284,10 +1484,16 @@ function renderMap() {
   updateLabels();
 }
 function fitMap() {
-  if (!map || !markers || !markers.getLayers().length) return;
+  const layer = mapViewMode === "catches" ? markers : mapSummaryLayer;
+  if (!map || !layer || !layer.getLayers().length) return;
   map.invalidateSize({ pan: false });
-  map.fitBounds(markers.getBounds(), { padding: [45, 45], maxZoom: 14, animate: false });
+  map.fitBounds(layer.getBounds(), {
+    padding: [55, 55],
+    maxZoom: mapViewMode === "spots" ? 18 : 14,
+    animate: false,
+  });
 }
+
 const speciesScientific = {
   kabeljo: "Argyrosomus inodorus",
   red_roman: "Chrysoblephus laticeps",
@@ -2770,7 +2976,8 @@ function route() {
   }
   document.body.dataset.page = page;
   $("page-title").textContent = pages.map((key) => viewNames[key]).join(" + ");
-  $("empty").hidden = !pages.some((key) => ["map", "totals"].includes(key)) ||
+  $("empty").hidden =
+    !pages.some((key) => (key === "totals" || (key === "map" && mapViewMode === "catches"))) ||
     visible.length > 0;
   document.title = $("page-title").textContent + " · Catch and Conditions";
   if (pages.includes("map") && session && !$("journal").hidden) {
