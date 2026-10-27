@@ -3329,15 +3329,10 @@ async function start() {
     $("login-button").disabled = true;
     return;
   }
-  // Remove only this project's legacy saved token. New sessions live in memory.
-  try {
-    const storageKey = `sb-${new URL(config.supabaseUrl).hostname.split(".")[0]}-auth-token`;
-    localStorage.removeItem(storageKey);
-    localStorage.removeItem(storageKey + "-code-verifier");
-  } catch { /* Storage can be unavailable in private browsing. */ }
+  // Supabase restores this browser’s saved session and refreshes expired tokens.
   client = window.supabase.createClient(config.supabaseUrl, key, {
     auth: {
-      persistSession: false,
+      persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: false,
     },
