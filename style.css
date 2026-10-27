@@ -5991,3 +5991,10 @@ body::before { opacity:.075; }
 .map-entry-label { font:italic 14px/1.4 var(--diary-hand); background:#fffaf0; color:#304f3e; border:1px solid #c9bea4; box-shadow:0 1px 4px #453f2b15; }
 .spot-map-selected { outline:2px solid #537963; outline-offset:3px; }
 @media(max-width:600px) { .map-toolbar { flex-wrap:wrap; gap:10px; }.map-view-tabs { flex:1 0 100%; }.map-view-tabs button { flex:1; min-height:44px; } }
+
+/* Saved day ratings remain visible while each day is collapsed. */
+.day-rating-status { display:flex; align-items:center; gap:5px; width:fit-content; margin-top:8px; padding:3px 7px; border:1px solid #d8cfbb; border-radius:4px; background:#f4f0e5; color:#747466; font:normal 11px/1.4 system-ui,sans-serif; letter-spacing:0; }
+.day-rating-status svg { width:13px; height:13px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; flex:none; }
+.day-rating-status.is-done { color:#32634a; background:#e7eee0; border-color:#b4c7aa; }
+.day-rating-status.is-partial { color:#8b692e; background:#f5edd8; border-color:#d9c79e; }
+.day-rating-status.is-error { color:#866443; }

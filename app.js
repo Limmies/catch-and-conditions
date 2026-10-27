@@ -235,6 +235,9 @@ function loginMessage(text, error = false) {
 function resetPrivateView() {
   loadGeneration++;
   conditionsGeneration++;
+  dayRatingEpoch++;
+  dayRatingRows.clear();
+  dayRatingLoad = "loading";
   catches = [];
   trips = [];
   visible = [];
@@ -350,6 +353,7 @@ async function refreshJournal() {
   if (!session || $("refresh").disabled) return;
   const generation = ++loadGeneration;
   const owner = session.user.id;
+  void refreshDayRatings(owner, generation);
   $("refresh").disabled = true;
   message("Refreshing…");
   $("status").classList.add("is-loading");
@@ -1349,7 +1353,7 @@ function initMap() {
   if (map || $("map-page").hidden) return;
   if (!window.L || !L.markerClusterGroup) {
     $("map").textContent =
-      "The map could not load. Your catches are still available in Species and the Fishing diary.";
+      "The map could not load. Your catches are still available in Species and Days.";
     return;
   }
   map = L.map("map", {
@@ -2062,8 +2066,8 @@ function renderDays(tripRows = diaryTripRows()) {
     }
     section.innerHTML = `<details class="day-record" data-disclosure="day-card:${
       esc(key)
-    }"><summary class="day-card-summary"><strong>${
-      esc(dateLabel(reference.caught_at))
+    }"><summary class="day-card-summary"><strong>${esc(dateLabel(reference.caught_at))}${
+      dayRatingBadge(key, fishingMode)
     }</strong><span class="record-metrics"><span title="Based on completed trips starting on this date"><b>${
       productivity === null ? "—" : productivity.toFixed(1)
     }</b> catches / fishing hour</span><span><b>${rows.length}</b> catches</span></span></summary><div class="day-record-body"><div class="day-summary">${
@@ -2212,6 +2216,95 @@ function journalArt(key) {
     art[key] || ""
   }</svg>`;
 }
+// Completion is based on the latest saved revision for this date and fishing style.
+let dayRatingRows = new Map();
+let dayRatingLoad = "loading";
+let dayRatingEpoch = 0;
+let dayRatingVersion = 0;
+function dayRatingKey(date, mode) {
+  return `${date}:${mode}`;
+}
+function dayRatingBadge(date, mode) {
+  const cached = dayRatingRows.get(dayRatingKey(date, mode));
+  const row = cached?._missing ? null : cached;
+  const count = row
+    ? dayFeelMetrics.filter((metric) =>
+      Number.isInteger(row[metric.key]) && row[metric.key] >= 0 && row[metric.key] <= 10
+    ).length
+    : 0;
+  const complete = count === dayFeelMetrics.length;
+  const state = complete
+    ? "done"
+    : row
+    ? "partial"
+    : cached?._missing || dayRatingLoad === "ready"
+    ? "pending"
+    : dayRatingLoad;
+  const label = complete
+    ? "Rating done"
+    : row
+    ? `Partly rated · ${count}/${dayFeelMetrics.length}`
+    : state === "pending"
+    ? "Not rated yet"
+    : state === "error"
+    ? "Rating unavailable"
+    : "Checking rating…";
+  const icon = complete ? '<path d="m3 8 3 3 7-8"/>' : '<circle cx="8" cy="8" r="5.5"/>';
+  return `<span class="day-rating-status is-${state}" data-rating-date="${
+    esc(date)
+  }" data-rating-mode="${esc(mode)}" title="${
+    esc(fishingModeLabels[mode])
+  }: ${count} of ${dayFeelMetrics.length} scores saved"><svg viewBox="0 0 16 16" aria-hidden="true">${icon}</svg>${
+    esc(label)
+  }</span>`;
+}
+function paintDayRatingBadges() {
+  document.querySelectorAll("[data-rating-date]").forEach((badge) => {
+    badge.outerHTML = dayRatingBadge(badge.dataset.ratingDate, badge.dataset.ratingMode);
+  });
+}
+function rememberDayRating(row, date, mode) {
+  const key = dayRatingKey(date, mode);
+  dayRatingRows.set(key, {
+    ...(row || {}),
+    observation_date: date,
+    fishing_mode: mode,
+    _localVersion: ++dayRatingVersion,
+    _missing: !row,
+  });
+  paintDayRatingBadges();
+}
+async function refreshDayRatings(owner, generation) {
+  const version = dayRatingVersion;
+  dayRatingLoad = "loading";
+  paintDayRatingBadges();
+  const latest = new Map();
+  try {
+    for (let offset = 0;; offset += 500) {
+      const { data, error } = await client.from("fishing_day_observations").select(
+        "id,observation_date,fishing_mode,recorded_at,enjoyment,water_clarity,sea_comfort,current_strength,bite_activity,bait_presence",
+      )
+        .eq("owner_id", owner).order("recorded_at", { ascending: false }).order("id", {
+          ascending: false,
+        }).range(offset, offset + 499);
+      if (generation !== loadGeneration || session?.user.id !== owner) return;
+      if (error) throw error;
+      for (const row of data || []) {
+        if (!row.observation_date || !Object.hasOwn(fishingModeLabels, row.fishing_mode)) continue;
+        const key = dayRatingKey(row.observation_date, row.fishing_mode);
+        if (!latest.has(key)) latest.set(key, row);
+      }
+      if (!data || data.length < 500) break;
+    }
+    for (const [key, row] of dayRatingRows) if (row._localVersion > version) latest.set(key, row);
+    dayRatingRows = latest;
+    dayRatingLoad = "ready";
+  } catch {
+    if (generation !== loadGeneration || session?.user.id !== owner) return;
+    dayRatingLoad = "error";
+  }
+  paintDayRatingBadges();
+}
 function dayFeelWord(metric, value) {
   return metric.words[Math.min(4, Math.floor(value / 2.5))];
 }
@@ -2232,6 +2325,7 @@ async function showDayObservations(c) {
   $("detail-label").textContent = "Day notes & ratings";
   $("details").dataset.view = "day-notes";
   const generation = ++conditionsGeneration, mode = fishingMode, date = dayKey(c.caught_at);
+  const ratingEpoch = dayRatingEpoch, ratingOwner = session?.user.id;
   $("detail-body").innerHTML = dayObservationFormHTML(c, mode);
   if (!$("details").open) $("details").showModal();
   $("details").scrollTop = 0;
@@ -2306,6 +2400,9 @@ async function showDayObservations(c) {
         if (!existing.error && existing.data?.some((row) => row.id === writeId)) error = null;
       }
       if (error) throw error;
+      if (dayRatingEpoch === ratingEpoch && session?.user.id === ratingOwner) {
+        rememberDayRating({ id: writeId, ...payload }, date, mode);
+      }
       if (current()) {
         status.textContent = "Saved for this day. Earlier versions are kept in your history.";
       }
@@ -2328,6 +2425,7 @@ async function showDayObservations(c) {
     if (!current()) return;
     if (error) throw error;
     const saved = data?.[0];
+    rememberDayRating(saved, date, mode);
     for (const m of dayFeelMetrics) {
       paint(m, Number.isInteger(saved?.[m.key]) ? saved[m.key] : null);
     }
@@ -2943,7 +3041,7 @@ const viewNames = {
   home: "Home",
   map: "Map",
   totals: "Species",
-  diary: "Fishing diary",
+  diary: "Days",
   spots: "Spots",
 };
 const desktopViews = matchMedia("(min-width: 951px) and (hover: hover) and (pointer: fine)");
