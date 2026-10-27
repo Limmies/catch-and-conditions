@@ -925,15 +925,17 @@ function renderSpotProductivity(rows) {
               mapSpotAttributes(spot.session)
             }>${esc(sessionSpotLabel(spot.session))}</button>${
               spotCoordinatesHTML(spot.session)
-            }<span class="small muted">${spot.sessions} ${
-              spot.sessions === 1 ? "session" : "sessions"
-            } · ${
-              durationLabel(spot.seconds)
-            } · ${spot.count} catches</span></div><div class="spot-productivity-rate"><strong>${
+            }</div><div class="spot-productivity-rate"><strong>${
               (spot.count * 3600 / spot.seconds).toFixed(1)
             }</strong><span>catches / fishing hour</span><span class="spot-last-visit">Last visit ${
               esc(dateLabel(spot.lastVisit))
-            }</span></div><div class="session-rate-track"><i style="width:${
+            }</span></div><details class="spot-details" data-disclosure="spot:${
+              esc(spot.session.spot_archive_id)
+            }"><summary>Spot details</summary><div class="spot-detail-content"><p class="spot-effort-summary">${spot.sessions} ${
+              spot.sessions === 1 ? "session" : "sessions"
+            } · ${durationLabel(spot.seconds)} fishing · ${spot.count} ${
+              spot.count === 1 ? "catch" : "catches"
+            }</p><div class="session-rate-track"><i style="width:${
               spot.count * 3600 / spot.seconds / maximum * 100
             }%"></i></div><div class="session-location">${sessionLocationHTML(spot.session)}</div>${
               (spot.knownAnglers && spot.anglerSeconds > 0) ||
@@ -948,7 +950,7 @@ function renderSpotProductivity(rows) {
                     : "Line effort unavailable"
                 }</p></details>`
                 : ""
-            }</article>`
+            }</div></details></article>`
           ).join("")
         }</div>`
         : '<p class="small muted">No located fishing sessions match these dates and fishing style.</p>'
@@ -2096,6 +2098,30 @@ async function showDayObservations(c) {
     if (current()) $("retry-day-observations").onclick = () => showDayObservations(c);
   }
 }
+// Catch setup is captured on the watch; never infer it from GPS or the page filter.
+const catchSetupLabels = {
+  position_method: { anchored: "Anchored", drifting: "Drifting" },
+  tackle_method: { bait: "Bait", jigging: "Jigging" },
+};
+function catchSetup(c) {
+  const raw = c.raw_payload || {};
+  const method = (key) => {
+    const value = c[key] ?? raw[key];
+    if (value != null) {
+      return Object.hasOwn(catchSetupLabels[key], value)
+        ? catchSetupLabels[key][value]
+        : "Unrecognised setting";
+    }
+    return Object.hasOwn(raw, key) ? "Not set on watch" : "Not recorded";
+  };
+  const mode = c.fishing_mode ?? raw.fishing_mode;
+  const legacy = mode == null || (mode === "offshore" && c.raw_payload && !raw.fishing_mode);
+  return {
+    style: legacy ? "Offshore (legacy default)" : fishingModeLabels[mode] || "Unrecognised setting",
+    position: method("position_method"),
+    tackle: method("tackle_method"),
+  };
+}
 function field(label, value) {
   return `<div><dt>${esc(label)}</dt><dd>${esc(value ?? "Not recorded")}</dd></div>`;
 }
@@ -2600,6 +2626,7 @@ async function showDetail(c) {
   $("detail-label").textContent = "Catch details";
   $("details").dataset.view = "catch";
   const generation = ++conditionsGeneration;
+  const setup = catchSetup(c);
   const gpsDelay = Math.round(
     (new Date(c.gps_at) - new Date(c.caught_at)) / 1000,
   );
@@ -2612,10 +2639,8 @@ async function showDetail(c) {
       "Fish length",
       Number.isInteger(c.raw_payload?.length_cm) ? `${c.raw_payload.length_cm} cm` : null,
     )
-  }${field("Fishing style", fishingModeLabels[recordFishingMode(c)] || recordFishingMode(c))}${
-    field("Position", c.position_method)
-  }${
-    field("Tackle", c.tackle_method)
+  }${field("Fishing style", setup.style)}${field("Boat movement", setup.position)}${
+    field("Tackle", setup.tackle)
   }</dl><details class="record-details"><summary>Location &amp; GPS record</summary><dl class="detail-grid">${
     field("Latitude", c.latitude.toFixed(6))
   }${field("Longitude", c.longitude.toFixed(6))}${

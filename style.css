@@ -5945,3 +5945,20 @@ body::before { opacity:.075; }
 .diary-totals { margin:0 0 22px; border-bottom:1px solid #d5ccb8; }
 .diary-totals > summary { min-height:44px; padding:10px 0; cursor:pointer; color:#4e6659; font-size:13px; font-weight:600; }
 .diary-totals[open] > summary { margin-bottom:12px; }
+
+/* Photo captions and personal notes share the Home scrapbook lettering. */
+:root { --diary-hand:'Bradley Hand','Segoe Print',Georgia,cursive; }
+.home-print figcaption,.spot-title,.spot-last-visit,.session-spot-label { font-family:var(--diary-hand); font-style:italic; font-weight:400; }
+.spot-title { font-size:25px; line-height:1.35; }
+.spot-productivity-card { position:relative; padding:14px 14px 0; background:#fffaf0; border-radius:3px; }
+.spot-cover { margin-bottom:16px; position:relative; }
+.spot-cover::before { content:''; position:absolute; top:-20px; left:calc(50% - 26px); width:52px; height:15px; background:#d5c8a78c; border:1px solid #c9bc9655; transform:rotate(-3deg); pointer-events:none; }
+.spot-productivity-rate { margin:14px 0 18px!important; }
+.spot-productivity-rate strong { font-family:system-ui,sans-serif; font-style:normal; }
+.spot-productivity-rate .spot-last-visit { margin-top:8px; font-size:15px; color:#576b59; }
+.spot-details { border-top:1px solid #d4cab4; margin-top:14px; }
+.spot-details > summary { cursor:pointer; min-height:48px; padding:13px 2px; color:#456151; font-size:13px; }
+.spot-detail-content { padding:0 2px 16px; }
+.spot-effort-summary { font-size:13px; line-height:1.7; color:var(--muted); }
+.spot-detail-content .session-location { margin:14px 0; }
+.spot-detail-content .spot-extra { margin:14px 0 0; border-top:1px dashed #d4cab4; padding-top:10px; }
