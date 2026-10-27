@@ -6003,3 +6003,8 @@ body::before { opacity:.075; }
 .spot-name-form input { width: 100%; min-width: 0; }
 .spot-name-actions { display: flex; flex-wrap: wrap; gap: 12px; }
 .spot-title { overflow-wrap: anywhere; }
+
+@media (hover: hover) and (pointer: fine) {
+  .spot-rename-touch { display: none; }
+  .spot-rename-touch:focus-visible { display: inline-block; }
+}

@@ -1029,6 +1029,14 @@ document.addEventListener("click", (event) => {
   const button = event.target.closest("[data-rename-spot]");
   if (button) showSpotRename(button.dataset.renameSpot);
 });
+document.addEventListener("contextmenu", (event) => {
+  const title = event.target.closest(".spot-title");
+  if (!title || !window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+  const card = title.closest("[data-spot-id]");
+  if (!card || !session) return;
+  event.preventDefault();
+  showSpotRename(card.dataset.spotId);
+});
 function renderSpotProductivity(rows) {
   const expanded = disclosureState($("spot-productivity"));
   const { ranked, unlocated } = collectSpotProductivity(rows);
@@ -1040,7 +1048,9 @@ function renderSpotProductivity(rows) {
           ranked.map((spot) =>
             `<article class="spot-productivity-card" data-spot-id="${
               esc(spot.session.spot_archive_id)
-            }">${spotCoverHTML(spot.speciesCounts)}<div><button type="button" class="spot-title" ${
+            }">${
+              spotCoverHTML(spot.speciesCounts)
+            }<div><button type="button" class="spot-title" title="View on map · Right-click to rename" ${
               mapSpotAttributes(spot.session)
             }>${esc(sessionSpotLabel(spot.session))}</button>${
               spotCoordinatesHTML(spot.session)
@@ -1054,7 +1064,7 @@ function renderSpotProductivity(rows) {
               spot.sessions === 1 ? "session" : "sessions"
             } · ${durationLabel(spot.seconds)} fishing · ${spot.count} ${
               spot.count === 1 ? "catch" : "catches"
-            }</p><button type="button" class="quiet" data-rename-spot="${
+            }</p><button type="button" class="quiet spot-rename-touch" data-rename-spot="${
               esc(spot.session.spot_archive_id)
             }">Rename spot</button><dl class="spot-species-counts">${
               leadingSpotSpecies(spot.speciesCounts).map(([id, count]) =>
