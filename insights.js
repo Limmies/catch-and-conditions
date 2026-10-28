@@ -177,9 +177,10 @@ function resetInsights() {
   for (
     const id of [
       "insights-overview",
-      "insights-conditions",
       "insights-ratings",
       "insights-ratings-status",
+      "insights-species-gallery",
+      "insights-conditions",
       "insights-comparison",
       "insights-spot-species",
       "insights-density-summary",
@@ -301,7 +302,7 @@ function insightPlot(title, rows, note = "", unit = "catches", kind = "dots", xL
     ).join("")
   }</g><path d="M${left},${top}V${bottom}H${right}" fill="none" stroke="#a99d81"/>${line}${
     rows.map((r, i) =>
-      `<circle class="insight-dot" cx="${px(i)}" cy="${py(r.value)}" r="${
+      `<circle class="insight-dot" style="fill:${esc(r.colour || "var(--insight-accent, #297a88)")}" cx="${px(i)}" cy="${py(r.value)}" r="${
         numeric ? 4 : 5
       }"><title>${esc(r.label)}: ${r.value} ${esc(unit)}${
         r.sample ? " · " + esc(r.sample) : ""
@@ -381,6 +382,21 @@ function renderInsights() {
   void loadInsightsConditions();
   const rows = uniqueRecords(visible), counts = new Map();
   for (const c of rows) counts.set(c.species_id, (counts.get(c.species_id) || 0) + 1);
+  const galleryIds = $("species").value ? [$("species").value] : [...new Set([...modeSpeciesIds(), ...counts.keys()])];
+  galleryIds.sort((a, b) => (counts.get(b) || 0) - (counts.get(a) || 0) ||
+    (species[a]?.[0] || a).localeCompare(species[b]?.[0] || b));
+  $("insights-species-gallery").innerHTML = `<h3>Species in your catches</h3>
+    <p class="small muted">${rows.length} catches in these filters · share of filtered catches${rows.length ? "" : " · no catches recorded"}</p>
+    <table class="insights-species-table"><thead><tr><th scope="col">Species</th><th scope="col">Catches</th><th scope="col">Share</th></tr></thead><tbody>${galleryIds.map((id) => {
+      const entry = species[id];
+      if (!entry) return "";
+      const count = counts.get(id) || 0, share = rows.length ? count / rows.length * 100 : 0;
+      const shareLabel = share > 0 && share < 1 ? "<1" : String(Math.round(share));
+      return `<tr class="insights-species-row" style="--species-colour:${esc(entry[1])}">
+        <th scope="row"><span class="insights-species-identity"><img src="${fishPreviews[id]}" alt="${esc(entry[0])} illustration" width="128" height="72" loading="eager"><span>${esc(entry[0])}</span></span></th>
+        <td class="insights-species-count">${count}</td><td class="insights-species-share">${rows.length ? shareLabel + "%" : "—"}</td>
+      </tr><tr class="insights-species-bar-row" aria-hidden="true" style="--species-colour:${esc(entry[1])}"><td colspan="3"><div class="insights-species-track"><i style="width:${share}%"></i></div></td></tr>`;
+    }).join("")}</tbody></table>`;
   const { ranked } = collectSpotProductivity(diaryTripRows(false));
   const spotCounts = ranked.slice().sort((a, b) => b.count - a.count).map((s) => ({
     label: sessionSpotLabel(s.session),
@@ -399,6 +415,7 @@ function renderInsights() {
     [...counts].sort((a, b) => b[1] - a[1]).map(([id, count]) => ({
       label: species[id]?.[0] || id,
       value: count,
+      colour: species[id]?.[1],
     })),
     `${rows.length} catches · ${new Set(rows.map((c) => dayKey(c.caught_at))).size} fishing days`,
   ) + insightPlot("Catches by spot", spotCounts, "Stored fishing sessions with known spots") +
@@ -674,121 +691,27 @@ function renderInsightsRatings() {
   const target = $("insights-ratings"), expanded = disclosureState(target);
   const eligible = new Set(visible.map((c) => dayKey(c.caught_at)));
   for (const { trip } of diaryTripRows(true)) eligible.add(dayKey(trip.started_at));
-  const from = $("from").value, to = $("to").value;
   const rows = JournalInsights.ratings([...dayRatingRows.values()], {
-    mode: fishingMode,
-    from,
-    to,
+    mode: fishingMode, from: $("from").value, to: $("to").value,
     dates: $("species").value ? eligible : null,
   });
-  const dates = [...new Set([...eligible, ...rows.map((r) => r.observation_date)])].sort();
-  const scopes = [...new Set(rows.map((r) => r.fishing_mode))];
   $("insights-ratings-status").textContent = dayRatingLoad === "loading"
-    ? "Refreshing saved day ratings…"
-    : dayRatingLoad === "error"
-    ? "Day ratings could not refresh. Any previously loaded ratings are shown."
-    : `${rows.length} saved day/style ratings · ${
-      new Set(rows.map((r) => r.observation_date)).size
-    } rated dates${fishingMode === "all" ? " · fishing styles shown separately" : ""}`;
+    ? "Refreshing saved ratings…" : dayRatingLoad === "error"
+    ? "Could not refresh ratings. Showing available saved scores." : "One bar per saved rating, grouped by fishing event. All bars use the same 0–10 scale; days between trips are skipped.";
+  const colours = { all: species.miss_lucy[1], offshore: species.carpenter[1], shore: species.red_roman[1] };
   target.innerHTML = dayFeelMetrics.map((metric) => {
-    const valid = (row) =>
-      Number.isInteger(row?.[metric.key]) && row[metric.key] >= 0 && row[metric.key] <= 10;
-    const used = rows.filter(valid),
-      title = metric.label === "How was the day?" ? "Enjoyment" : metric.label;
-    if (!used.length) {
-      return insightBars(
-        title,
-        [],
-        metric.note + " No saved score for these filters.",
-        "rating / 10",
-      );
-    }
-    const first = Date.parse(dates[0] + "T00:00:00Z"),
-      last = Date.parse(dates.at(-1) + "T00:00:00Z");
-    const px = (date) =>
-        last === first
-          ? 290
-          : 55 + (Date.parse(date + "T00:00:00Z") - first) / (last - first) * 455,
-      py = (v) => 220 - v * 18;
-    const styles = {
-      offshore: { colour: "#4f7e6b", dash: "" },
-      shore: { colour: "#a66d54", dash: "6 3" },
-      all: { colour: "#a8893c", dash: "2 3" },
-    };
-    const series = scopes.map((mode) => {
-      const saved = new Map(
-        rows.filter((r) => r.fishing_mode === mode).map((r) => [r.observation_date, r]),
-      );
-      let previous = null, path = "";
-      const circles = [];
-      for (const date of dates) {
-        const row = saved.get(date);
-        if (!valid(row)) {
-          previous = null;
-          continue;
-        }
-        const value = row[metric.key], time = Date.parse(date + "T00:00:00Z");
-        path += (previous !== null && time - previous === 86400000 ? "L" : "M") + px(date) + "," +
-          py(value) + " ";
-        previous = time;
-        circles.push(
-          `<circle cx="${px(date)}" cy="${py(value)}" r="4" fill="${styles[mode].colour}"><title>${
-            esc(dateLabel(date + "T12:00:00Z"))
-          } · ${esc(fishingModeLabels[mode])}: ${value}/10</title></circle>`,
-        );
-      }
-      return `<path d="${path}" fill="none" stroke="${
-        styles[mode].colour
-      }" stroke-width="2" stroke-dasharray="${styles[mode].dash}"/>${circles.join("")}`;
-    }).join("");
-    const spanDays = Math.round((last - first) / 86400000);
-    const tickCount = Math.min(innerWidth <= 650 ? 2 : 4, spanDays + 1);
-    const tickDates = Array.from(
-      { length: tickCount },
-      (_, i) =>
-        new Date(
-          first + (tickCount === 1 ? 0 : Math.round(i * spanDays / (tickCount - 1))) * 86400000,
-        )
-          .toISOString().slice(0, 10),
-    );
-    const plot =
-      `<svg class="insight-plot insight-line-plot insight-rating-chart" viewBox="0 0 540 280" role="img" aria-label="${
-        esc(title)
-      } day ratings from zero to ten"><g class="insight-gridlines">${
-        [0, 2, 4, 6, 8, 10].map((v) =>
-          `<path d="M55 ${py(v)}H510"/><text x="45" y="${py(v) + 4}" text-anchor="end">${v}</text>`
-        ).join("")
-      }</g>${series}${
-        tickDates.map((date, i) =>
-          `<text class="insight-axis-label" x="${px(date)}" y="245" text-anchor="${
-            i === 0 ? "start" : i === tickDates.length - 1 ? "end" : "middle"
-          }">${esc(dateLabel(date + "T12:00:00Z"))}</text>`
-        ).join("")
-      }<text class="insight-axis-title" x="55" y="20">Rating / 10</text></svg>`;
-    const legend = `<div class="insight-rating-legend">${
-      scopes.filter((mode) => used.some((r) => r.fishing_mode === mode)).map((mode) =>
-        `<span><i style="background:${styles[mode].colour}"></i>${
-          esc(fishingModeLabels[mode])
-        }</span>`
-      ).join("")
-    }</div>`;
-    const table = dates.flatMap((date) =>
-      (scopes.length ? scopes : [fishingMode]).map((mode) => {
-        const row = rows.find((r) => r.observation_date === date && r.fishing_mode === mode);
-        return {
-          label: dateLabel(date + "T12:00:00Z") + " · " + fishingModeLabels[mode],
-          value: valid(row) ? `${row[metric.key]} / 10` : "Not rated",
-          sample: "Personal day rating",
-        };
-      })
-    );
-    return `<article class="insight-card"><h3>${
-      esc(title)
-    }</h3><p class="insight-caption">${used.length} saved scores across ${
-      new Set(used.map((r) => r.observation_date)).size
-    } days · ${esc(metric.note)}</p>${legend}${plot}${
-      insightTable(table, "Day · fishing waters", "rating:" + metric.key)
-    }</article>`;
+    const used = rows.filter((r) => Number.isFinite(r[metric.key]) && r[metric.key] >= 0 && r[metric.key] <= 10);
+    const dates = [...new Set(used.map((r) => r.observation_date))];
+    const table = used.map((r) => ({ label: r.observation_date, value: r[metric.key] + " / 10", sample: fishingModeLabels[r.fishing_mode] }));
+    return `<article class="insight-card"><h3>${esc(metric.key === "enjoyment" ? "Enjoyment" : metric.label)}</h3>
+      <p class="insight-caption">${used.length} saved scores across ${dates.length} fishing events · ${esc(metric.note)}</p>
+      ${used.length ? `<div class="rating-scale" aria-hidden="true"><span>0</span><span>5</span><span>10</span></div><div class="rating-day-list">${dates.map((date, eventIndex) => {
+        const label = new Date(date + "T12:00:00Z").toLocaleDateString("en-GB", { day:"2-digit", month:"short", year:"numeric", timeZone:"UTC" });
+        return `<div class="rating-day"><h4><span class="rating-event-label">Fishing day ${eventIndex + 1}</span>${esc(label)}</h4>${used.filter((r) => r.observation_date === date).map((r) =>
+          `<div class="rating-score-row" style="--rating-colour:${colours[r.fishing_mode]}"><span class="rating-mode">${esc(fishingModeLabels[r.fishing_mode])}</span><div class="rating-score-track" role="img" aria-label="${esc(label)} · ${esc(fishingModeLabels[r.fishing_mode])}: ${r[metric.key]} out of 10"><i style="width:${r[metric.key] * 10}%"></i></div><strong>${r[metric.key]}<small> / 10</small></strong></div>`
+        ).join("")}</div>`;
+      }).join("")}</div>` : '<p class="insight-empty">No saved scores for these filters.</p>'}
+      ${insightTable(table, "Fishing event date", "rating:" + metric.key)}</article>`;
   }).join("");
   restoreDisclosures(target, expanded);
 }
