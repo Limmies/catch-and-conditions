@@ -6042,3 +6042,32 @@ body::before { opacity:.075; }
 .insight-interpretation { margin-top:18px; padding:14px 16px; border-left:3px solid var(--insight-accent,#297a88); border-radius:0 8px 8px 0; background:#ffffff80; }
 .insight-interpretation h4 { margin:0 0 7px; font-size:12px; }
 .insight-interpretation p { margin:0; font-size:12px; line-height:1.7; color:#52665b; }
+
+/* Keep chart overflow inside the card, with readable touch-sized controls. */
+#insights-page, #insights-page .insights-section, #insights-page .insight-card { min-width:0; max-width:100%; }
+#insights-page .insight-card h3, #insights-page .insight-caption, .insight-interpretation p { overflow-wrap:anywhere; }
+.insight-plot-scroll { border-radius:6px; scrollbar-width:thin; touch-action:pan-x pan-y; }
+.insight-chart-hint { font-size:11px; color:var(--muted); margin:8px 0; }
+.day-photo-panel { margin:8px 0 18px; padding-bottom:16px; border-bottom:1px solid var(--line); }
+.day-photo-preview { display:block; width:100%; max-height:350px; object-fit:contain; border-radius:10px; background:#ede7da; }
+.day-photo-actions { display:flex; flex-wrap:wrap; gap:8px 12px; margin-top:12px; align-items:center; }
+.day-photo-actions p { flex-basis:100%; margin:0; }
+.day-photo-actions button { min-height:44px; }
+.day-photo-thumb { flex:0 0 60px; width:60px; height:60px; object-fit:cover; border-radius:8px; }
+.day-photo-preview[hidden], .day-photo-thumb[hidden] { display:none; }
+@media(max-width:650px) {
+  #insights-page .insights-grid, #insights-overview { grid-template-columns:minmax(0,1fr); }
+  #insights-page .insight-card { padding:14px 12px; }
+  #insights-page .insight-plot-scroll { width:100%; }
+  #insights-page select { max-width:100%; }
+  .insight-plot-scroll:focus-visible { outline:2px solid #297a88; outline-offset:2px; }
+  .insights-compare-controls label { min-width:0; flex-wrap:wrap; }
+  .rating-score-row { grid-template-columns:70px minmax(0,1fr) 43px; gap:7px; }
+  .rating-scale { margin-left:77px; margin-right:50px; }
+  .rating-day-list { max-height:360px; }
+  .day-card-summary { flex-wrap:wrap; gap:10px; }
+  .day-card-summary>strong { flex:1; min-width:0; }
+  .day-card-summary .record-metrics { flex-basis:100%; }
+  .day-photo-preview { max-height:280px; }
+  .day-photo-actions button { flex:1 1 120px; }
+}

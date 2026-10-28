@@ -306,10 +306,10 @@ function insightPlot(title, rows, note = "", unit = "catches", kind = "dots", xL
   const numeric = kind === "line",
     width = Math.max(
       520,
-      numeric ? Math.min(620, rows.length * 36 + 100) : rows.length * 86 + 100,
+      numeric ? Math.min(620, rows.length * 36 + 100) : rows.length * 86 + 220,
     ),
-    height = numeric ? 300 : 350;
-  const left = 55,
+    height = numeric ? 300 : 390;
+  const left = numeric ? 55 : 155,
     right = width - 30,
     top = 30,
     bottom = numeric ? 225 : 215,
@@ -369,7 +369,7 @@ function insightPlot(title, rows, note = "", unit = "catches", kind = "dots", xL
     numeric
       ? "Points are catch totals per interval; straight lines connect them without smoothing."
       : kind === "bars" ? "Each upright bar shows the recorded catch total for one species." : "One dot per category shows its total; category order does not imply a trend."
-  }</p>${insightTable(rows, "Interval / category", title)}${insightSummary(rows, unit, title)}</article>`;
+  }</p>${numeric ? "" : '<p class="insight-chart-hint">Swipe the chart sideways to see every category.</p>'}${insightTable(rows, "Interval / category", title)}${insightSummary(rows, unit, title)}</article>`;
 }
 function insightBinnedRows(rows, key) {
   const grouped = JournalInsights.groups(rows, key, insightValue, insightSteps[key]);

@@ -233,6 +233,7 @@ function loginMessage(text, error = false) {
   $("login-status").classList.toggle("error", error);
 }
 function resetPrivateView() {
+  resetDayPhotos();
   resetInsights();
   loadGeneration++;
   conditionsGeneration++;
@@ -2317,6 +2318,8 @@ function diaryTripRows(filterSpecies = true) {
     });
 }
 function renderDays(tripRows = diaryTripRows()) {
+  dayPhotoObserver?.disconnect();
+  void loadDayPhotos();
   const expanded = disclosureState($("days"));
   const groups = new Map();
   for (const c of visible) {
@@ -2343,7 +2346,7 @@ function renderDays(tripRows = diaryTripRows()) {
     }
     section.innerHTML = `<details class="day-record" data-disclosure="day-card:${
       esc(key)
-    }"><summary class="day-card-summary"><strong>${esc(dateLabel(reference.caught_at))}${
+    }"><summary class="day-card-summary"><img class="day-photo-thumb" alt="" width="60" height="60" hidden><strong>${esc(dateLabel(reference.caught_at))}${
       dayRatingBadge(key, fishingMode)
     }</strong><span class="record-metrics"><span title="Based on completed trips starting on this date"><b>${
       productivity === null ? "—" : productivity.toFixed(1)
@@ -2356,6 +2359,7 @@ function renderDays(tripRows = diaryTripRows()) {
         .join("")
     }</div></div></details>`;
     const body = section.querySelector(".day-record-body");
+    body.prepend(createDayPhotoPanel(key));
     const weather = document.createElement("button");
     weather.className = "quiet day-weather";
     weather.textContent = "View day conditions";
@@ -2413,6 +2417,7 @@ function renderDays(tripRows = diaryTripRows()) {
     $("days").innerHTML = '<p class="empty">No fishing records match these filters.</p>';
   }
   restoreDisclosures($("days"), expanded);
+  paintDayPhotos();
 }
 const dayFeelMetrics = [
   {
