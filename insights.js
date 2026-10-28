@@ -7,6 +7,7 @@
     sea: { label: "Sea surface temperature", unit: "°C", step: 2 },
     pressure: { label: "Barometric pressure", unit: "hPa", step: 5 },
     moon: { label: "Moon phase" },
+    illumination: { label: "Moon illumination", unit: "%", step: 10 },
     current: { label: "Current speed", unit: "km/h", step: .5 },
     length: { label: "Fish length", unit: "cm", step: 10 },
   };
@@ -51,13 +52,14 @@
       sea: "sea_surface_temperature",
       pressure: "pressure_msl",
       moon: "moon_phase_fraction",
+      illumination: "moon_illumination",
       current: "ocean_current_velocity",
     }[key];
     for (const s of snapshotsFor(snapshots, c.caught_at)) {
       let v = s.raw_payload?.[field];
       if (!Number.isFinite(v)) continue;
       const measuredAt = s.raw_payload?.field_sample_times?.[field] ||
-        (key === "moon" ? s.raw_payload?.catch_at : null) || s.sample_at;
+        (["moon", "illumination"].includes(key) ? s.raw_payload?.catch_at : null) || s.sample_at;
       if (
         !Number.isFinite(Date.parse(measuredAt)) ||
         Math.abs(Date.parse(measuredAt) - Date.parse(c.caught_at)) > 3600000
@@ -74,6 +76,7 @@
         else if (unit !== "km/h") continue;
       }
       if (key === "moon" && (v < 0 || v > 1)) continue;
+      if (key === "illumination" && (v < 0 || v > 100 || (unit && unit !== "%"))) continue;
       if (
         key === "sea" && (v < -3 || v > 50) || key === "pressure" && (v < 800 || v > 1100) ||
         key === "current" && (v < 0 || v > 50)
@@ -82,12 +85,16 @@
     }
     return null;
   }
-  function groups(rows, key, getValue) {
-    const grouped = new Map(), step = metrics[key]?.step;
+  function groups(rows, key, getValue, stepOverride) {
+    const grouped = new Map(), step = stepOverride || metrics[key]?.step;
     for (const c of rows) {
       const v = getValue(c, key);
       if (v === null || v === undefined || v === "") continue;
-      const bin = key === "moon" ? Math.round(v * 8) % 8 : step ? Math.floor(v / step) : v;
+      const bin = key === "moon"
+        ? Math.round(v * 8) % 8
+        : step
+        ? Math.floor((key === "illumination" ? Math.min(v, 100 - 1e-9) : v) / step)
+        : v;
       if (!grouped.has(bin)) grouped.set(bin, []);
       grouped.get(bin).push(c);
     }
@@ -95,18 +102,21 @@
       typeof a === "number" ? a - b : String(a).localeCompare(String(b))
     );
     if (key === "moon") keys = Array.from({ length: 8 }, (_, i) => i);
+    if (key === "illumination" && grouped.size) {
+      keys = Array.from({ length: Math.ceil(100 / step) }, (_, i) => i);
+    }
     if (step && keys.length) {
-      const min = keys[0], max = keys.at(-1);
-      if (max - min <= 100) keys = Array.from({ length: max - min + 1 }, (_, i) => min + i);
+      const min = key === "current" ? 0 : keys[0], max = keys.at(-1);
+      if (max - min <= 1000) keys = Array.from({ length: max - min + 1 }, (_, i) => min + i);
     }
     return keys.map((k) => ({
       key: k,
       label: key === "moon"
         ? phases[k]
         : step
-        ? `${Number((k * step).toFixed(2))}–<${Number(((k + 1) * step).toFixed(2))} ${
-          metrics[key].unit
-        }`
+        ? `${Number((k * step).toFixed(2))}–${
+          key === "illumination" && (k + 1) * step >= 100 ? "" : "<"
+        }${Number(((k + 1) * step).toFixed(2))} ${metrics[key].unit}`
         : String(k),
       rows: grouped.get(k) || [],
     }));
@@ -218,20 +228,121 @@ function insightBars(title, rows, note = "", unit = "catches") {
       : '<p class="insight-empty">No usable records for these filters.</p>'
   }</article>`;
 }
+let insightSteps = { sea: 1, pressure: 2, illumination: 10, current: 1 };
+function insightPlot(title, rows, note = "", unit = "catches", kind = "dots", xLabel = "") {
+  if (!rows.length) return insightBars(title, [], note, unit);
+  const numeric = kind === "line",
+    width = Math.max(
+      520,
+      numeric ? Math.min(620, rows.length * 36 + 100) : rows.length * 86 + 100,
+    ),
+    height = numeric ? 300 : 350;
+  const left = 55,
+    right = width - 30,
+    top = 30,
+    bottom = numeric ? 225 : 215,
+    max = Math.max(1, ...rows.map((r) => r.value));
+  const px = (i) =>
+      rows.length === 1 ? (left + right) / 2 : left + i * (right - left) / (rows.length - 1),
+    py = (v) => bottom - v / max * (bottom - top);
+  const ticks = [...new Set(Array.from({ length: 5 }, (_, i) => Math.round(max * i / 4)))],
+    labelEvery = Math.max(1, Math.ceil(rows.length / (innerWidth <= 650 ? 4 : 9)));
+  const line = numeric && rows.length > 1
+    ? `<path class="insight-line" d="${
+      rows.map((r, i) => (i ? "L" : "M") + px(i) + "," + py(r.value)).join(" ")
+    }"/>`
+    : "";
+  const chart = `<div class="insight-plot-scroll" tabindex="0" aria-label="Scrollable ${
+    esc(title)
+  }"><svg class="insight-plot ${
+    numeric ? "insight-line-plot" : "insight-dot-plot"
+  }" viewBox="0 0 ${width} ${height}" style="min-width:${
+    numeric ? 0 : width
+  }px" role="img" aria-label="${esc(title)}"><g class="insight-gridlines">${
+    ticks.map((v) =>
+      `<path d="M${left},${py(v)}H${right}"/><text x="${left - 9}" y="${
+        py(v) + 4
+      }" text-anchor="end">${Number.isInteger(v) ? v : v.toFixed(1)}</text>`
+    ).join("")
+  }</g><path d="M${left},${top}V${bottom}H${right}" fill="none" stroke="#a99d81"/>${line}${
+    rows.map((r, i) =>
+      `<circle class="insight-dot" cx="${px(i)}" cy="${py(r.value)}" r="${
+        numeric ? 4 : 5
+      }"><title>${esc(r.label)}: ${r.value} ${esc(unit)}${
+        r.sample ? " · " + esc(r.sample) : ""
+      }</title></circle>${
+        !numeric || i % labelEvery === 0 || i === rows.length - 1
+          ? `<text class="insight-axis-label" transform="translate(${px(i)},${bottom + 20})${
+            numeric ? "" : " rotate(-35)"
+          }" text-anchor="${
+            numeric ? (i === rows.length - 1 ? "end" : i === 0 ? "start" : "middle") : "end"
+          }">${
+            esc(
+              numeric
+                ? (r.axisLabel ?? r.label)
+                : (r.label.length > 24 ? r.label.slice(0, 23) + "…" : r.label),
+            )
+          }</text>`
+          : ""
+      }`
+    ).join("")
+  }<text class="insight-axis-title" x="${left}" y="16">${
+    esc(unit)
+  }</text><text class="insight-axis-title" x="${(left + right) / 2}" y="${
+    height - 8
+  }" text-anchor="middle">${esc(xLabel)}</text></svg></div>`;
+  return `<article class="insight-card"><h3>${esc(title)}</h3><p class="insight-caption">${
+    esc(note)
+  }</p>${chart}<p class="small muted">${
+    numeric
+      ? "Points are catch totals per interval; straight lines connect them without smoothing."
+      : "One dot per category shows its total; category order does not imply a trend."
+  }</p>${insightTable(rows, "Interval / category", title)}</article>`;
+}
+function insightBinnedRows(rows, key) {
+  const grouped = JournalInsights.groups(rows, key, insightValue, insightSteps[key]);
+  const used = grouped.reduce((n, g) => n + g.rows.length, 0);
+  return {
+    used,
+    values: used
+      ? grouped.map((g) => ({
+        label: g.label,
+        axisLabel: key === "illumination" && (g.key + 1) * (insightSteps[key] || 10) >= 100
+          ? `${g.key * (insightSteps[key] || 10)}–100`
+          : JournalInsights.metrics[key].step
+          ? String(
+            Number((g.key * (insightSteps[key] || JournalInsights.metrics[key].step)).toFixed(2)),
+          )
+          : g.label,
+        value: g.rows.length,
+      }))
+      : [],
+  };
+}
 function insightConditionChart(rows, key) {
-  const groups = JournalInsights.groups(rows, key, insightValue),
-    used = groups.reduce((n, g) => n + g.rows.length, 0);
-  return insightBars(
-    `Catches × ${JournalInsights.metrics[key].label.toLowerCase()}`,
-    used ? groups.map((g) => ({ label: g.label, value: g.rows.length })) : [],
+  const { used, values } = insightBinnedRows(rows, key);
+  const metric = JournalInsights.metrics[key];
+  return insightPlot(
+    `Catches × ${metric.label.toLowerCase()}`,
+    values,
     `${used} of ${rows.length} catches with usable saved ${
-      key === "moon" ? "astronomy" : "model conditions"
-    } · ${rows.length - used} unavailable`,
+      key === "illumination" ? "astronomy" : "model conditions"
+    } · ${rows.length - used} unavailable · ${insightSteps[key]} ${metric.unit} intervals`,
+    "catches",
+    "line",
+    `${metric.label} (${metric.unit}) · intervals`,
   );
 }
 function renderInsights() {
   if (!session || $("insights-page").hidden) return;
   const expanded = disclosureState($("insights-page"));
+  const selector = $("insights-density-species");
+  if (!selector.options.length || selector.dataset.options !== $("species").innerHTML) {
+    selector.innerHTML = $("species").innerHTML;
+    selector.dataset.options = $("species").innerHTML;
+    selector.options[0].textContent = "All fish";
+  }
+  selector.value = $("species").value;
   void loadInsightsConditions();
   const rows = uniqueRecords(visible), counts = new Map();
   for (const c of rows) counts.set(c.species_id, (counts.get(c.species_id) || 0) + 1);
@@ -248,14 +359,14 @@ function renderInsights() {
       s.sessions === 1 ? "session" : "sessions"
     }`,
   }));
-  $("insights-overview").innerHTML = insightBars(
+  $("insights-overview").innerHTML = insightPlot(
     "Species caught",
     [...counts].sort((a, b) => b[1] - a[1]).map(([id, count]) => ({
       label: species[id]?.[0] || id,
       value: count,
     })),
     `${rows.length} catches · ${new Set(rows.map((c) => dayKey(c.caught_at))).size} fishing days`,
-  ) + insightBars("Catches by spot", spotCounts, "Stored fishing sessions with known spots") +
+  ) + insightPlot("Catches by spot", spotCounts, "Stored fishing sessions with known spots") +
     insightBars(
       "Productivity by spot",
       spotRates,
@@ -284,7 +395,7 @@ function renderInsights() {
       rows.filter((c) => insightsSnapshots.has(c.archive_id)).length
     } of ${rows.length} filtered catches have snapshots; each chart reports usable coverage.`;
   $("insights-retry").hidden = insightsState !== "error";
-  $("insights-conditions").innerHTML = ["sea", "pressure", "moon", "current"].map((key) =>
+  $("insights-conditions").innerHTML = ["sea", "pressure", "illumination", "current"].map((key) =>
     insightConditionChart(rows, key)
   ).join("");
   renderInsightsComparison(rows, ranked);
@@ -312,7 +423,7 @@ function renderInsightsComparison(rows, ranked) {
   }
   if (x === "spot") {
     $("insights-comparison").innerHTML = y === "count"
-      ? insightBars(
+      ? insightPlot(
         "Catches by spot",
         ranked.map((s) => ({
           label: sessionSpotLabel(s.session),
@@ -324,12 +435,14 @@ function renderInsightsComparison(rows, ranked) {
     return;
   }
   if (y === "count") {
-    const grouped = JournalInsights.groups(rows, x, insightValue),
-      used = grouped.reduce((n, g) => n + g.rows.length, 0);
-    $("insights-comparison").innerHTML = insightBars(
+    const { used, values } = insightBinnedRows(rows, x);
+    $("insights-comparison").innerHTML = insightPlot(
       `Catches × ${xLabel.toLowerCase()}`,
-      used ? grouped.map((g) => ({ label: g.label, value: g.rows.length })) : [],
+      values,
       `${used} of ${rows.length} catches included; missing values excluded`,
+      "catches",
+      JournalInsights.metrics[x].step ? "line" : "dots",
+      xLabel,
     );
     return;
   }
@@ -398,9 +511,6 @@ function renderInsightsMap(rows) {
     $("insights-map").textContent = "The density map could not load. Your charts remain available.";
     return;
   }
-  $("insights-density-species").innerHTML = $("species").innerHTML;
-  $("insights-density-species").options[0].textContent = "Choose a species";
-  $("insights-density-species").value = $("species").value;
   if (!insightsMap) {
     insightsMap = L.map("insights-map", { zoomAnimation: false, fadeAnimation: false }).setView([
       -34.08,
@@ -473,6 +583,12 @@ function renderInsightsMap(rows) {
   }
 }
 function setupInsights() {
+  document.querySelectorAll("[data-insight-step]").forEach((select) =>
+    select.addEventListener("change", () => {
+      insightSteps[select.dataset.insightStep] = Number(select.value);
+      renderInsights();
+    })
+  );
   $("insights-x").innerHTML = Object.entries(JournalInsights.metrics).map(([id, m]) =>
     `<option value="${id}">${esc(m.label)}</option>`
   ).join("");

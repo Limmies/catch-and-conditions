@@ -5986,3 +5986,21 @@ body::before { opacity:.075; }
 .multiple-views #insights-page .insights-grid { grid-template-columns:minmax(0,1fr); }
 @media(max-width:1100px) { .insights-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:650px) { .insights-grid,.conditions-grid { grid-template-columns:minmax(0,1fr); }.insight-card { padding:16px; }.insights-compare-controls label,.insights-map-controls>label:first-child { flex-basis:100%; }.insights-map-controls select,.insights-compare-controls select { flex:1; width:100%; min-width:0; } #insights-map { height:380px; } .tabs a { padding-left:2px; padding-right:2px; } .tabs a>span:last-child { font-size:10px; } }
+
+.insights-page-filter { padding:16px 20px; margin-bottom:20px; border:1px solid var(--line); border-radius:6px; background:#f5efdf; }
+.insights-page-filter label { display:flex; flex-direction:row; align-items:center; gap:14px; }
+.insights-page-filter select { appearance:none; -webkit-appearance:none; width:min(100%,280px); min-height:44px; padding:10px 14px; }
+.insights-page-filter p { margin:8px 0 0; }
+.insights-bin-controls { display:flex; flex-wrap:wrap; gap:12px 18px; margin:18px 0 12px; }
+.insights-bin-controls label { font-size:12px; }
+.insights-bin-controls select { appearance:none; -webkit-appearance:none; min-height:44px; padding:8px 12px; width:auto; }
+.insight-plot-scroll { width:100%; max-width:100%; overflow-x:auto; overscroll-behavior-x:contain; -webkit-overflow-scrolling:touch; }
+.insight-plot { display:block; width:100%; height:auto; }
+.insight-gridlines path { stroke:#d9d1bf; stroke-width:1; stroke-dasharray:3 4; }
+.insight-gridlines text,.insight-axis-label { fill:#607064; font:12px system-ui,sans-serif; }
+.insight-axis-title { fill:#52665b; font:12px system-ui,sans-serif; }
+.insight-line { fill:none; stroke:#4f7e6b; stroke-width:2; stroke-linejoin:round; }
+.insight-dot { fill:#d5ab47; stroke:#3e6d59; stroke-width:1.5; }
+@media(max-width:650px) { .insights-page-filter { padding:14px; }.insights-page-filter label { flex-direction:column; align-items:stretch; }.insights-page-filter select { width:100%; }.insights-bin-controls { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }.insights-bin-controls select { width:100%; } }
+
+@media(max-width:650px) { .insight-line-plot .insight-axis-label,.insight-line-plot .insight-axis-title,.insight-line-plot .insight-gridlines text { font-size:20px; } }
