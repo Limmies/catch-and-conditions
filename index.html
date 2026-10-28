@@ -19,12 +19,13 @@
     <link rel="stylesheet" href="vendor/leaflet.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.Default.css">
-    <link rel="stylesheet" href="style.css?v=81">
+    <link rel="stylesheet" href="style.css?v=82">
     <script defer src="vendor/supabase.js"></script>
     <script defer src="vendor/leaflet.js"></script>
     <script defer src="vendor/leaflet.markercluster.js"></script>
     <script defer src="config.js"></script>
-    <script defer src="app.js?v=81"></script>
+    <script defer src="density.js?v=82"></script>
+    <script defer src="app.js?v=82"></script>
   </head>
   <body>
     <header
@@ -136,7 +137,12 @@
           </div>
         </section>
         <section id="map-page" hidden aria-label="Catch map">
-          <div class="map-toolbar"><div class="map-view-tabs" role="group" aria-label="Show on map"><button type="button" data-map-view="catches" aria-pressed="true">Catches</button><button type="button" data-map-view="spots" aria-pressed="false">Spots</button><button type="button" data-map-view="days" aria-pressed="false">Days</button></div><button id="fit" class="quiet">Show all catches</button></div>
+          <div class="map-toolbar"><div class="map-view-tabs" role="group" aria-label="Show on map"><button type="button" data-map-view="catches" aria-pressed="true">Catches</button><button type="button" data-map-view="spots" aria-pressed="false">Spots</button><button type="button" data-map-view="days" aria-pressed="false">Days</button><button type="button" data-map-view="species" aria-pressed="false">Species</button></div><button id="fit" class="quiet">Show all catches</button></div>
+          <div id="density-controls" class="density-controls" hidden>
+            <label>Species <select id="density-species" aria-label="Species for catch density"></select></label>
+            <label class="density-switch"><input id="density-enabled" type="checkbox" checked>Density overlay</label>
+            <details class="density-settings"><summary>Smoothing · <span id="density-radius-label">Auto</span></summary><label for="density-radius">Smoothing radius (metres)</label><input id="density-radius" type="range" min="0" max="100" step="1"><button id="density-auto" type="button" class="quiet">Use automatic radius</button><p class="small muted">Gaussian bandwidth in metres. Wider smoothing connects nearby catches; it does not establish fishing probability.</p></details>
+          </div>
           <div id="map" aria-label="Map of catch locations"></div>
           <p id="map-view-summary" class="map-view-summary" role="status"></p><div id="legend" class="legend"></div>
         </section>

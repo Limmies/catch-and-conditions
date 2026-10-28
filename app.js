@@ -247,6 +247,11 @@ function resetPrivateView() {
   spotLayer = null;
   mapSummaryLayer = null;
   mapViewMode = "catches";
+  densityLayer = null;
+  densityModel = null;
+  densityRadius = null;
+  $("density-enabled").checked = true;
+  $("density-controls").hidden = true;
   if (map) map.remove();
   map = null;
   markers = null;
@@ -1238,11 +1243,194 @@ function renderTrips() {
 }
 let mapViewMode = "catches";
 let mapSummaryLayer = null;
+let densityLayer = null;
+let densityRadius = null;
+let densityModel = null;
+function densityRadiusLabel(radius) {
+  return radius >= 1000
+    ? `${(radius / 1000).toFixed(radius % 1000 ? 1 : 0)} km`
+    : `${Math.round(radius)} m`;
+}
+function makeDensityLayer() {
+  return new (L.Layer.extend({
+    onAdd(target) {
+      this.canvas = L.DomUtil.create("canvas", "species-density-canvas");
+      this.canvas.setAttribute("aria-hidden", "true");
+      target.getPane("overlayPane").prepend(this.canvas);
+      this.draw = () => {
+        if (this.frame) cancelAnimationFrame(this.frame);
+        this.frame = requestAnimationFrame(() => {
+          this.frame = null;
+          this.paint(target);
+        });
+      };
+      this.hide = () => {
+        this.canvas.hidden = true;
+      };
+      target.on("moveend zoomend resize", this.draw);
+      target.on("zoomstart", this.hide);
+      this.draw();
+    },
+    onRemove(target) {
+      target.off("moveend zoomend resize", this.draw);
+      target.off("zoomstart", this.hide);
+      if (this.frame) cancelAnimationFrame(this.frame);
+      this.canvas.remove();
+    },
+    paint(target) {
+      if (!densityModel || !this.canvas.isConnected) return;
+      const size = target.getSize(), cell = Math.max(1, Math.sqrt(size.x * size.y / 240000));
+      const width = Math.max(1, Math.ceil(size.x / cell)),
+        height = Math.max(1, Math.ceil(size.y / cell));
+      const zoom = target.getZoom(), centre = target.getCenter().lng;
+      const points = densityModel.points.map((p) => {
+        const lng = p.longitude + 360 * Math.round((centre - p.longitude) / 360);
+        const xy = target.latLngToContainerPoint([p.latitude, lng]);
+        const metresPerPixel = 2 * Math.PI * 6371008.8 *
+          Math.cos(Math.min(85, Math.abs(p.latitude)) * Math.PI / 180) / (256 * 2 ** zoom);
+        return {
+          x: xy.x / cell,
+          y: xy.y / cell,
+          sigma: densityModel.radius / metresPerPixel / cell,
+          weight: p.weight,
+        };
+      });
+      const grid = document.createElement("canvas");
+      grid.width = width;
+      grid.height = height;
+      const context = grid.getContext("2d");
+      context.putImageData(
+        new ImageData(
+          FishingDensity.raster(points, width, height, densityModel.peak),
+          width,
+          height,
+        ),
+        0,
+        0,
+      );
+      const ratio = Math.min(2, window.devicePixelRatio || 1);
+      this.canvas.width = Math.max(1, Math.round(size.x * ratio));
+      this.canvas.height = Math.max(1, Math.round(size.y * ratio));
+      this.canvas.style.width = `${size.x}px`;
+      this.canvas.style.height = `${size.y}px`;
+      L.DomUtil.setPosition(this.canvas, target.containerPointToLayerPoint([0, 0]));
+      this.canvas.getContext("2d").drawImage(grid, 0, 0, this.canvas.width, this.canvas.height);
+      this.canvas.hidden = false;
+    },
+  }))();
+}
+function renderSpeciesDensity() {
+  const id = $("species").value;
+  const selected = id ? uniqueRecords(visible).filter((c) => c.species_id === id) : [];
+  const points = FishingDensity.locations(selected);
+  const count = points.reduce((sum, p) => sum + p.weight, 0), excluded = selected.length - count;
+  const automatic = FishingDensity.bandwidth(points), radius = densityRadius || automatic;
+  $("density-radius-label").textContent = (densityRadius ? "" : "Auto · ") +
+    densityRadiusLabel(radius);
+  $("density-radius").value = String(
+    Math.max(0, Math.min(100, Math.log(radius / 25) / Math.log(2000) * 100)),
+  );
+  $("density-auto").disabled = densityRadius === null;
+  const signature = JSON.stringify([
+    "species",
+    id,
+    radius,
+    $("density-enabled").checked,
+    selected.map((c) => [c.archive_id || c.catch_id, c.latitude, c.longitude]),
+  ]);
+  if (signature === mapSignature) return;
+  mapSignature = signature;
+  map.closePopup();
+  mapSummaryLayer.clearLayers();
+  if (densityLayer) {
+    map.removeLayer(densityLayer);
+    densityLayer = null;
+  }
+  densityModel = points.length
+    ? { points, radius, peak: FishingDensity.peak(points, radius) }
+    : null;
+  if (!id) {
+    $("map-view-summary").textContent =
+      "Choose a species to see where its recorded catches concentrate.";
+    $("legend").replaceChildren();
+    return;
+  }
+  const dates = new Set(
+    selected.filter((c) => Number.isFinite(c.latitude) && Number.isFinite(c.longitude)).map((c) =>
+      dayKey(c.caught_at)
+    ),
+  ).size;
+  const limited = count < 20 || points.length < 5 || dates < 3;
+  $("map-view-summary").textContent = `${species[id][0]} · ${count} located ${
+    count === 1 ? "catch" : "catches"
+  }${excluded ? ` · ${excluded} without usable coordinates` : ""}${
+    count && limited ? " · Limited data" : ""
+  }${!count ? " · No located catches for these filters" : ""}`;
+  for (const c of selected) {
+    if (!FishingDensity.locations([c]).length) continue;
+    const marker = L.circleMarker([c.latitude, c.longitude], {
+      radius: $("density-enabled").checked ? 1.25 : 3,
+      opacity: $("density-enabled").checked ? .3 : 1,
+      color: "#344e47",
+      weight: 1,
+      fillColor: "#fffaf0",
+      fillOpacity: $("density-enabled").checked ? .15 : .7,
+    });
+    marker.bindTooltip(esc(`${nameOf(c)} · ${dateLabel(c.caught_at)}`));
+    marker.on("click", () => showDetail(c));
+    mapSummaryLayer.addLayer(marker);
+  }
+  if (count && $("density-enabled").checked) {
+    densityLayer = makeDensityLayer();
+    map.addLayer(densityLayer);
+  }
+  $("legend").innerHTML = `${
+    count && $("density-enabled").checked
+      ? '<div class="density-scale"><span>Lower</span><i></i><span>Higher concentration</span></div>'
+      : count
+      ? "<span>Density overlay hidden · dots mark catches</span>"
+      : "<span>No density to estimate for this selection.</span>"
+  }<details class="density-method"><summary>About this estimate</summary><p>Gaussian smoothing of recorded ${
+    esc(species[id][0])
+  } catches using a ${
+    densityRadiusLabel(radius)
+  } bandwidth. Each catch has equal weight. Colours compare concentration within this filtered selection; they are not catch probabilities or confidence levels and are not adjusted for fishing effort.</p><p>With few catches, locations or fishing days, patterns are preliminary. Smoothing can extend onto land; no habitat or coast mask is applied. ${
+    points.length === 1
+      ? "A single location uses a 250 m automatic starting radius."
+      : "Automatic smoothing combines a Scott-style estimate with local spacing, bounded to 50 m–25 km."
+  }</p></details>`;
+}
+$("density-species").addEventListener("change", () => {
+  $("species").value = $("density-species").value;
+  render();
+  fitMap();
+});
+$("density-enabled").addEventListener("change", () => renderMap());
+$("density-radius").addEventListener("input", () => {
+  densityRadius = Math.round(25 * 2000 ** (Number($("density-radius").value) / 100));
+  renderMap();
+});
+$("density-auto").addEventListener("click", () => {
+  densityRadius = null;
+  renderMap();
+});
+
 function updateMapControls() {
   document.querySelectorAll("[data-map-view]").forEach((button) =>
     button.setAttribute("aria-pressed", String(button.dataset.mapView === mapViewMode))
   );
-  $("fit").textContent = "Show all " + mapViewMode;
+  $("density-controls").hidden = mapViewMode !== "species";
+  if ($("density-species").dataset.options !== $("species").innerHTML) {
+    $("density-species").innerHTML = $("species").innerHTML;
+    $("density-species").dataset.options = $("species").innerHTML;
+  }
+  $("density-species").value = $("species").value;
+  if ($("density-species").options.length) {
+    $("density-species").options[0].textContent = "Choose a species";
+  }
+  $("fit").textContent = mapViewMode === "species"
+    ? "Show species catches"
+    : "Show all " + mapViewMode;
   if (selectedPages().includes("map") && !selectedPages().includes("totals")) {
     $("empty").hidden = mapViewMode !== "catches" || visible.length > 0;
   }
@@ -1252,11 +1440,12 @@ function updateMapControls() {
       catches: "Map of catch locations",
       spots: "Map of saved fishing spots",
       days: "Map of fishing days",
+      species: "Species catch density map",
     }[mapViewMode],
   );
 }
 function setMapView(mode, fit = false) {
-  if (!["catches", "spots", "days"].includes(mode)) return;
+  if (!["catches", "spots", "days", "species"].includes(mode)) return;
   if (mode !== mapViewMode && spotLayer && map) {
     map.removeLayer(spotLayer);
     spotLayer = null;
@@ -1272,6 +1461,11 @@ function renderMap() {
   initMap();
   if (!markers) return;
   updateMapControls();
+  if (mapViewMode !== "species" && densityLayer) {
+    map.removeLayer(densityLayer);
+    densityLayer = null;
+    densityModel = null;
+  }
   if (mapViewMode === "catches") {
     if (mapSummaryLayer) map.removeLayer(mapSummaryLayer);
     if (!map.hasLayer(markers)) map.addLayer(markers);
@@ -1280,7 +1474,8 @@ function renderMap() {
     map.removeLayer(markers);
     if (!mapSummaryLayer) mapSummaryLayer = L.featureGroup();
     if (!map.hasLayer(mapSummaryLayer)) map.addLayer(mapSummaryLayer);
-    renderMapGroups();
+    if (mapViewMode === "species") renderSpeciesDensity();
+    else renderMapGroups();
   }
 }
 function renderMapGroups() {
@@ -1564,7 +1759,13 @@ function fitMap() {
   const layer = mapViewMode === "catches" ? markers : mapSummaryLayer;
   if (!map || !layer || !layer.getLayers().length) return;
   map.invalidateSize({ pan: false });
-  map.fitBounds(layer.getBounds(), {
+  const bounds = layer.getBounds();
+  if (mapViewMode === "species" && densityModel) {
+    for (const p of densityModel.points) {
+      bounds.extend(L.latLng(p.latitude, p.longitude).toBounds(densityModel.radius * 8));
+    }
+  }
+  map.fitBounds(bounds, {
     padding: [55, 55],
     maxZoom: mapViewMode === "spots" ? 18 : 14,
     animate: false,
