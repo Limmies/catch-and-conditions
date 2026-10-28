@@ -233,6 +233,7 @@ function loginMessage(text, error = false) {
   $("login-status").classList.toggle("error", error);
 }
 function resetPrivateView() {
+  resetInsights();
   loadGeneration++;
   conditionsGeneration++;
   dayRatingEpoch++;
@@ -454,6 +455,7 @@ function render() {
   renderTotals();
   renderTrips();
   if (!$("journal").hidden && !$("map-page").hidden) renderMap();
+  if (!$("journal").hidden && !$("insights-page").hidden) renderInsights();
 }
 
 function durationLabel(seconds) {
@@ -1251,7 +1253,7 @@ function densityRadiusLabel(radius) {
     ? `${(radius / 1000).toFixed(radius % 1000 ? 1 : 0)} km`
     : `${Math.round(radius)} m`;
 }
-function makeDensityLayer() {
+function makeDensityLayer(getModel = () => densityModel) {
   return new (L.Layer.extend({
     onAdd(target) {
       this.canvas = L.DomUtil.create("canvas", "species-density-canvas");
@@ -1278,12 +1280,13 @@ function makeDensityLayer() {
       this.canvas.remove();
     },
     paint(target) {
-      if (!densityModel || !this.canvas.isConnected) return;
+      const model = getModel();
+      if (!model || !this.canvas.isConnected) return;
       const size = target.getSize(), cell = Math.max(1, Math.sqrt(size.x * size.y / 240000));
       const width = Math.max(1, Math.ceil(size.x / cell)),
         height = Math.max(1, Math.ceil(size.y / cell));
       const zoom = target.getZoom(), centre = target.getCenter().lng;
-      const points = densityModel.points.map((p) => {
+      const points = model.points.map((p) => {
         const lng = p.longitude + 360 * Math.round((centre - p.longitude) / 360);
         const xy = target.latLngToContainerPoint([p.latitude, lng]);
         const metresPerPixel = 2 * Math.PI * 6371008.8 *
@@ -1291,7 +1294,7 @@ function makeDensityLayer() {
         return {
           x: xy.x / cell,
           y: xy.y / cell,
-          sigma: densityModel.radius / metresPerPixel / cell,
+          sigma: model.radius / metresPerPixel / cell,
           weight: p.weight,
         };
       });
@@ -1301,7 +1304,7 @@ function makeDensityLayer() {
       const context = grid.getContext("2d");
       context.putImageData(
         new ImageData(
-          FishingDensity.raster(points, width, height, densityModel.peak),
+          FishingDensity.raster(points, width, height, model.peak),
           width,
           height,
         ),
@@ -3310,13 +3313,14 @@ async function showDetail(c) {
     }
   }
 }
-const viewKeys = ["home", "map", "totals", "diary", "spots"];
+const viewKeys = ["home", "map", "totals", "diary", "spots", "insights"];
 const viewNames = {
   home: "Home",
   map: "Map",
   totals: "Species",
   diary: "Days",
   spots: "Spots",
+  insights: "Insights",
 };
 const desktopViews = matchMedia("(min-width: 951px) and (hover: hover) and (pointer: fine)");
 function selectedPages() {
@@ -3352,6 +3356,7 @@ function route() {
     !pages.some((key) => (key === "totals" || (key === "map" && mapViewMode === "catches"))) ||
     visible.length > 0;
   document.title = $("page-title").textContent + " · Catch and Conditions";
+  if (pages.includes("insights") && session && !$("journal").hidden) renderInsights();
   if (pages.includes("map") && session && !$("journal").hidden) {
     renderMap();
     requestAnimationFrame(() => map?.invalidateSize({ pan: false }));
@@ -3649,6 +3654,7 @@ function setupHomeAlbum() {
   turn(0);
   schedule();
 }
+setupInsights();
 setupHomeAlbum();
 start();
 if ("serviceWorker" in navigator && location.protocol !== "file:") {

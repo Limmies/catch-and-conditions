@@ -3224,7 +3224,7 @@ dialog {
     z-index:1000;
     width:100%;
     display:grid;
-    grid-template-columns:repeat(5,minmax(0,1fr));
+    grid-template-columns:repeat(6,minmax(0,1fr));
     gap:2px;
     margin:0;
     padding:6px 7px calc(6px + env(safe-area-inset-bottom));
@@ -5797,7 +5797,7 @@ body[data-page=home] .heading::before {
 .record-total strong { color:var(--ink); font-variant-numeric:tabular-nums; }
 
 /* One diary date groups its catches, ratings and completed trips. */
-@media(max-width:600px) { .tabs { grid-template-columns:repeat(5,minmax(0,1fr)); } }
+@media(max-width:600px) { .tabs { grid-template-columns:repeat(6,minmax(0,1fr)); } }
 .diary-trips { margin:18px 0; }
 .diary-trips table { width:100%; table-layout:fixed; }
 .diary-trips td { padding:0 0 12px; border:0; }
@@ -5954,3 +5954,35 @@ body::before { opacity:.075; }
 .density-scale { display:flex; align-items:center; gap:12px; font-size:13px; }
 .density-scale i { display:block; width:110px; height:10px; border-radius:3px; background:linear-gradient(90deg,#5b8f8f,#dab85e,#974133); }
 @media(max-width:600px) { .density-controls { gap:12px; }.density-controls label:first-child { flex:1 0 100%; }.density-controls select { flex:1; max-width:none; min-width:0; } }
+
+.insights-intro { margin:4px 0 24px; max-width:70ch; }
+.insights-intro h2 { font-family:var(--diary-hand); font-size:28px; font-weight:400; margin:8px 0; }
+.insights-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; align-items:start; }
+.insight-card { padding:20px; border:1px solid var(--line); background:#fffaf0; border-radius:5px 9px 6px 8px; min-width:0; }
+.insight-card h3,.insights-section>h3 { font:italic 23px/1.3 var(--diary-hand); margin:0 0 12px; }
+.insight-caption { font-size:12px; color:var(--muted); min-height:36px; margin:0 0 16px; }
+.insight-bars { display:grid; gap:12px; }
+.insight-bar-row { display:grid; grid-template-columns:minmax(70px,1fr) minmax(40px,1.5fr) auto; gap:7px 10px; align-items:center; font-size:12px; }
+.insight-bar-row>span { overflow-wrap:anywhere; }
+.insight-bar-row strong { font-variant-numeric:tabular-nums; font-size:15px; }
+.insight-bar-row small { grid-column:1/-1; color:var(--muted); font-size:11px; margin-top:-4px; }
+.insight-bar-track { height:11px; border-radius:2px; background:#e9e5d7; overflow:hidden; }
+.insight-bar-track i { display:block; height:100%; background:#547b67; border-radius:2px; }
+.insight-data { margin-top:16px; font-size:12px; color:var(--muted); }
+.insight-data summary,.insights-section>summary { cursor:pointer; }
+.insight-data th,.insight-data td { padding:9px; font-size:12px; white-space:normal; overflow-wrap:anywhere; }
+.insights-section { margin-top:26px; padding-top:22px; border-top:1px solid var(--line); min-width:0; }
+.insights-section>summary { font:italic 23px/1.4 var(--diary-hand); margin-bottom:16px; }
+.conditions-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.insights-map-controls,.insights-compare-controls { display:flex; flex-wrap:wrap; gap:14px 24px; margin-bottom:16px; }
+.insights-map-controls label,.insights-compare-controls label { flex-direction:row; align-items:center; }
+.insights-map-controls select,.insights-compare-controls select { appearance:none; -webkit-appearance:none; width:auto; min-height:44px; padding:10px 16px; }
+.insights-map-controls details { flex-basis:100%; font-size:13px; }
+.insights-map-controls input[type=range] { display:block; width:min(100%,400px); margin:12px 0; }
+.insights-switch input { width:18px; height:18px; min-height:18px; margin:0; }
+#insights-map { height:480px; min-height:300px; border:1px solid #b8ac8c; border-radius:8px; background:#e7e4d8; isolation:isolate; z-index:0; }
+.insight-scatter { width:100%; height:auto; display:block; }
+.insight-empty { color:var(--muted); font-size:13px; padding:12px 0; }
+.multiple-views #insights-page .insights-grid { grid-template-columns:minmax(0,1fr); }
+@media(max-width:1100px) { .insights-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:650px) { .insights-grid,.conditions-grid { grid-template-columns:minmax(0,1fr); }.insight-card { padding:16px; }.insights-compare-controls label,.insights-map-controls>label:first-child { flex-basis:100%; }.insights-map-controls select,.insights-compare-controls select { flex:1; width:100%; min-width:0; } #insights-map { height:380px; } .tabs a { padding-left:2px; padding-right:2px; } .tabs a>span:last-child { font-size:10px; } }
