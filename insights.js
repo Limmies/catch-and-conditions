@@ -179,7 +179,6 @@ function resetInsights() {
       "insights-overview",
       "insights-ratings",
       "insights-ratings-status",
-      "insights-species-gallery",
       "insights-conditions",
       "insights-comparison",
       "insights-spot-species",
@@ -380,23 +379,7 @@ function renderInsights() {
   }
   selector.value = $("species").value;
   void loadInsightsConditions();
-  const rows = uniqueRecords(visible), counts = new Map();
-  for (const c of rows) counts.set(c.species_id, (counts.get(c.species_id) || 0) + 1);
-  const galleryIds = $("species").value ? [$("species").value] : [...new Set([...modeSpeciesIds(), ...counts.keys()])];
-  galleryIds.sort((a, b) => (counts.get(b) || 0) - (counts.get(a) || 0) ||
-    (species[a]?.[0] || a).localeCompare(species[b]?.[0] || b));
-  $("insights-species-gallery").innerHTML = `<h3>Species in your catches</h3>
-    <p class="small muted">${rows.length} catches in these filters · share of filtered catches${rows.length ? "" : " · no catches recorded"}</p>
-    <table class="insights-species-table"><thead><tr><th scope="col">Species</th><th scope="col">Catches</th><th scope="col">Share</th></tr></thead><tbody>${galleryIds.map((id) => {
-      const entry = species[id];
-      if (!entry) return "";
-      const count = counts.get(id) || 0, share = rows.length ? count / rows.length * 100 : 0;
-      const shareLabel = share > 0 && share < 1 ? "<1" : String(Math.round(share));
-      return `<tr class="insights-species-row" style="--species-colour:${esc(entry[1])}">
-        <th scope="row"><span class="insights-species-identity"><img src="${fishPreviews[id]}" alt="${esc(entry[0])} illustration" width="128" height="72" loading="eager"><span>${esc(entry[0])}</span></span></th>
-        <td class="insights-species-count">${count}</td><td class="insights-species-share">${rows.length ? shareLabel + "%" : "—"}</td>
-      </tr><tr class="insights-species-bar-row" aria-hidden="true" style="--species-colour:${esc(entry[1])}"><td colspan="3"><div class="insights-species-track"><i style="width:${share}%"></i></div></td></tr>`;
-    }).join("")}</tbody></table>`;
+  const rows = uniqueRecords(visible);
   const { ranked } = collectSpotProductivity(diaryTripRows(false));
   const spotCounts = ranked.slice().sort((a, b) => b.count - a.count).map((s) => ({
     label: sessionSpotLabel(s.session),
@@ -410,15 +393,7 @@ function renderInsights() {
       s.sessions === 1 ? "session" : "sessions"
     }`,
   }));
-  $("insights-overview").innerHTML = insightPlot(
-    "Species caught",
-    [...counts].sort((a, b) => b[1] - a[1]).map(([id, count]) => ({
-      label: species[id]?.[0] || id,
-      value: count,
-      colour: species[id]?.[1],
-    })),
-    `${rows.length} catches · ${new Set(rows.map((c) => dayKey(c.caught_at))).size} fishing days`,
-  ) + insightPlot("Catches by spot", spotCounts, "Stored fishing sessions with known spots") +
+  $("insights-overview").innerHTML = insightPlot("Catches by spot", spotCounts, "Stored fishing sessions with known spots") +
     insightBars(
       "Productivity by spot",
       spotRates,
