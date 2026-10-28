@@ -424,9 +424,7 @@ function filtered() {
   });
 }
 function colourOf(c) {
-  return $("colour").value === "day"
-    ? dayPalette.get(dayKey(c.caught_at))
-    : species[c.species_id]?.[1] || "#11543e";
+  return species[c.species_id]?.[1] || "#11543e";
 }
 function render() {
   visible = filtered();
@@ -1244,7 +1242,6 @@ function updateMapControls() {
   document.querySelectorAll("[data-map-view]").forEach((button) =>
     button.setAttribute("aria-pressed", String(button.dataset.mapView === mapViewMode))
   );
-  $("catch-colour-control").hidden = mapViewMode !== "catches";
   $("fit").textContent = "Show all " + mapViewMode;
   if (selectedPages().includes("map") && !selectedPages().includes("totals")) {
     $("empty").hidden = mapViewMode !== "catches" || visible.length > 0;
@@ -1429,9 +1426,6 @@ document.addEventListener("click", (event) => {
     setMapView("catches", true);
   }
 });
-function applyChartStyle() {
-  if (map) $("map").classList.toggle("vintage-chart", $("chart-vintage").checked);
-}
 function initMap() {
   if (map || $("map-page").hidden) return;
   if (!window.L || !L.markerClusterGroup) {
@@ -1476,7 +1470,6 @@ function initMap() {
   map.on("unload", () => clearTimeout(tileTimer));
   tiles.addTo(map);
   L.control.scale({ imperial: false, position: "bottomleft" }).addTo(map);
-  applyChartStyle();
   markers = L.markerClusterGroup({
     maxClusterRadius: 40,
     spiderfyOnMaxZoom: true,
@@ -1510,7 +1503,6 @@ function renderCatchMap() {
   } · numbered circles group nearby catches`;
   const signature = JSON.stringify([
     "catches",
-    $("colour").value,
     records.map(
       (c) => [
         c.archive_id || c.catch_id,
@@ -1557,16 +1549,14 @@ function renderCatchMap() {
     });
     markers.addLayer(marker);
     legend.set(
-      $("colour").value === "day" ? dateLabel(c.caught_at) : nameOf(c),
+      nameOf(c),
       colour,
     );
   }
   $("legend").innerHTML = [...legend].map(([name, colour]) =>
-    $("colour").value === "species"
-      ? `<button type="button" class="fish-name-link" data-profile="${
-        esc(visible.find((c) => nameOf(c) === name)?.species_id || "")
-      }"><i class="dot" style="background:${colour}"></i>${esc(name)}</button>`
-      : `<span><i class="dot" style="background:${colour}"></i>${esc(name)}</span>`
+    `<button type="button" class="fish-name-link" data-profile="${
+      esc(visible.find((c) => nameOf(c) === name)?.species_id || "")
+    }"><i class="dot" style="background:${colour}"></i>${esc(name)}</button>`
   ).join("");
   updateLabels();
 }
@@ -3213,7 +3203,7 @@ updateModeControls();
 document.querySelectorAll("button[data-fishing-mode]").forEach((button) => {
   button.addEventListener("click", () => setFishingMode(button.dataset.fishingMode));
 });
-for (const id of ["species", "from", "to", "colour"]) {
+for (const id of ["species", "from", "to"]) {
   $(id).addEventListener("change", render);
 }
 $("filter-species-info").onclick = () => {
@@ -3223,7 +3213,6 @@ $("clear").onclick = () => {
   for (const id of ["species", "from", "to"]) $(id).value = "";
   render();
 };
-$("chart-vintage").addEventListener("change", applyChartStyle);
 $("fit").onclick = fitMap;
 $("refresh").onclick = refreshJournal;
 document.addEventListener("click", (event) => {

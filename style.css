@@ -1872,16 +1872,6 @@ dialog {
 .map-toolbar {
   flex-wrap: wrap;
 }
-.map-toolbar .chart-style {
-  display: flex;
-  flex-direction: row;
-  white-space: nowrap;
-}
-.chart-style input {
-  width: 18px;
-  height: 18px;
-  accent-color: #6f6946;
-}
 #map {
   background: #e7e4d8;
 }
@@ -3556,41 +3546,6 @@ dialog {
   justify-content:space-between;
   z-index:5;
 }
-.map-options > summary {
-  min-height:44px;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:8px 12px;
-  font-size:12px;
-  cursor:pointer;
-}
-.map-options > summary::after {
-  content:'⌄';
-}
-.map-options[open] > summary::after {
-  content:'⌃';
-}
-.map-options-panel {
-  position:absolute;
-  top:calc(100% + 6px);
-  right:0;
-  z-index:10;
-  display:grid;
-  gap:14px;
-  width:280px;
-  max-width:calc(100vw - 28px);
-  border:1px solid var(--line);
-  padding:16px;
-  box-shadow:0 6px 24px #243b3220;
-}
-.map-options-panel label {
-  justify-content:space-between;
-  min-height:44px;
-}
-.map-options-panel select {
-  max-width:150px;
-}
 #map {
   z-index:0;
   isolation:isolate;
@@ -3631,12 +3586,6 @@ dialog {
   }
   .trip-summary-more summary > span {
     min-height:0;
-  }
-  .map-options > summary {
-    font-size:12px;
-  }
-  .map-options-panel label {
-    font-size:13px;
   }
   .masthead .quiet {
     min-height:44px;
@@ -4043,14 +3992,6 @@ h1,h2,h3 {
 #map {
   border-color:#b8ac8c;
 }
-#map.vintage-chart {
-  background-color:#eae0c6;
-  border-color:#b8ac8c;
-  box-shadow:inset 0 0 24px #7c674515;
-}
-#map.vintage-chart .leaflet-tile-pane {
-  filter:sepia(.38) saturate(.65) contrast(.96);
-}
 @media(max-width:600px) {
   .tabs {
     background:#faf5e9f5;
@@ -4113,9 +4054,6 @@ main {
 .map-toolbar {
   align-items:center;
   gap:12px;
-}
-.map-options > summary {
-  padding-right:4px;
 }
 .day-card,.trip-card,.spot-productivity-card {
   padding:20px;
@@ -4801,9 +4739,6 @@ body {
   background:#fffaf0;
   color:var(--ink);
 }
-.map-options-panel {
-  background:#fff9ec;
-}
 .dialog-heading {
   border-bottom-style:dashed;
 }
@@ -5006,11 +4941,6 @@ body[data-fishing-mode=all] .heading::before {
   background:#ebedd6;
   border-color:#b5bd9b;
   border-radius:6px 9px 10px 5px;
-}
-.map-options-panel {
-  border-style:dashed;
-  border-color:#b9ab87;
-  border-radius:6px 8px 11px 5px;
 }
 .filter-panel {
   background:#fff7e4;
