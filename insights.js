@@ -241,6 +241,43 @@ function insightTable(rows, heading = "Value", key = heading) {
     ).join("")
   }</tbody></table></div></details>`;
 }
+function insightInterpretation(message) {
+  return `<aside class="insight-interpretation"><h4>What this shows</h4><p>${esc(message)}</p></aside>`;
+}
+function insightSummary(rows, unit = "catches", title = "") {
+  const valid = rows.filter((r) => Number.isFinite(r.value));
+  if (!valid.length) return insightInterpretation("There are not enough usable records in these filters to describe a pattern yet.");
+  const max = Math.max(...valid.map((r) => r.value)), top = valid.filter((r) => r.value === max);
+  const amount = Number.isInteger(max) ? String(max) : max.toFixed(2);
+  const peak = top.length === valid.length && valid.length > 1
+    ? `All ${valid.length} categories are tied at ${amount} ${unit}.`
+    : `${top.slice(0, 3).map((r) => r.label).join("; ")}${top.length > 3 ? ` and ${top.length - 3} other categories` : ""} ${top.length > 1 ? "are tied for the highest value" : "has the highest value"}: ${amount} ${unit}.`;
+  const context = unit === "catches / fishing hour"
+    ? "This accounts for recorded fishing hours, including zero-catch sessions. Small samples and differences in conditions can change spot rankings."
+    : unit === "catches"
+    ? "These are recorded catch totals. More fishing time can produce more catches; this does not establish a higher bite rate."
+    : "These values describe the saved measurements, not fishing success or a cause of better catches.";
+  const condition = /temperature|pressure|current|moon/i.test(title)
+    ? " These intervals describe conditions at catch time, not whether conditions were rising or falling."
+    : "";
+  return insightInterpretation(`${peak} ${context}${condition}`);
+}
+function insightRatingSummary(rows, key) {
+  if (!rows.length) return insightInterpretation("No saved scores are available for this rating in the selected fishing events.");
+  const scopes = [...new Set(rows.map((r) => r.fishing_mode))];
+  return insightInterpretation(scopes.map((scope) => {
+    const values = rows.filter((r) => r.fishing_mode === scope).map((r) => r[key]);
+    return `${fishingModeLabels[scope]} averages ${(values.reduce((a, b) => a + b, 0) / values.length).toFixed(1)}/10 across ${values.length} saved scores, ranging from ${Math.min(...values)} to ${Math.max(...values)}.`;
+  }).join(" ") + " Each fishing day is a separate event. These personal ratings do not establish a relationship with catch totals.");
+}
+function insightPairSummary(pairs, xLabel, yLabel) {
+  if (pairs.length < 5) return insightInterpretation(`Only ${pairs.length} catches have both measurements. More paired records are needed before describing an association.`);
+  const mx = pairs.reduce((n, p) => n + p.x, 0) / pairs.length, my = pairs.reduce((n, p) => n + p.y, 0) / pairs.length;
+  const xx = pairs.reduce((n, p) => n + (p.x - mx) ** 2, 0), yy = pairs.reduce((n, p) => n + (p.y - my) ** 2, 0);
+  if (!xx || !yy) return insightInterpretation("One measurement does not vary in these records, so no association can be described.");
+  const r = pairs.reduce((n, p) => n + (p.x - mx) * (p.y - my), 0) / Math.sqrt(xx * yy);
+  return insightInterpretation(`${pairs.length} paired catch records: ${Math.abs(r) < .3 ? "there is little linear association between" : "there is a descriptive " + (r > 0 ? "positive" : "negative") + " linear association between"} ${xLabel.toLowerCase()} and ${yLabel.toLowerCase()} (r = ${r.toFixed(2)}). This compares measurements on caught fish, not bite rate. Catches from the same event can dominate the pattern; association does not establish cause.`);
+}
 function insightBars(title, rows, note = "", unit = "catches") {
   const maximum = Math.max(1, ...rows.map((r) => r.value)), shown = rows.slice(0, 12);
   return `<article class="insight-card"><h3>${esc(title)}</h3><p class="insight-caption">${
@@ -261,7 +298,7 @@ function insightBars(title, rows, note = "", unit = "catches") {
         rows.length > 12 ? ` · showing 12 of ${rows.length}; all rows below` : ""
       }</p>${insightTable(rows, "Value", title)}`
       : '<p class="insight-empty">No usable records for these filters.</p>'
-  }</article>`;
+  }${insightSummary(rows, unit, title)}</article>`;
 }
 let insightSteps = { sea: 1, pressure: 2, illumination: 10, current: 1 };
 function insightPlot(title, rows, note = "", unit = "catches", kind = "dots", xLabel = "") {
@@ -332,7 +369,7 @@ function insightPlot(title, rows, note = "", unit = "catches", kind = "dots", xL
     numeric
       ? "Points are catch totals per interval; straight lines connect them without smoothing."
       : "One dot per category shows its total; category order does not imply a trend."
-  }</p>${insightTable(rows, "Interval / category", title)}</article>`;
+  }</p>${insightTable(rows, "Interval / category", title)}${insightSummary(rows, unit, title)}</article>`;
 }
 function insightBinnedRows(rows, key) {
   const grouped = JournalInsights.groups(rows, key, insightValue, insightSteps[key]);
@@ -532,7 +569,7 @@ function renderInsightsComparison(rows, ranked) {
       })),
       `${xLabel} / ${yMetric.label}`,
     )
-  }</article>`;
+  }${insightPairSummary(pairs, xLabel, yMetric.label)}</article>`;
 }
 function renderInsightsMap(rows) {
   if (!window.L || !window.FishingDensity) {
@@ -686,7 +723,7 @@ function renderInsightsRatings() {
           `<div class="rating-score-row" style="--rating-colour:${colours[r.fishing_mode]}"><span class="rating-mode">${esc(fishingModeLabels[r.fishing_mode])}</span><div class="rating-score-track" role="img" aria-label="${esc(label)} · ${esc(fishingModeLabels[r.fishing_mode])}: ${r[metric.key]} out of 10"><i style="width:${r[metric.key] * 10}%"></i></div><strong>${r[metric.key]}<small> / 10</small></strong></div>`
         ).join("")}</div>`;
       }).join("")}</div>` : '<p class="insight-empty">No saved scores for these filters.</p>'}
-      ${insightTable(table, "Fishing event date", "rating:" + metric.key)}</article>`;
+      ${insightTable(table, "Fishing event date", "rating:" + metric.key)}${insightRatingSummary(used, metric.key)}</article>`;
   }).join("");
   restoreDisclosures(target, expanded);
 }

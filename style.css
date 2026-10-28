@@ -6038,3 +6038,7 @@ body::before { opacity:.075; }
 
 #insights-overview { grid-template-columns:repeat(2,minmax(0,1fr)); }
 @media(max-width:650px) { #insights-overview { grid-template-columns:minmax(0,1fr); } }
+
+.insight-interpretation { margin-top:18px; padding:14px 16px; border-left:3px solid var(--insight-accent,#297a88); border-radius:0 8px 8px 0; background:#ffffff80; }
+.insight-interpretation h4 { margin:0 0 7px; font-size:12px; }
+.insight-interpretation p { margin:0; font-size:12px; line-height:1.7; color:#52665b; }
