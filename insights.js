@@ -586,6 +586,7 @@ function renderInsightsMap(rows) {
       -34.08,
       22.97,
     ], 8);
+    limitMapToSouthAfrica(insightsMap);
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
       attribution:

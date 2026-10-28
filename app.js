@@ -1636,6 +1636,7 @@ function initMap() {
     bounceAtZoomLimits: false,
     touchZoom: true,
   }).setView([-34.08, 22.97], 8);
+  limitMapToSouthAfrica(map);
   const osmCredit =
     '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
   const tileStatus = document.createElement("div");

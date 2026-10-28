@@ -118,3 +118,21 @@
     raster,
   });
 })();
+
+// Keep the widest map view at South Africa's extent on each screen size.
+function limitMapToSouthAfrica(target) {
+  const bounds = L.latLngBounds([[-35.5, 16], [-21.5, 33.5]]);
+  const centreAtLimit = () => {
+    if (target.getZoom() <= target.getMinZoom()) target.panTo(bounds.getCenter(), { animate: false });
+  };
+  const updateLimit = () => {
+    const size = target.getSize();
+    if (size.x <= 0 || size.y <= 0) return;
+    target.setMinZoom(target.getBoundsZoom(bounds, false, [24, 24]));
+    centreAtLimit();
+  };
+  target.setMinZoom(4);
+  target.on("resize", updateLimit);
+  target.on("zoomend", centreAtLimit);
+  updateLimit();
+}
