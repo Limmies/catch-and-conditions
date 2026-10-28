@@ -338,11 +338,11 @@ function insightPlot(title, rows, note = "", unit = "catches", kind = "dots", xL
     ).join("")
   }</g><path d="M${left},${top}V${bottom}H${right}" fill="none" stroke="#a99d81"/>${line}${
     rows.map((r, i) =>
-      `<circle class="insight-dot" style="fill:${esc(r.colour || "var(--insight-accent, #297a88)")}" cx="${px(i)}" cy="${py(r.value)}" r="${
+      `${kind === "bars" ? `<rect x="${px(i) - 23}" y="${py(r.value)}" width="46" height="${bottom - py(r.value)}" rx="3" fill="${esc(r.colour || "#297a88")}"><title>${esc(r.label)}: ${r.value} catches</title></rect><text class="insight-axis-label" x="${px(i)}" y="${py(r.value)-9}" text-anchor="middle">${r.value}</text>` : `<circle class="insight-dot" style="fill:${esc(r.colour || "var(--insight-accent, #297a88)")}" cx="${px(i)}" cy="${py(r.value)}" r="${
         numeric ? 4 : 5
       }"><title>${esc(r.label)}: ${r.value} ${esc(unit)}${
         r.sample ? " · " + esc(r.sample) : ""
-      }</title></circle>${
+      }</title></circle>`}${
         !numeric || i % labelEvery === 0 || i === rows.length - 1
           ? `<text class="insight-axis-label" transform="translate(${px(i)},${bottom + 20})${
             numeric ? "" : " rotate(-35)"
@@ -368,7 +368,7 @@ function insightPlot(title, rows, note = "", unit = "catches", kind = "dots", xL
   }</p>${chart}<p class="small muted">${
     numeric
       ? "Points are catch totals per interval; straight lines connect them without smoothing."
-      : "One dot per category shows its total; category order does not imply a trend."
+      : kind === "bars" ? "Each upright bar shows the recorded catch total for one species." : "One dot per category shows its total; category order does not imply a trend."
   }</p>${insightTable(rows, "Interval / category", title)}${insightSummary(rows, unit, title)}</article>`;
 }
 function insightBinnedRows(rows, key) {
@@ -394,12 +394,14 @@ function insightBinnedRows(rows, key) {
 function insightConditionChart(rows, key) {
   const { used, values } = insightBinnedRows(rows, key);
   const metric = JournalInsights.metrics[key];
+  const measurements = rows.map((c) => insightValue(c, key)).filter((v) => v !== null);
+  const coverage = measurements.length ? `${new Set(measurements).size} distinct saved values, from ${Math.min(...measurements).toFixed(2)} to ${Math.max(...measurements).toFixed(2)} ${metric.unit}; grouped into intervals, not one point per catch.` : "No usable measurements are saved for these filters.";
   return insightPlot(
     `Catches × ${metric.label.toLowerCase()}`,
     values,
     `${used} of ${rows.length} catches with usable saved ${
       key === "illumination" ? "astronomy" : "model conditions"
-    } · ${rows.length - used} unavailable · ${insightSteps[key]} ${metric.unit} intervals`,
+    } · ${rows.length - used} unavailable · ${insightSteps[key]} ${metric.unit} intervals. ${coverage}`,
     "catches",
     "line",
     `${metric.label} (${metric.unit}) · intervals`,
@@ -417,6 +419,9 @@ function renderInsights() {
   selector.value = $("species").value;
   void loadInsightsConditions();
   const rows = uniqueRecords(visible);
+  const speciesCounts = new Map();
+  for (const c of rows) speciesCounts.set(c.species_id, (speciesCounts.get(c.species_id) || 0) + 1);
+  const speciesRows = [...speciesCounts].sort((a, b) => b[1] - a[1]).map(([id, value]) => ({label: species[id]?.[0] || id, value, colour: species[id]?.[1]}));
   const { ranked } = collectSpotProductivity(diaryTripRows(false));
   const spotCounts = ranked.slice().sort((a, b) => b.count - a.count).map((s) => ({
     label: sessionSpotLabel(s.session),
@@ -430,7 +435,7 @@ function renderInsights() {
       s.sessions === 1 ? "session" : "sessions"
     }`,
   }));
-  $("insights-overview").innerHTML = insightPlot("Catches by spot", spotCounts, "Stored fishing sessions with known spots") +
+  $("insights-overview").innerHTML = insightPlot("Catches by species", speciesRows, `${rows.length} filtered catches`, "catches", "bars", "Species") + insightPlot("Catches by spot", spotCounts, "Stored fishing sessions with known spots") +
     insightBars(
       "Productivity by spot",
       spotRates,
@@ -469,7 +474,7 @@ function renderInsights() {
 }
 function renderInsightsComparison(rows, ranked) {
   const x = $("insights-x").value,
-    y = $("insights-y").value,
+    y = "count",
     xLabel = JournalInsights.metrics[x].label;
   if (y === "rate") {
     $("insights-comparison").innerHTML = x === "spot"
@@ -657,11 +662,7 @@ function setupInsights() {
   $("insights-x").innerHTML = Object.entries(JournalInsights.metrics).map(([id, m]) =>
     `<option value="${id}">${esc(m.label)}</option>`
   ).join("");
-  $("insights-y").innerHTML =
-    '<option value="count">Total catches</option><option value="rate">Catches per fishing hour</option>' +
-    ["length", "sea", "pressure", "current"].map((id) =>
-      `<option value="${id}">${esc(JournalInsights.metrics[id].label)}</option>`
-    ).join("");
+  $("insights-y").innerHTML = '<option value="count">Total catches</option>';
   for (const id of ["insights-x", "insights-y"]) {
     $(id).addEventListener("change", () =>
       renderInsightsComparison(
@@ -711,7 +712,7 @@ function renderInsightsRatings() {
     ? "Refreshing saved ratings…" : dayRatingLoad === "error"
     ? "Could not refresh ratings. Showing available saved scores." : "One bar per saved rating, grouped by fishing event. All bars use the same 0–10 scale; days between trips are skipped.";
   const colours = { all: species.miss_lucy[1], offshore: species.carpenter[1], shore: species.red_roman[1] };
-  target.innerHTML = dayFeelMetrics.map((metric) => {
+  target.innerHTML = dayFeelMetrics.filter((metric) => ["enjoyment", "bite_activity"].includes(metric.key)).map((metric) => {
     const used = rows.filter((r) => Number.isFinite(r[metric.key]) && r[metric.key] >= 0 && r[metric.key] <= 10);
     const dates = [...new Set(used.map((r) => r.observation_date))];
     const table = used.map((r) => ({ label: r.observation_date, value: r[metric.key] + " / 10", sample: fishingModeLabels[r.fishing_mode] }));
