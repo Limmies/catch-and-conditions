@@ -2536,6 +2536,7 @@ function dayRatingBadge(date, mode) {
   }</span>`;
 }
 function paintDayRatingBadges() {
+  if (session && !$("insights-page").hidden) renderInsightsRatings();
   document.querySelectorAll("[data-rating-date]").forEach((badge) => {
     badge.outerHTML = dayRatingBadge(badge.dataset.ratingDate, badge.dataset.ratingMode);
   });

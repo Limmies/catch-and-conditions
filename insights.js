@@ -121,7 +121,40 @@
       rows: grouped.get(k) || [],
     }));
   }
-  globalThis.JournalInsights = Object.freeze({ metrics, phases, value, groups, snapshotsFor });
+  function ratings(rows, { mode = "all", from = "", to = "", dates = null } = {}) {
+    const latest = new Map();
+    for (
+      const row of [...rows].sort((a, b) =>
+        (b._localVersion || 0) - (a._localVersion || 0) ||
+        String(b.recorded_at || "").localeCompare(String(a.recorded_at || "")) ||
+        String(b.id || "").localeCompare(String(a.id || ""))
+      )
+    ) {
+      const day = row.observation_date, style = row.fishing_mode;
+      if (
+        row._missing || !/^\d{4}-\d{2}-\d{2}$/.test(day || "") ||
+        !["all", "offshore", "shore"].includes(style)
+      ) continue;
+      if (
+        mode !== "all" && style !== mode || from && day < from || to && day > to ||
+        dates && !dates.has(day)
+      ) continue;
+      const key = day + ":" + style;
+      if (!latest.has(key)) latest.set(key, row);
+    }
+    return [...latest.values()].sort((a, b) =>
+      a.observation_date.localeCompare(b.observation_date) ||
+      a.fishing_mode.localeCompare(b.fishing_mode)
+    );
+  }
+  globalThis.JournalInsights = Object.freeze({
+    metrics,
+    phases,
+    value,
+    groups,
+    snapshotsFor,
+    ratings,
+  });
 })();
 
 let insightsMap = null, insightsHeat = null, insightsPoints = null, insightsModel = null;
@@ -145,6 +178,8 @@ function resetInsights() {
     const id of [
       "insights-overview",
       "insights-conditions",
+      "insights-ratings",
+      "insights-ratings-status",
       "insights-comparison",
       "insights-spot-species",
       "insights-density-summary",
@@ -398,6 +433,7 @@ function renderInsights() {
   $("insights-conditions").innerHTML = ["sea", "pressure", "illumination", "current"].map((key) =>
     insightConditionChart(rows, key)
   ).join("");
+  renderInsightsRatings();
   renderInsightsComparison(rows, ranked);
   renderInsightsMap(rows);
   restoreDisclosures($("insights-page"), expanded);
@@ -632,3 +668,127 @@ function setupInsights() {
 // Entry points shared with the journal's classic script.
 globalThis.resetInsights = resetInsights;
 globalThis.setupInsights = setupInsights;
+
+function renderInsightsRatings() {
+  if (!session || $("insights-page").hidden) return;
+  const target = $("insights-ratings"), expanded = disclosureState(target);
+  const eligible = new Set(visible.map((c) => dayKey(c.caught_at)));
+  for (const { trip } of diaryTripRows(true)) eligible.add(dayKey(trip.started_at));
+  const from = $("from").value, to = $("to").value;
+  const rows = JournalInsights.ratings([...dayRatingRows.values()], {
+    mode: fishingMode,
+    from,
+    to,
+    dates: $("species").value ? eligible : null,
+  });
+  const dates = [...new Set([...eligible, ...rows.map((r) => r.observation_date)])].sort();
+  const scopes = [...new Set(rows.map((r) => r.fishing_mode))];
+  $("insights-ratings-status").textContent = dayRatingLoad === "loading"
+    ? "Refreshing saved day ratings…"
+    : dayRatingLoad === "error"
+    ? "Day ratings could not refresh. Any previously loaded ratings are shown."
+    : `${rows.length} saved day/style ratings · ${
+      new Set(rows.map((r) => r.observation_date)).size
+    } rated dates${fishingMode === "all" ? " · fishing styles shown separately" : ""}`;
+  target.innerHTML = dayFeelMetrics.map((metric) => {
+    const valid = (row) =>
+      Number.isInteger(row?.[metric.key]) && row[metric.key] >= 0 && row[metric.key] <= 10;
+    const used = rows.filter(valid),
+      title = metric.label === "How was the day?" ? "Enjoyment" : metric.label;
+    if (!used.length) {
+      return insightBars(
+        title,
+        [],
+        metric.note + " No saved score for these filters.",
+        "rating / 10",
+      );
+    }
+    const first = Date.parse(dates[0] + "T00:00:00Z"),
+      last = Date.parse(dates.at(-1) + "T00:00:00Z");
+    const px = (date) =>
+        last === first
+          ? 290
+          : 55 + (Date.parse(date + "T00:00:00Z") - first) / (last - first) * 455,
+      py = (v) => 220 - v * 18;
+    const styles = {
+      offshore: { colour: "#4f7e6b", dash: "" },
+      shore: { colour: "#a66d54", dash: "6 3" },
+      all: { colour: "#a8893c", dash: "2 3" },
+    };
+    const series = scopes.map((mode) => {
+      const saved = new Map(
+        rows.filter((r) => r.fishing_mode === mode).map((r) => [r.observation_date, r]),
+      );
+      let previous = null, path = "";
+      const circles = [];
+      for (const date of dates) {
+        const row = saved.get(date);
+        if (!valid(row)) {
+          previous = null;
+          continue;
+        }
+        const value = row[metric.key], time = Date.parse(date + "T00:00:00Z");
+        path += (previous !== null && time - previous === 86400000 ? "L" : "M") + px(date) + "," +
+          py(value) + " ";
+        previous = time;
+        circles.push(
+          `<circle cx="${px(date)}" cy="${py(value)}" r="4" fill="${styles[mode].colour}"><title>${
+            esc(dateLabel(date + "T12:00:00Z"))
+          } · ${esc(fishingModeLabels[mode])}: ${value}/10</title></circle>`,
+        );
+      }
+      return `<path d="${path}" fill="none" stroke="${
+        styles[mode].colour
+      }" stroke-width="2" stroke-dasharray="${styles[mode].dash}"/>${circles.join("")}`;
+    }).join("");
+    const spanDays = Math.round((last - first) / 86400000);
+    const tickCount = Math.min(innerWidth <= 650 ? 2 : 4, spanDays + 1);
+    const tickDates = Array.from(
+      { length: tickCount },
+      (_, i) =>
+        new Date(
+          first + (tickCount === 1 ? 0 : Math.round(i * spanDays / (tickCount - 1))) * 86400000,
+        )
+          .toISOString().slice(0, 10),
+    );
+    const plot =
+      `<svg class="insight-plot insight-line-plot insight-rating-chart" viewBox="0 0 540 280" role="img" aria-label="${
+        esc(title)
+      } day ratings from zero to ten"><g class="insight-gridlines">${
+        [0, 2, 4, 6, 8, 10].map((v) =>
+          `<path d="M55 ${py(v)}H510"/><text x="45" y="${py(v) + 4}" text-anchor="end">${v}</text>`
+        ).join("")
+      }</g>${series}${
+        tickDates.map((date, i) =>
+          `<text class="insight-axis-label" x="${px(date)}" y="245" text-anchor="${
+            i === 0 ? "start" : i === tickDates.length - 1 ? "end" : "middle"
+          }">${esc(dateLabel(date + "T12:00:00Z"))}</text>`
+        ).join("")
+      }<text class="insight-axis-title" x="55" y="20">Rating / 10</text></svg>`;
+    const legend = `<div class="insight-rating-legend">${
+      scopes.filter((mode) => used.some((r) => r.fishing_mode === mode)).map((mode) =>
+        `<span><i style="background:${styles[mode].colour}"></i>${
+          esc(fishingModeLabels[mode])
+        }</span>`
+      ).join("")
+    }</div>`;
+    const table = dates.flatMap((date) =>
+      (scopes.length ? scopes : [fishingMode]).map((mode) => {
+        const row = rows.find((r) => r.observation_date === date && r.fishing_mode === mode);
+        return {
+          label: dateLabel(date + "T12:00:00Z") + " · " + fishingModeLabels[mode],
+          value: valid(row) ? `${row[metric.key]} / 10` : "Not rated",
+          sample: "Personal day rating",
+        };
+      })
+    );
+    return `<article class="insight-card"><h3>${
+      esc(title)
+    }</h3><p class="insight-caption">${used.length} saved scores across ${
+      new Set(used.map((r) => r.observation_date)).size
+    } days · ${esc(metric.note)}</p>${legend}${plot}${
+      insightTable(table, "Day · fishing waters", "rating:" + metric.key)
+    }</article>`;
+  }).join("");
+  restoreDisclosures(target, expanded);
+}

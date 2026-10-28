@@ -19,14 +19,14 @@
     <link rel="stylesheet" href="vendor/leaflet.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.Default.css">
-    <link rel="stylesheet" href="style.css?v=84">
+    <link rel="stylesheet" href="style.css?v=85">
     <script defer src="vendor/supabase.js"></script>
     <script defer src="vendor/leaflet.js"></script>
     <script defer src="vendor/leaflet.markercluster.js"></script>
     <script defer src="config.js"></script>
-    <script defer src="density.js?v=84"></script>
-    <script defer src="insights.js?v=84"></script>
-    <script defer src="app.js?v=84"></script>
+    <script defer src="density.js?v=85"></script>
+    <script defer src="insights.js?v=85"></script>
+    <script defer src="app.js?v=85"></script>
   </head>
   <body>
     <header
@@ -154,6 +154,7 @@
           <div id="insights-overview" class="insights-grid"></div>
           <details class="insights-section"><summary>Species at each spot</summary><div id="insights-spot-species"></div></details>
           <section class="insights-section"><div class="section-heading"><h3>Where catches concentrate</h3><button id="insights-fit" type="button" class="quiet">Show catches</button></div><div class="insights-map-controls"><label class="insights-switch"><input type="checkbox" id="insights-density-enabled" checked>Density overlay</label><details><summary>Smoothing · <span id="insights-radius-label">Auto</span></summary><label for="insights-radius">Bandwidth in metres</label><input id="insights-radius" type="range" min="0" max="100" step="1"><button id="insights-auto" class="quiet" type="button">Use automatic radius</button></details></div><div id="insights-map" aria-label="Species catch density"></div><p id="insights-density-summary" class="small muted" role="status"></p><div id="insights-density-scale" class="density-scale"><span>Lower</span><i></i><span>Higher concentration</span></div><details class="insight-data"><summary>How to read this map</summary><p>Gaussian catch density uses the same method as Map → Species. The radius is in metres and can be adjusted. Colours show relative recorded catch concentration, not fish abundance or fishing probability. Smoothing can extend onto land. No fishing-effort adjustment or habitat mask is applied.</p></details></section>
+          <section class="insights-section"><h3>Your day ratings</h3><p id="insights-ratings-status" class="small muted" role="status"></p><p class="small muted">The latest ratings saved in Days, on their original 0–10 scales. Gaps are unrated, not zero. Selecting a species limits the dates shown; the scores still describe the whole day.</p><div id="insights-ratings" class="insights-grid conditions-grid"></div></section>
           <section class="insights-section"><h3>Conditions when you caught fish</h3><p id="insights-condition-status" class="small muted" role="status"></p><button id="insights-retry" class="quiet" type="button" hidden>Retry conditions</button><p class="small muted">Catch-time model estimates and astronomy. These distributions do not account for time spent fishing in each condition.</p><div class="insights-bin-controls"><label>Temperature intervals<select data-insight-step="sea"><option value="0.5">0.5°C</option><option value="1" selected>1°C</option><option value="2">2°C</option></select></label><label>Pressure intervals<select data-insight-step="pressure"><option value="1">1 hPa</option><option value="2" selected>2 hPa</option><option value="5">5 hPa</option></select></label><label>Moon intervals<select data-insight-step="illumination"><option value="5">5%</option><option value="10" selected>10%</option></select></label><label>Current intervals<select data-insight-step="current"><option value="0.5">0.5 km/h</option><option value="1" selected>1 km/h</option><option value="2">2 km/h</option></select></label></div><p class="small muted">Moon illumination runs from 0% (new) to 100% (full), combining waxing and waning. The comparison builder also retains named moon phases. Pressure is in hPa (equivalent to mbar).</p><div id="insights-conditions" class="insights-grid conditions-grid"></div></section>
           <section class="insights-section"><h3>Explore a comparison</h3><div class="insights-compare-controls"><label>Compare this<select id="insights-y"></select></label><label>Against this<select id="insights-x"></select></label></div><div id="insights-comparison"></div></section>
           <details class="insight-data"><summary>Data quality &amp; interpretation</summary><p>Each chart reports its sample. Missing or unrecognised measurements are excluded, never replaced with zero. Calm currents and zero lunar phase are valid. Conditions are matched within one hour of the catch; only compatible units are compared. Repeated snapshots do not create extra catches.</p><p>Spot rates use recorded fishing sessions, including zero-catch sessions. Unclassified time is excluded from fishing hours. Small samples and incomplete GPS or recording can change rankings. No confidence intervals, causal claims or calibrated fishing predictions are implied. These charts include any test records still in your account; remove those before interpreting real fishing patterns.</p></details>

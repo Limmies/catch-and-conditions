@@ -6004,3 +6004,7 @@ body::before { opacity:.075; }
 @media(max-width:650px) { .insights-page-filter { padding:14px; }.insights-page-filter label { flex-direction:column; align-items:stretch; }.insights-page-filter select { width:100%; }.insights-bin-controls { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }.insights-bin-controls select { width:100%; } }
 
 @media(max-width:650px) { .insight-line-plot .insight-axis-label,.insight-line-plot .insight-axis-title,.insight-line-plot .insight-gridlines text { font-size:20px; } }
+
+.insight-rating-legend { display:flex; flex-wrap:wrap; gap:8px 14px; margin-bottom:8px; color:var(--muted); font-size:12px; }
+.insight-rating-legend span { display:flex; align-items:center; gap:6px; }
+.insight-rating-legend i { display:block; width:16px; height:3px; border-radius:2px; }
