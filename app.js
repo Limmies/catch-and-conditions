@@ -1325,7 +1325,7 @@ function makeDensityLayer(getModel = () => densityModel) {
 }
 function renderSpeciesDensity() {
   const id = $("species").value;
-  const selected = id ? uniqueRecords(visible).filter((c) => c.species_id === id) : [];
+  const selected = uniqueRecords(visible).filter((c) => !id || c.species_id === id);
   const points = FishingDensity.locations(selected);
   const count = points.reduce((sum, p) => sum + p.weight, 0), excluded = selected.length - count;
   const automatic = FishingDensity.bandwidth(points), radius = densityRadius || automatic;
@@ -1353,19 +1353,13 @@ function renderSpeciesDensity() {
   densityModel = points.length
     ? { points, radius, peak: FishingDensity.peak(points, radius) }
     : null;
-  if (!id) {
-    $("map-view-summary").textContent =
-      "Choose a species to see where its recorded catches concentrate.";
-    $("legend").replaceChildren();
-    return;
-  }
   const dates = new Set(
     selected.filter((c) => Number.isFinite(c.latitude) && Number.isFinite(c.longitude)).map((c) =>
       dayKey(c.caught_at)
     ),
   ).size;
   const limited = count < 20 || points.length < 5 || dates < 3;
-  $("map-view-summary").textContent = `${species[id][0]} · ${count} located ${
+  $("map-view-summary").textContent = `${id ? species[id][0] : "All fish"} · ${count} located ${
     count === 1 ? "catch" : "catches"
   }${excluded ? ` · ${excluded} without usable coordinates` : ""}${
     count && limited ? " · Limited data" : ""
@@ -1395,7 +1389,7 @@ function renderSpeciesDensity() {
       ? "<span>Density overlay hidden · dots mark catches</span>"
       : "<span>No density to estimate for this selection.</span>"
   }<details class="density-method"><summary>About this estimate</summary><p>Gaussian smoothing of recorded ${
-    esc(species[id][0])
+    esc(id ? species[id][0] : "all-species")
   } catches using a ${
     densityRadiusLabel(radius)
   } bandwidth. Each catch has equal weight. Colours compare concentration within this filtered selection; they are not catch probabilities or confidence levels and are not adjusted for fishing effort.</p><p>With few catches, locations or fishing days, patterns are preliminary. Smoothing can extend onto land; no habitat or coast mask is applied. ${
@@ -1430,7 +1424,7 @@ function updateMapControls() {
   }
   $("density-species").value = $("species").value;
   if ($("density-species").options.length) {
-    $("density-species").options[0].textContent = "Choose a species";
+    $("density-species").options[0].textContent = "All fish";
   }
   $("fit").textContent = mapViewMode === "species"
     ? "Show species catches"

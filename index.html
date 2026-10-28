@@ -19,15 +19,15 @@
     <link rel="stylesheet" href="vendor/leaflet.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.Default.css">
-    <link rel="stylesheet" href="style.css?v=97">
+    <link rel="stylesheet" href="style.css?v=98">
     <script defer src="vendor/supabase.js"></script>
     <script defer src="vendor/leaflet.js"></script>
     <script defer src="vendor/leaflet.markercluster.js"></script>
     <script defer src="config.js"></script>
-    <script defer src="density.js?v=97"></script>
-    <script defer src="insights.js?v=97"></script>
-    <script defer src="day-photos.js?v=97"></script>
-    <script defer src="app.js?v=97"></script>
+    <script defer src="density.js?v=98"></script>
+    <script defer src="insights.js?v=98"></script>
+    <script defer src="day-photos.js?v=98"></script>
+    <script defer src="app.js?v=98"></script>
   </head>
   <body>
     <header
@@ -150,7 +150,7 @@
           <p id="map-view-summary" class="map-view-summary" role="status"></p><div id="legend" class="legend"></div>
         </section>
         <section id="insights-page" hidden aria-label="Fishing insights">
-          <div class="insights-page-filter"><label>Species<select id="insights-density-species"></select></label><p class="small muted">Applies to every chart. All fish includes all species; choose one species for its KDE map.</p></div>
+          <div class="insights-page-filter"><label>Species<select id="insights-density-species"></select></label><p class="small muted">Applies to every chart. All fish combines every species on the density map; choose a species to narrow the view.</p></div>
           <div id="insights-overview" class="insights-grid"></div>
           <details class="insights-section"><summary>Species at each spot</summary><div id="insights-spot-species"></div></details>
           <section class="insights-section"><div class="section-heading"><h3>Where catches concentrate</h3><button id="insights-fit" type="button" class="quiet">Show catches</button></div><div class="insights-map-controls"><label class="insights-switch"><input type="checkbox" id="insights-density-enabled" checked>Density overlay</label><details><summary>Smoothing · <span id="insights-radius-label">Auto</span></summary><label for="insights-radius">Bandwidth in metres</label><input id="insights-radius" type="range" min="0" max="100" step="1"><button id="insights-auto" class="quiet" type="button">Use automatic radius</button></details></div><div id="insights-map" aria-label="Species catch density"></div><p id="insights-density-summary" class="small muted" role="status"></p><div id="insights-density-scale" class="density-scale"><span>Lower</span><i></i><span>Higher concentration</span></div><details class="insight-data"><summary>How to read this map</summary><p>Gaussian catch density uses the same method as Map → Species. The radius is in metres and can be adjusted. Colours show relative recorded catch concentration, not fish abundance or fishing probability. Smoothing can extend onto land. No fishing-effort adjustment or habitat mask is applied.</p></details></section>

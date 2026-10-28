@@ -594,7 +594,7 @@ function renderInsightsMap(rows) {
     insightsPoints = L.featureGroup().addTo(insightsMap);
   }
   const id = $("species").value,
-    points = FishingDensity.locations(id ? rows : []),
+    points = FishingDensity.locations(rows),
     radius = insightsRadius || FishingDensity.bandwidth(points);
   $("insights-radius-label").textContent = (insightsRadius ? "" : "Auto · ") +
     densityRadiusLabel(radius);
@@ -625,11 +625,9 @@ function renderInsightsMap(rows) {
     : null;
   const count = points.reduce((n, p) => n + p.weight, 0);
   $("insights-density-scale").hidden = !count || !$("insights-density-enabled").checked;
-  $("insights-density-summary").textContent = !id
-    ? "Choose one species for the density map."
-    : !count
+  $("insights-density-summary").textContent = !count
     ? "No located catches for these filters."
-    : `${species[id][0]} · ${count} located catches${
+    : `${id ? species[id][0] : "All fish"} · ${count} located catches${
       count < 20 || points.length < 5 || new Set(rows.map((c) => dayKey(c.caught_at))).size < 3
         ? " · Limited data"
         : ""
