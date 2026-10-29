@@ -151,3 +151,5 @@ Shell v109 moves the 26 unchanged 160px fish previews out of JavaScript into ind
 Shell v110 adds Atlantic Bonito (Sarda sarda) to the offshore species list, filters, maps, Insights and guide. Its watch, companion, database and upload validation ID is atlantic_bonito; existing IDs are unchanged.
 
 Shell v111 blends the supplied Kob field-study sheet behind the Home About and Mission notes with a single small decorative image. CSS masks soften its edges into the paper, and it remains non-interactive and outside installation precaching.
+
+Shell v112 removes the enhanced Kob life-cycle banner, its section and the public image asset at the owner’s request. The separate field-sheet background doodles remain.

@@ -6135,10 +6135,6 @@ button.quiet,.text-action { min-height:44px; }
 }
 
 /* Two lightweight field notes on Home; detailed images open only on request. */
-/* Keep the supplied lower Kob panel as a wide strip, without resampling its labels. */
-.home-kob-banner { margin:0; padding:8px; border:1px solid #cdbf96; border-radius:10px; background:#fffaf0; }
-.home-kob-banner-window { position:relative; aspect-ratio:3 / 1; overflow:hidden; border-radius:6px; }
-.home-kob-banner-window > img { display:block; width:100%; height:auto; max-height:none; transform:none; }
 
 /* The owner's Kob field sheet, blended into the paper behind the journal notes. */
 .home-doodle { position:relative; isolation:isolate; overflow:clip; }
