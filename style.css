@@ -6138,4 +6138,4 @@ button.quiet,.text-action { min-height:44px; }
 /* Keep the supplied lower Kob panel as a wide strip, without resampling its labels. */
 .home-kob-banner { margin:0; padding:8px; border:1px solid #cdbf96; border-radius:10px; background:#fffaf0; }
 .home-kob-banner-window { position:relative; aspect-ratio:3 / 1; overflow:hidden; border-radius:6px; }
-.home-kob-banner-window > img { position:absolute; bottom:0; left:0; display:block; width:100%; height:auto; max-height:none; transform:none; }
+.home-kob-banner-window > img { display:block; width:100%; height:auto; max-height:none; transform:none; }
