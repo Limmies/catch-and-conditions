@@ -1,33 +1,16 @@
 // Cache the public app shell only. Never cache Auth, database requests or maps.
-const CACHE = 'catch-conditions-shell-v108';
+const CACHE = 'catch-conditions-shell-v109';
 const IMAGE_CACHE = 'catch-conditions-fish-mobile-v6';
 // Both styles keep their background illustrations with the public shell.
 const FILES = [
   './',
   './index.html',
-  './style.css?v=107',
-  './app.js?v=107',
-  './day-photos.js?v=107',
+  './style.css?v=109',
+  './app.js?v=109',
+  './day-photos.js?v=109',
   './config.js',
-  './density.js?v=107',
-  './insights.js?v=107',
-  './photos/offshore-memory.jpg',
-  './photos/bass-closeup.jpg',
-  './photos/release.jpg',
-  './photos/release-after.jpg',
-  './photos/spearfishing-staal.jpg',
-  './photos/marcus-roman.jpg',
-  './photos/grunter-day.jpg',
-  './photos/river-day.jpg',
-  './photos/mentor-steenbras.jpg',
-  './photos/offshore-closeup.jpg',
-  './photos/atlantic-bonito.jpg',
-  './fish/mobile/kabeljo.png',
-  './fish/mobile/red_steenbras.png',
-  './fish/mobile/miss_lucy.png',
-  './fish/mobile/blacktail.png',
-  './fish/mobile/galjoen.png',
-  './fish/mobile/garrick.png',
+  './density.js?v=109',
+  './insights.js?v=109',
   './icon.svg',
   './icon-192.png',
   './icon-512.png',
@@ -109,13 +92,20 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   // Album pages are fetched and cached only when opened, not during installation.
-  const albumPhoto=url.pathname.startsWith(PHOTO_PATH) && /^album-\d{2}\.jpg$/.test(url.pathname.slice(PHOTO_PATH.length));
+  const albumPhoto=url.pathname.startsWith(PHOTO_PATH) && /^[a-z0-9_-]+\.jpg$/.test(url.pathname.slice(PHOTO_PATH.length));
   const studyPlate = url.pathname.startsWith(STUDY_PATH) && /^[a-z_]+\.jpg$/.test(url.pathname.slice(STUDY_PATH.length));
   if (!SHELL_PATHS.has(url.pathname) && !albumPhoto && !studyPlate) {
     return;
   }
   event.respondWith(
-    fetch(event.request).then((response) => {
+    (async () => {
+      // Versioned scripts and immutable artwork can render from local cache.
+      if (albumPhoto || studyPlate || url.searchParams.has('v')) {
+        const cached = await caches.match(event.request).catch(() => null);
+        if (cached) return cached;
+      }
+      return fetch(event.request);
+    })().then((response) => {
       if (response.ok) {
         const copy = response.clone();
         event.waitUntil(
