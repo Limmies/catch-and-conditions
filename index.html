@@ -19,15 +19,15 @@
     <link rel="stylesheet" href="vendor/leaflet.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.Default.css">
-    <link rel="stylesheet" href="style.css?v=104">
+    <link rel="stylesheet" href="style.css?v=105">
     <script defer src="vendor/supabase.js"></script>
     <script defer src="vendor/leaflet.js"></script>
     <script defer src="vendor/leaflet.markercluster.js"></script>
     <script defer src="config.js"></script>
-    <script defer src="density.js?v=104"></script>
-    <script defer src="insights.js?v=104"></script>
-    <script defer src="day-photos.js?v=104"></script>
-    <script defer src="app.js?v=104"></script>
+    <script defer src="density.js?v=105"></script>
+    <script defer src="insights.js?v=105"></script>
+    <script defer src="day-photos.js?v=105"></script>
+    <script defer src="app.js?v=105"></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
@@ -126,6 +126,12 @@
             </section>
 
 
+            <section class="home-chapter home-life-cycles" aria-labelledby="home-life-cycles-title">
+              <div class="home-chapter-heading"><span class="home-kicker">Get to know the fish</span><h2 id="home-life-cycles-title">A life beyond the catch.</h2><p>Illustrated life cycles of Dusky Kob and Miss Lucy, from eggs to adults. Take a closer look at the fish behind the records.</p></div>
+              <figure class="home-life-cycle-figure"><a href="fish/studies/kob_miss_lucy_life_cycles.jpg" target="_blank" rel="noopener" aria-label="Open the Dusky Kob and Miss Lucy life-cycle illustration at full size"><img src="fish/studies/kob_miss_lucy_life_cycles_preview.jpg" srcset="fish/studies/kob_miss_lucy_life_cycles_preview.jpg 1024w, fish/studies/kob_miss_lucy_life_cycles.jpg 1536w" sizes="(max-width: 650px) calc(100vw - 40px), 1200px" alt="Illustrated life cycles of Miss Lucy and Dusky Kob showing eggs, larvae, juveniles, subadults and adults" width="1024" height="683" loading="lazy"></a><figcaption><span>Miss Lucy &amp; Dusky Kob · life-cycle illustrations</span><a href="fish/studies/kob_miss_lucy_life_cycles.jpg" target="_blank" rel="noopener">Open full size ↗</a></figcaption></figure>
+              <div class="home-life-cycle-links"><button type="button" class="text-action" data-profile="dusky_kob">Meet Dusky Kob →</button><button type="button" class="text-action" data-profile="miss_lucy">Meet Miss Lucy →</button><a href="#totals" class="text-action">Browse the illustrated field guide →</a></div>
+            </section>
+
             <section class="home-chapter home-data" aria-labelledby="home-data-title">
               <div class="home-chapter-heading"><span class="home-kicker">What we actually collect</span><h2 id="home-data-title">One catch. A whole set of clues.</h2><p>You save the fish, time and place. Online data services supply the surrounding weather and sea conditions; the system calculates the moon, daylight and recent changes. Here is what those names and units mean.</p></div>
               <div class="home-data-flow" aria-label="How catch data reaches the journal"><span><b>1</b> Log a catch on the watch</span><span><b>2</b> The phone sends the record</span><span><b>3</b> Match its time and place to conditions</span><span><b>4</b> Save it together in the private database</span></div>
@@ -180,6 +186,7 @@
           <details class="insight-data"><summary>Data quality &amp; interpretation</summary><p>Each chart reports its sample. Missing or unrecognised measurements are excluded, never replaced with zero. Calm currents and zero lunar phase are valid. Conditions are matched within one hour of the catch; only compatible units are compared. Repeated snapshots do not create extra catches.</p><p>Spot rates use recorded fishing sessions, including zero-catch sessions. Unclassified time is excluded from fishing hours. Small samples and incomplete GPS or recording can change rankings. No confidence intervals, causal claims or calibrated fishing predictions are implied. Charts reflect the records in your account and the selected filters.</p></details>
         </section>
         <section id="totals-page" hidden aria-label="Species totals">
+          <details class="species-study-library" data-disclosure="species:studies"><summary>Illustrated field guide <span id="species-study-count">8 species</span></summary><p class="small muted">Your anatomy, habitat and life-cycle plates. Select a picture to read the full-size artwork.</p><div id="species-studies" class="species-study-grid"></div></details>
 
           <div class="table-wrap">
             <table>

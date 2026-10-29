@@ -1,16 +1,16 @@
 // Cache the public app shell only. Never cache Auth, database requests or maps.
-const CACHE = 'catch-conditions-shell-v104';
+const CACHE = 'catch-conditions-shell-v105';
 const IMAGE_CACHE = 'catch-conditions-fish-mobile-v6';
 // Both styles keep their background illustrations with the public shell.
 const FILES = [
   './',
   './index.html',
-  './style.css?v=104',
-  './app.js?v=104',
-  './day-photos.js?v=104',
+  './style.css?v=105',
+  './app.js?v=105',
+  './day-photos.js?v=105',
   './config.js',
-  './density.js?v=104',
-  './insights.js?v=104',
+  './density.js?v=105',
+  './insights.js?v=105',
   './photos/offshore-memory.jpg',
   './photos/bass-closeup.jpg',
   './photos/release.jpg',
@@ -22,6 +22,7 @@ const FILES = [
   './photos/mentor-steenbras.jpg',
   './photos/offshore-closeup.jpg',
   './photos/atlantic-bonito.jpg',
+  './fish/studies/kob_miss_lucy_life_cycles_preview.jpg',
   './fish/mobile/kabeljo.png',
   './fish/mobile/red_steenbras.png',
   './fish/mobile/miss_lucy.png',
@@ -48,6 +49,7 @@ const ROOT = new URL('./', self.location.href);
 const SHELL_PATHS = new Set(FILES.map((file) => new URL(file, ROOT).pathname));
 const IMAGE_PATH = new URL('fish/mobile/', ROOT).pathname;
 const PHOTO_PATH = new URL('photos/', ROOT).pathname;
+const STUDY_PATH = new URL('fish/studies/', ROOT).pathname;
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(FILES)));
   self.skipWaiting();
@@ -109,7 +111,8 @@ self.addEventListener('fetch', (event) => {
   }
   // Album pages are fetched and cached only when opened, not during installation.
   const albumPhoto=url.pathname.startsWith(PHOTO_PATH) && /^album-\d{2}\.jpg$/.test(url.pathname.slice(PHOTO_PATH.length));
-  if (!SHELL_PATHS.has(url.pathname) && !albumPhoto) {
+  const studyPlate = url.pathname.startsWith(STUDY_PATH) && /^[a-z_]+\.jpg$/.test(url.pathname.slice(STUDY_PATH.length));
+  if (!SHELL_PATHS.has(url.pathname) && !albumPhoto && !studyPlate) {
     return;
   }
   event.respondWith(

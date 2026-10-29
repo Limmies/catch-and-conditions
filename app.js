@@ -2258,6 +2258,30 @@ function fishProfileHTML(id) {
     esc(p[1])
   }</p>${reference}</section>`;
 }
+const speciesStudyPlates = Object.freeze({
+  dusky_kob: [{ file: "dusky_kob", label: "Dusky Kob field plate" }, { file: "dusky_kob_life_cycle", label: "Dusky Kob anatomy and life cycle" }],
+  miss_lucy: [{ file: "miss_lucy_life_cycle", label: "Miss Lucy anatomy and life cycle" }],
+  zebra: [{ file: "zebra", label: "Zebra / Wildeperd field plate" }],
+  blacktail: [{ file: "blacktail", label: "Blacktail field plate" }],
+  hake: [{ file: "hake", label: "Hake field plate" }],
+  spotted_grunter: [{ file: "spotted_grunter", label: "Spotted Grunter field plate" }],
+  red_roman: [{ file: "red_roman", label: "Red Roman field plate" }],
+  sea_barbel: [{ file: "sea_barbel", label: "Sea Barbel / See Baber field plate" }],
+});
+function speciesStudyHTML(id) {
+  const plates = speciesStudyPlates[id];
+  if (!plates) return "";
+  return `<section class="species-study-profile"><h3>Illustrated field ${plates.length === 1 ? "plate" : "plates"}</h3>${plates.map((plate) =>
+    `<figure class="species-study-figure"><a href="fish/studies/${plate.file}.jpg" target="_blank" rel="noopener" aria-label="Open ${esc(plate.label)} at full size"><img src="fish/studies/${plate.file}.jpg" alt="${esc(plate.label)} with anatomical labels and habitat drawings" loading="lazy"></a><figcaption>${esc(plate.label)} · <a href="fish/studies/${plate.file}.jpg" target="_blank" rel="noopener">Open full size ↗</a></figcaption></figure>`
+  ).join("")}${id === "zebra" ? '<p class="small muted">The supplied plate prints <i>Diplodus cervinus</i>; the journal profile retains <i>Diplodus hottentotus</i>.</p>' : ""}</section>`;
+}
+function renderSpeciesStudies() {
+  $("species-study-count").textContent = Object.keys(speciesStudyPlates).length + " species";
+  $("species-studies").innerHTML = Object.entries(speciesStudyPlates).map(([id, plates]) => {
+    const plate = plates[0];
+    return `<figure class="species-study-card"><a href="fish/studies/${plate.file}.jpg" target="_blank" rel="noopener" aria-label="Open ${esc(plate.label)} at full size"><img src="fish/studies/${plate.file}_preview.jpg" alt="${esc(plate.label)}" width="560" height="700" loading="lazy"></a><figcaption><strong>${esc(species[id][0])}</strong><a href="fish/studies/${plate.file}.jpg" target="_blank" rel="noopener">View plate ↗</a><button class="text-action" type="button" data-profile="${id}">Read species guide</button></figcaption></figure>`;
+  }).join("");
+}
 function showSpeciesProfile(id) {
   if (!fishProfiles[id]) return;
   conditionsGeneration++;
@@ -2265,7 +2289,7 @@ function showSpeciesProfile(id) {
   $("details").dataset.view = "species";
   $("detail-body").innerHTML = `${fishImage(id, true)}<h2>${esc(species[id][0])}</h2>${
     scientificCaption(id)
-  }${fishProfileHTML(id)}`;
+  }${fishProfileHTML(id)}${speciesStudyHTML(id)}`;
   upgradeFishPortrait(id);
   if (!$("details").open) $("details").showModal();
   $("details").scrollTop = 0;
@@ -3652,6 +3676,7 @@ function setupHomeAlbum() {
 }
 setupInsights();
 setupHomeAlbum();
+renderSpeciesStudies();
 start();
 if ("serviceWorker" in navigator && location.protocol !== "file:") {
   // Updates apply on the next opening; never interrupt a login or unsaved form.
