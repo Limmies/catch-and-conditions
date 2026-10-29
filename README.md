@@ -157,3 +157,5 @@ Shell v112 removes the enhanced Kob life-cycle banner, its section and the publi
 Shell v113 replaces the faded field-sheet backgrounds with a graphite Kob study on a taped, lined-paper sketchbook insert. The single 1000px image loads lazily and stays out of installation precaching.
 
 Shell v114 places the taped Kob sketch directly below the opening letter in the left column, alongside the hero photo. On phones it follows the opening text.
+
+Shell v115 adds three verbatim extracts from the owner’s Saltwater Pages fishing book, attributed with printed page numbers and PDF links. The complete original 48-page PDF (3.2 MB) is available to read or download on demand; only its small cover preview loads on Home. Neither PDF nor cover is installation-precached.
