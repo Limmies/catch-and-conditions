@@ -159,3 +159,5 @@ Shell v113 replaces the faded field-sheet backgrounds with a graphite Kob study 
 Shell v114 places the taped Kob sketch directly below the opening letter in the left column, alongside the hero photo. On phones it follows the opening text.
 
 Shell v115 adds three verbatim extracts from the owner’s Saltwater Pages fishing book, attributed with printed page numbers and PDF links. The complete original 48-page PDF (3.2 MB) is available to read or download on demand; only its small cover preview loads on Home. Neither PDF nor cover is installation-precached.
+
+Shell v116 expands the Home parameter catalogue to cover catch GPS/species/length, all six daily ratings and notes, private day photos, trips, effort, sessions, movement, spots, optional instrument imports, estimates and source/record metadata. Checked against live Supabase tables and the saved JSON payload keys; optional and unavailable values are explicitly labelled. Existing catch and rating persistence was verified; no records or schema were changed.
