@@ -19,20 +19,21 @@
     <link rel="stylesheet" href="vendor/leaflet.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.Default.css">
-    <link rel="stylesheet" href="style.css?v=99">
+    <link rel="stylesheet" href="style.css?v=100">
     <script defer src="vendor/supabase.js"></script>
     <script defer src="vendor/leaflet.js"></script>
     <script defer src="vendor/leaflet.markercluster.js"></script>
     <script defer src="config.js"></script>
-    <script defer src="density.js?v=99"></script>
-    <script defer src="insights.js?v=99"></script>
-    <script defer src="day-photos.js?v=99"></script>
-    <script defer src="app.js?v=99"></script>
+    <script defer src="density.js?v=100"></script>
+    <script defer src="insights.js?v=100"></script>
+    <script defer src="day-photos.js?v=100"></script>
+    <script defer src="app.js?v=100"></script>
   </head>
   <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
     <header
       class="masthead"><a class="brand" href="#home" aria-label="Catch and Conditions home"><span class="monogram">C&C</span><span>Catch and<br><b>Conditions</b></span></a><button id="signout" class="quiet" hidden>Sign out</button></header>
-    <main id="main-content">
+    <main id="main-content" tabindex="-1">
       <section id="login" class="login-panel">
       <span class="eyebrow">CATCH AND CONDITIONS</span><h1>Your fishing<br>journal.</h1><p>Catch locations, species totals and days on the water.</p>
       <form id="login-form"><label>Email<input id="email" type="email" autocomplete="username" required></label><label>Password<input id="password" type="password" autocomplete="current-password" required></label><button id="login-button" class="primary" type="submit">Sign in</button></form>
@@ -54,7 +55,7 @@
           <a href="#insights" data-page="insights"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 3v18h19M7 17v-5m5 5V7m5 10V4"/></svg></span><span>Insights</span></a>
         </nav>
         <div class="journal-controls">
-          <div class="fishing-style-panel"><svg class="mode-sketch" viewBox="0 0 160 64" aria-hidden="true"><path d="M2 48q10-8 20 0t20 0t20 0t20 0t20 0t20 0t20 0M45 35h62l-12 10H59ZM75 35V9l22 23H75M22 37l10-17 14 17M115 34l17-22 23 22"/></svg><span class="fishing-mode-label">Your fishing waters</span>
+          <div class="fishing-style-panel">
 
             <div class="fishing-modes" role="group" aria-label="Fishing style">
               <button type="button" data-fishing-mode="offshore" aria-pressed="true">Offshore</button>
@@ -81,7 +82,7 @@
                 <span class="home-kicker">A fisherman’s diary</span>
                 <h2>Keep the story.<br>Learn from the details.</h2>
                 <p class="home-lead">A few taps on your Garmin. A record that grows with every trip. More to learn from when you get back on the water.</p>
-                <p>The idea behind Catch and Conditions is simple: make fishing data easy to collect, then turn it into something useful. Your watch records the catch, time and location. The journal brings those details together with conditions, so each trip adds to a picture of what works.</p>
+                <p>Your watch saves the species, time and location. Review your fishing days, compare spots and explore the conditions behind your catches.</p>
                 <a class="primary home-link" href="#map">Open the catch map <span aria-hidden="true">→</span></a>
               </article>
               <div class="home-photo-pair">
@@ -91,7 +92,7 @@
             </div>
 
             <section class="home-chapter" aria-labelledby="home-about-title">
-              <div class="home-chapter-heading"><span class="home-kicker">01 / About the journal</span><h2 id="home-about-title">More than a catch count.</h2></div>
+              <div class="home-chapter-heading"><span class="home-kicker">01 / About the journal</span><h2 id="home-about-title">Your journal at a glance.</h2></div>
               <div class="home-about-grid">
                 <article class="home-paper"><h3>The catch</h3><p>Log the species on the watch and save its time and GPS position when a usable fix is available. Review catches on the map, browse the fish guide or look back by day.</p><a href="#totals" class="text-action">Explore species →</a></article>
                 <article class="home-paper home-paper-sage"><h3>The effort</h3><p>See fishing time, travel time and individual fishing sessions. Compare catches per fishing hour, including sessions when nothing was caught.</p><a href="#diary" class="text-action">View fishing days →</a></article>
@@ -112,7 +113,7 @@
                 <li><span class="home-step">2</span><h3>Across the connection</h3><p>With Garmin Connect, Bluetooth and internet available, the watch sends its saved records. Unsent records stay queued for another attempt.</p></li>
                 <li><span class="home-step">3</span><h3>In your journal</h3><p>Sign in to see uploaded catches, completed trips and sessions. The website brings together the map, effort, spot comparisons and conditions.</p></li>
               </ol>
-              <aside class="home-note home-accuracy"><h3>The details you don’t have to write down</h3><p>A catch’s time and GPS location let the journal look up weather for that moment and place. Add your own day ratings for what you actually experienced. Together, they give each catch more context than a species name alone.</p></aside>
+              <aside class="home-note home-accuracy"><h3>The details you don’t have to write down</h3><p>Catch-time weather is added when available. In Days, add a photo and rate what you experienced.</p></aside>
             </section>
 
             <div class="home-photo-strip home-photo-strip-wide" aria-label="Fishing memories">
@@ -122,7 +123,7 @@
             </div>
 
             <section class="home-chapter home-next" aria-labelledby="home-next-title">
-              <article class="home-letter"><span class="home-kicker">03 / The plan</span><h2 id="home-next-title">Build a better picture over time.</h2><p>If you can only fish on holidays or the occasional weekend, every day on the water matters. Keeping an easy, consistent record means you can learn from past trips instead of starting from memory each time. The quiet sessions count too: they help show how much fishing went into each catch.</p><p>The long-term goal is to choose a date and get a useful suggestion: which spot to try, which species to target and why the conditions might suit it. Those predictions are still ahead of us. For now, we’re building the catch, effort and conditions history needed to find meaningful patterns over time.</p><p class="home-letter-ending">Less time entering data. More to learn from the time we get to fish.</p><a class="text-action" href="#diary">View days →</a></article>
+              <article class="home-letter"><span class="home-kicker">03 / The plan</span><h2 id="home-next-title">Build a better picture over time.</h2><p>Every fishing day adds to your history. Quiet sessions count too: they show how much fishing went into each catch.</p><p>Use your recorded catches, effort and conditions to plan your next trip. The journal shows your history; it does not predict where fish will bite.</p><p class="home-letter-ending">Less time entering data. More to learn from the time we get to fish.</p><a class="text-action" href="#diary">View days →</a></article>
               <figure class="home-print home-print-feature"><img src="photos/mentor-steenbras.jpg" width="1600" height="1067" alt="Fishing mentor Johnny McSeveny holding a red steenbras" loading="lazy"><figcaption>Johnny McSeveny with a red steenbras. My all-time fishing mentor—the person who taught me so much of what I know, and someone I’ll always look up to.</figcaption></figure>
             </section>
             <div class="home-last-prints" aria-label="More pages from the diary">
@@ -131,33 +132,33 @@
             </div>
 
             <section class="home-album" aria-labelledby="album-title">
-              <div class="home-chapter-heading"><span class="home-kicker">Loose pages / The photo album</span><h2 id="album-title">A few more moments from the water.</h2><p>A slower look at the quieter moments. The pages turn every three seconds; pause whenever you like.</p></div>
+              <div class="home-chapter-heading"><span class="home-kicker">Loose pages / The photo album</span><h2 id="album-title">A few more moments from the water.</h2><p>A slower look at the quieter moments. Browse at your own pace, or press Play for a slideshow.</p></div>
               <div class="album-book" id="home-album" role="region" aria-roledescription="carousel" aria-label="Fishing photo scrapbook" tabindex="0">
                 <div class="album-pages"><figure class="home-print album-page" data-album-page="0"><img src="photos/album-01.jpg" alt="An underwater view of a fly reel and fish in clear water" loading="lazy" width="1440" height="974"><figcaption>Below the surface.</figcaption></figure><figure class="home-print album-page" data-album-page="1" hidden><img src="photos/album-02.jpg" alt="An angler on a boat beneath a softly coloured evening sky" loading="lazy" width="1440" height="960"><figcaption>Last light on the water.</figcaption></figure><figure class="home-print album-page" data-album-page="2" hidden><img src="photos/album-03.jpg" alt="An angler casting from the shoreline in evening light" loading="lazy" width="960" height="1440"><figcaption>One more cast.</figcaption></figure><figure class="home-print album-page" data-album-page="3" hidden><img src="photos/album-04.jpg" alt="An angler beside a boat lowering a fish towards the water" loading="lazy" width="960" height="1440"><figcaption>A moment before the release.</figcaption></figure><figure class="home-print album-page" data-album-page="4" hidden><img src="photos/album-05.jpg" alt="A close view of an angler holding a fly rod and fish" loading="lazy" width="960" height="1440"><figcaption>Rod, reel and a quiet moment.</figcaption></figure><figure class="home-print album-page" data-album-page="5" hidden><img src="photos/album-06.jpg" alt="A view past a boat canopy into the sky" loading="lazy" width="1440" height="960"><figcaption>A view from the boat.</figcaption></figure><figure class="home-print album-page" data-album-page="6" hidden><img src="photos/album-07.jpg" alt="A small colourful fish resting in an open hand" loading="lazy" width="1440" height="960"><figcaption>Small fish, close up.</figcaption></figure><figure class="home-print album-page" data-album-page="7" hidden><img src="photos/album-08.jpg" alt="An angler seated on a boat with a fish against a distant shoreline" loading="lazy" width="1440" height="960"><figcaption>A little space to fish.</figcaption></figure><figure class="home-print album-page" data-album-page="8" hidden><img src="photos/album-12.jpg" alt="A fishing photograph from the personal scrapbook" loading="lazy" width="1440" height="960"><figcaption>Another page from the water.</figcaption></figure><figure class="home-print album-page" data-album-page="9" hidden><img src="photos/album-14.jpg" alt="A fishing photograph from the personal scrapbook" loading="lazy" width="960" height="1440"><figcaption>Another page from the water.</figcaption></figure><figure class="home-print album-page" data-album-page="10" hidden><img src="photos/album-16.jpg" alt="A fishing photograph from the personal scrapbook" loading="lazy" width="1440" height="810"><figcaption>Another page from the water.</figcaption></figure><figure class="home-print album-page" data-album-page="11" hidden><img src="photos/album-17.jpg" alt="A fishing photograph from the personal scrapbook" loading="lazy" width="1440" height="808"><figcaption>Another page from the water.</figcaption></figure><figure class="home-print album-page" data-album-page="12" hidden><img src="photos/album-18.jpg" alt="A fishing photograph from the personal scrapbook" loading="lazy" width="1440" height="807"><figcaption>Another page from the water.</figcaption></figure><figure class="home-print album-page" data-album-page="13" hidden><img src="photos/album-19.jpg" alt="A fishing photograph from the personal scrapbook" loading="lazy" width="1440" height="808"><figcaption>Another page from the water.</figcaption></figure><figure class="home-print album-page" data-album-page="14" hidden><img src="photos/album-20.jpg" alt="A fishing photograph from the personal scrapbook" loading="lazy" width="1440" height="810"><figcaption>Another page from the water.</figcaption></figure><figure class="home-print album-page" data-album-page="15" hidden><img src="photos/album-21.jpg" alt="A fishing photograph from the personal scrapbook" loading="lazy" width="1440" height="1080"><figcaption>Another page from the water.</figcaption></figure></div>
               </div>
-              <div class="album-controls"><button type="button" id="album-prev" class="quiet" aria-controls="home-album" aria-label="Previous photograph">← Previous</button><button type="button" id="album-play" class="quiet" aria-controls="home-album">Pause</button><span id="album-position" role="status" aria-live="polite" aria-atomic="true">Photo 1 of 16</span><button type="button" id="album-next" class="quiet" aria-controls="home-album" aria-label="Next photograph">Next →</button></div>
+              <div class="album-controls"><button type="button" id="album-prev" class="quiet" aria-controls="home-album" aria-label="Previous photograph">← Previous</button><button type="button" id="album-play" class="quiet" aria-controls="home-album">Play</button><span id="album-position" role="status" aria-live="polite" aria-atomic="true">Photo 1 of 16</span><button type="button" id="album-next" class="quiet" aria-controls="home-album" aria-label="Next photograph">Next →</button></div>
             </section>
           </div>
         </section>
         <section id="map-page" hidden aria-label="Catch map">
-          <div class="map-toolbar"><div class="map-view-tabs" role="group" aria-label="Show on map"><button type="button" data-map-view="catches" aria-pressed="true">Catches</button><button type="button" data-map-view="spots" aria-pressed="false">Spots</button><button type="button" data-map-view="days" aria-pressed="false">Days</button><button type="button" data-map-view="species" aria-pressed="false">Species</button></div><button id="fit" class="quiet">Show all catches</button></div>
+          <div class="map-toolbar"><div class="map-view-tabs" role="group" aria-label="Show on map"><button type="button" data-map-view="catches" aria-pressed="true">Catches</button><button type="button" data-map-view="spots" aria-pressed="false">Spots</button><button type="button" data-map-view="days" aria-pressed="false">Days</button><button type="button" data-map-view="species" aria-pressed="false">Density</button></div><button id="fit" class="quiet">Show all catches</button></div>
           <div id="density-controls" class="density-controls" hidden>
             <label>Species <select id="density-species" aria-label="Species for catch density"></select></label>
             <label class="density-switch"><input id="density-enabled" type="checkbox" checked>Density overlay</label>
-            <details class="density-settings"><summary>Smoothing · <span id="density-radius-label">Auto</span></summary><label for="density-radius">Smoothing radius (metres)</label><input id="density-radius" type="range" min="0" max="100" step="1"><button id="density-auto" type="button" class="quiet">Use automatic radius</button><p class="small muted">Gaussian bandwidth in metres. Wider smoothing connects nearby catches; it does not establish fishing probability.</p></details>
+            <details class="density-settings"><summary>Smoothing · <span id="density-radius-label">Auto</span></summary><label for="density-radius">Smoothing radius (metres)</label><input id="density-radius" type="range" min="0" max="100" step="1"><button id="density-auto" type="button" class="quiet">Use automatic radius</button><p class="small muted">Wider smoothing joins nearby catch locations. This shows recorded concentration, not fishing probability.</p></details>
           </div>
           <div id="map" aria-label="Map of catch locations"></div>
           <p id="map-view-summary" class="map-view-summary" role="status"></p><div id="legend" class="legend"></div>
         </section>
         <section id="insights-page" hidden aria-label="Fishing insights">
-          <div class="insights-page-filter"><label>Species<select id="insights-density-species"></select></label><p class="small muted">Applies to every chart. All fish combines every species on the density map; choose a species to narrow the view.</p></div>
+          <div class="insights-page-filter"><label>Species<select id="insights-density-species"></select></label><p class="small muted">Applies to every chart and the density map.</p></div>
           <div id="insights-overview" class="insights-grid"></div>
           <details class="insights-section"><summary>Species at each spot</summary><div id="insights-spot-species"></div></details>
           <section class="insights-section"><div class="section-heading"><h3>Where catches concentrate</h3><button id="insights-fit" type="button" class="quiet">Show catches</button></div><div class="insights-map-controls"><label class="insights-switch"><input type="checkbox" id="insights-density-enabled" checked>Density overlay</label><details><summary>Smoothing · <span id="insights-radius-label">Auto</span></summary><label for="insights-radius">Bandwidth in metres</label><input id="insights-radius" type="range" min="0" max="100" step="1"><button id="insights-auto" class="quiet" type="button">Use automatic radius</button></details></div><div id="insights-map" aria-label="Species catch density"></div><p id="insights-density-summary" class="small muted" role="status"></p><div id="insights-density-scale" class="density-scale"><span>Lower</span><i></i><span>Higher concentration</span></div><details class="insight-data"><summary>How to read this map</summary><p>Gaussian catch density uses the same method as Map → Species. The radius is in metres and can be adjusted. Colours show relative recorded catch concentration, not fish abundance or fishing probability. Smoothing can extend onto land. No fishing-effort adjustment or habitat mask is applied.</p></details></section>
           <section class="insights-section"><h3>Ratings by fishing event</h3><p id="insights-ratings-status" class="small muted" role="status"></p><div id="insights-ratings" class="insights-grid conditions-grid"></div></section>
-          <section class="insights-section"><h3>Conditions when you caught fish</h3><p id="insights-condition-status" class="small muted" role="status"></p><button id="insights-retry" class="quiet" type="button" hidden>Retry conditions</button><p class="small muted">Catch-time model estimates and astronomy. These distributions do not account for time spent fishing in each condition.</p><div class="insights-bin-controls"><label>Temperature intervals<select data-insight-step="sea"><option value="0.5">0.5°C</option><option value="1" selected>1°C</option><option value="2">2°C</option></select></label><label>Pressure intervals<select data-insight-step="pressure"><option value="1">1 hPa</option><option value="2" selected>2 hPa</option><option value="5">5 hPa</option></select></label><label>Moon intervals<select data-insight-step="illumination"><option value="5">5%</option><option value="10" selected>10%</option></select></label><label>Current intervals<select data-insight-step="current"><option value="0.5">0.5 km/h</option><option value="1" selected>1 km/h</option><option value="2">2 km/h</option></select></label></div><p class="small muted">Moon illumination runs from 0% (new) to 100% (full), combining waxing and waning. The comparison builder also retains named moon phases. Pressure is in hPa (equivalent to mbar).</p><div id="insights-conditions" class="insights-grid conditions-grid"></div></section>
-          <section class="insights-section"><h3>Explore a comparison</h3><div class="insights-compare-controls"><label>Compare this<select id="insights-y"></select></label><label>Against this<select id="insights-x"></select></label></div><div id="insights-comparison"></div></section>
-          <details class="insight-data"><summary>Data quality &amp; interpretation</summary><p>Each chart reports its sample. Missing or unrecognised measurements are excluded, never replaced with zero. Calm currents and zero lunar phase are valid. Conditions are matched within one hour of the catch; only compatible units are compared. Repeated snapshots do not create extra catches.</p><p>Spot rates use recorded fishing sessions, including zero-catch sessions. Unclassified time is excluded from fishing hours. Small samples and incomplete GPS or recording can change rankings. No confidence intervals, causal claims or calibrated fishing predictions are implied. These charts include any test records still in your account; remove those before interpreting real fishing patterns.</p></details>
+          <section class="insights-section"><h3>Conditions when you caught fish</h3><p id="insights-condition-status" class="small muted" role="status"></p><button id="insights-retry" class="quiet" type="button" hidden>Retry conditions</button><p class="small muted">Catch-time model estimates and astronomy. These distributions do not account for time spent fishing in each condition.</p><details class="insight-data insight-chart-settings" data-disclosure="insight:intervals"><summary>Adjust chart intervals</summary><div class="insights-bin-controls"><label>Temperature intervals<select data-insight-step="sea"><option value="0.5">0.5°C</option><option value="1" selected>1°C</option><option value="2">2°C</option></select></label><label>Pressure intervals<select data-insight-step="pressure"><option value="1">1 hPa</option><option value="2" selected>2 hPa</option><option value="5">5 hPa</option></select></label><label>Moon intervals<select data-insight-step="illumination"><option value="5">5%</option><option value="10" selected>10%</option></select></label><label>Current intervals<select data-insight-step="current"><option value="0.5">0.5 km/h</option><option value="1" selected>1 km/h</option><option value="2">2 km/h</option></select></label></div><p class="small muted">Moon illumination: 0% new to 100% full, combining waxing and waning. Pressure: hPa, equivalent to mbar.</p></details><div id="insights-conditions" class="insights-grid conditions-grid"></div></section>
+          <details class="insights-section" data-disclosure="insight:comparison"><summary>Explore another comparison</summary><div class="insights-compare-controls"><label>Catches by<select id="insights-x"></select></label></div><div id="insights-comparison"></div></details>
+          <details class="insight-data"><summary>Data quality &amp; interpretation</summary><p>Each chart reports its sample. Missing or unrecognised measurements are excluded, never replaced with zero. Calm currents and zero lunar phase are valid. Conditions are matched within one hour of the catch; only compatible units are compared. Repeated snapshots do not create extra catches.</p><p>Spot rates use recorded fishing sessions, including zero-catch sessions. Unclassified time is excluded from fishing hours. Small samples and incomplete GPS or recording can change rankings. No confidence intervals, causal claims or calibrated fishing predictions are implied. Charts reflect the records in your account and the selected filters.</p></details>
         </section>
         <section id="totals-page" hidden aria-label="Species totals">
 
@@ -176,7 +177,7 @@
           </div>
         </section>
         <section id="diary-page" hidden aria-label="Fishing days">
-          <div class="section-heading"><h2>By date</h2><a href="#spots" class="text-action">Compare spots →</a></div>
+          <div class="section-heading"><h2>Your fishing days</h2><a href="#spots" class="text-action">Compare spots →</a></div>
           <p id="trip-status" role="status" class="muted"></p>
           <details class="diary-totals"><summary>Trip totals</summary><div id="trip-summary" class="trip-summary"></div></details>
           <div id="trip-rows"><div id="days"></div></div>

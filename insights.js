@@ -249,16 +249,17 @@ function insightSummary(rows, unit = "catches", title = "") {
   if (!valid.length) return insightInterpretation("There are not enough usable records in these filters to describe a pattern yet.");
   const max = Math.max(...valid.map((r) => r.value)), top = valid.filter((r) => r.value === max);
   const amount = Number.isInteger(max) ? String(max) : max.toFixed(2);
+  const displayUnit = unit === "catches" && max === 1 ? "catch" : unit;
   const peak = top.length === valid.length && valid.length > 1
-    ? `All ${valid.length} categories are tied at ${amount} ${unit}.`
-    : `${top.slice(0, 3).map((r) => r.label).join("; ")}${top.length > 3 ? ` and ${top.length - 3} other categories` : ""} ${top.length > 1 ? "are tied for the highest value" : "has the highest value"}: ${amount} ${unit}.`;
+    ? `All ${valid.length} categories have ${amount} ${displayUnit}.`
+    : `${top.slice(0, 3).map((r) => r.label).join("; ")}${top.length > 3 ? ` and ${top.length - 3} other categories` : ""} ${top.length > 1 ? "are tied for the highest value" : "has the highest value"}: ${amount} ${displayUnit}.`;
   const context = unit === "catches / fishing hour"
     ? "This accounts for recorded fishing hours, including zero-catch sessions. Small samples and differences in conditions can change spot rankings."
     : unit === "catches"
-    ? "These are recorded catch totals. More fishing time can produce more catches; this does not establish a higher bite rate."
-    : "These values describe the saved measurements, not fishing success or a cause of better catches.";
+    ? "Recorded catch totals; differences in fishing time can affect the comparison."
+    : "This describes the saved measurements, not a prediction.";
   const condition = /temperature|pressure|current|moon/i.test(title)
-    ? " These intervals describe conditions at catch time, not whether conditions were rising or falling."
+    ? " Conditions are catch-time values, not rising or falling trends."
     : "";
   return insightInterpretation(`${peak} ${context}${condition}`);
 }
@@ -268,15 +269,7 @@ function insightRatingSummary(rows, key) {
   return insightInterpretation(scopes.map((scope) => {
     const values = rows.filter((r) => r.fishing_mode === scope).map((r) => r[key]);
     return `${fishingModeLabels[scope]} averages ${(values.reduce((a, b) => a + b, 0) / values.length).toFixed(1)}/10 across ${values.length} saved scores, ranging from ${Math.min(...values)} to ${Math.max(...values)}.`;
-  }).join(" ") + " Each fishing day is a separate event. These personal ratings do not establish a relationship with catch totals.");
-}
-function insightPairSummary(pairs, xLabel, yLabel) {
-  if (pairs.length < 5) return insightInterpretation(`Only ${pairs.length} catches have both measurements. More paired records are needed before describing an association.`);
-  const mx = pairs.reduce((n, p) => n + p.x, 0) / pairs.length, my = pairs.reduce((n, p) => n + p.y, 0) / pairs.length;
-  const xx = pairs.reduce((n, p) => n + (p.x - mx) ** 2, 0), yy = pairs.reduce((n, p) => n + (p.y - my) ** 2, 0);
-  if (!xx || !yy) return insightInterpretation("One measurement does not vary in these records, so no association can be described.");
-  const r = pairs.reduce((n, p) => n + (p.x - mx) * (p.y - my), 0) / Math.sqrt(xx * yy);
-  return insightInterpretation(`${pairs.length} paired catch records: ${Math.abs(r) < .3 ? "there is little linear association between" : "there is a descriptive " + (r > 0 ? "positive" : "negative") + " linear association between"} ${xLabel.toLowerCase()} and ${yLabel.toLowerCase()} (r = ${r.toFixed(2)}). This compares measurements on caught fish, not bite rate. Catches from the same event can dominate the pattern; association does not establish cause.`);
+  }).join(" ") + " Personal scores for separate fishing events; not a measure of catch rate.");
 }
 function insightBars(title, rows, note = "", unit = "catches") {
   const maximum = Math.max(1, ...rows.map((r) => r.value)), shown = rows.slice(0, 12);
@@ -301,21 +294,30 @@ function insightBars(title, rows, note = "", unit = "catches") {
   }${insightSummary(rows, unit, title)}</article>`;
 }
 let insightSteps = { sea: 1, pressure: 2, illumination: 10, current: 1 };
+function insightAxisLines(label) {
+  const lines = []; let line = "";
+  for (const word of String(label).split(/\s+/)) {
+    if (line && (line + " " + word).length > 14) { lines.push(line); line = word; }
+    else line += (line ? " " : "") + word;
+  }
+  if (line) lines.push(line);
+  return lines.slice(0, 3).map((text) => text.length > 18 ? text.slice(0, 17) + "…" : text);
+}
 function insightPlot(title, rows, note = "", unit = "catches", kind = "dots", xLabel = "") {
   if (!rows.length) return insightBars(title, [], note, unit);
   const numeric = kind === "line",
     width = Math.max(
-      520,
-      numeric ? Math.min(620, rows.length * 36 + 100) : rows.length * 86 + 220,
+      numeric ? 520 : 360,
+      numeric ? Math.min(620, rows.length * 36 + 100) : rows.length * 90 + 80,
     ),
-    height = numeric ? 300 : 390;
-  const left = numeric ? 55 : 155,
+    height = numeric ? 300 : 320;
+  const left = numeric ? 55 : 50,
     right = width - 30,
     top = 30,
     bottom = numeric ? 225 : 215,
     max = Math.max(1, ...rows.map((r) => r.value));
   const px = (i) =>
-      rows.length === 1 ? (left + right) / 2 : left + i * (right - left) / (rows.length - 1),
+      numeric ? (rows.length === 1 ? (left + right) / 2 : left + i * (right - left) / (rows.length - 1)) : left + (i + .5) * (right - left) / rows.length,
     py = (v) => bottom - v / max * (bottom - top);
   const ticks = [...new Set(Array.from({ length: 5 }, (_, i) => Math.round(max * i / 4)))],
     labelEvery = Math.max(1, Math.ceil(rows.length / (innerWidth <= 650 ? 4 : 9)));
@@ -327,9 +329,9 @@ function insightPlot(title, rows, note = "", unit = "catches", kind = "dots", xL
   const chart = `<div class="insight-plot-scroll" tabindex="0" aria-label="Scrollable ${
     esc(title)
   }"><svg class="insight-plot ${
-    numeric ? "insight-line-plot" : "insight-dot-plot"
+    numeric ? "insight-line-plot" : kind === "bars" ? "insight-bar-plot" : "insight-dot-plot"
   }" viewBox="0 0 ${width} ${height}" style="min-width:${
-    numeric ? 0 : width
+    numeric || rows.length <= 3 ? 0 : width
   }px" role="img" aria-label="${esc(title)}"><g class="insight-gridlines">${
     ticks.map((v) =>
       `<path d="M${left},${py(v)}H${right}"/><text x="${left - 9}" y="${
@@ -344,17 +346,8 @@ function insightPlot(title, rows, note = "", unit = "catches", kind = "dots", xL
         r.sample ? " · " + esc(r.sample) : ""
       }</title></circle>`}${
         !numeric || i % labelEvery === 0 || i === rows.length - 1
-          ? `<text class="insight-axis-label" transform="translate(${px(i)},${bottom + 20})${
-            numeric ? "" : " rotate(-35)"
-          }" text-anchor="${
-            numeric ? (i === rows.length - 1 ? "end" : i === 0 ? "start" : "middle") : "end"
-          }">${
-            esc(
-              numeric
-                ? (r.axisLabel ?? r.label)
-                : (r.label.length > 24 ? r.label.slice(0, 23) + "…" : r.label),
-            )
-          }</text>`
+          ? numeric ? `<text class="insight-axis-label" x="${px(i)}" y="${bottom + 20}" text-anchor="${i === rows.length - 1 ? "end" : i === 0 ? "start" : "middle"}">${esc(r.axisLabel ?? r.label)}</text>`
+          : `<text class="insight-axis-label" text-anchor="middle"><title>${esc(r.label)}</title>${insightAxisLines(r.label).map((text, line) => `<tspan x="${px(i)}" y="${bottom + 22 + line * 16}">${esc(text)}</tspan>`).join("")}</text>`
           : ""
       }`
     ).join("")
@@ -369,7 +362,7 @@ function insightPlot(title, rows, note = "", unit = "catches", kind = "dots", xL
     numeric
       ? "Points are catch totals per interval; straight lines connect them without smoothing."
       : kind === "bars" ? "Each upright bar shows the recorded catch total for one species." : "One dot per category shows its total; category order does not imply a trend."
-  }</p>${numeric ? "" : '<p class="insight-chart-hint">Swipe the chart sideways to see every category.</p>'}${insightTable(rows, "Interval / category", title)}${insightSummary(rows, unit, title)}</article>`;
+  }</p>${numeric || rows.length <= 3 ? "" : '<p class="insight-chart-hint">Swipe the chart sideways to see every category.</p>'}${insightTable(rows, "Interval / category", title)}${insightSummary(rows, unit, title)}</article>`;
 }
 function insightBinnedRows(rows, key) {
   const grouped = JournalInsights.groups(rows, key, insightValue, insightSteps[key]);
@@ -473,108 +466,20 @@ function renderInsights() {
   restoreDisclosures($("insights-page"), expanded);
 }
 function renderInsightsComparison(rows, ranked) {
-  const x = $("insights-x").value,
-    y = "count",
-    xLabel = JournalInsights.metrics[x].label;
-  if (y === "rate") {
-    $("insights-comparison").innerHTML = x === "spot"
-      ? insightBars(
-        "Productivity by spot",
-        ranked.filter((s) => s.seconds > 0).map((s) => ({
-          label: sessionSpotLabel(s.session),
-          value: s.count * 3600 / s.seconds,
-          sample: `${s.count} catches · ${(s.seconds / 3600).toFixed(2)} h`,
-        })),
-        "Stored session effort",
-        "catches / fishing hour",
-      )
-      : '<p class="insight-empty">Choose Spot to compare catches per fishing hour. Condition-specific fishing effort is not yet available, so a condition catch rate would be misleading.</p>';
-    return;
-  }
+  const x = $("insights-x").value, metric = JournalInsights.metrics[x];
   if (x === "spot") {
-    $("insights-comparison").innerHTML = y === "count"
-      ? insightPlot(
-        "Catches by spot",
-        ranked.map((s) => ({
-          label: sessionSpotLabel(s.session),
-          value: s.count,
-          sample: `${s.sessions} ${s.sessions === 1 ? "session" : "sessions"}`,
-        })),
-      )
-      : '<p class="insight-empty">Spot measurements need an unambiguous catch-to-session link. Use total catches or catches per fishing hour here.</p>';
+    $("insights-comparison").innerHTML = insightPlot("Catches by spot", ranked.map((s) => ({
+      label: sessionSpotLabel(s.session), value: s.count,
+      sample: `${s.sessions} ${s.sessions === 1 ? "session" : "sessions"}`,
+    })), "Recorded catches linked to fishing spots");
     return;
   }
-  if (y === "count") {
-    const { used, values } = insightBinnedRows(rows, x);
-    $("insights-comparison").innerHTML = insightPlot(
-      `Catches × ${xLabel.toLowerCase()}`,
-      values,
-      `${used} of ${rows.length} catches included; missing values excluded`,
-      "catches",
-      JournalInsights.metrics[x].step ? "line" : "dots",
-      xLabel,
-    );
-    return;
-  }
-  const pairs = rows.map((c) => ({ c, x: insightValue(c, x), y: insightValue(c, y) })).filter((p) =>
-    p.x !== null && p.y !== null
+  const { used, values } = insightBinnedRows(rows, x);
+  $("insights-comparison").innerHTML = insightPlot(
+    `Catches × ${metric.label.toLowerCase()}`, values,
+    `${used} of ${rows.length} catches with usable data`, "catches",
+    metric.step ? "line" : x === "species" ? "bars" : "dots", metric.label,
   );
-  const yMetric = JournalInsights.metrics[y];
-  if (["species", "day", "moon"].includes(x)) {
-    const groups = JournalInsights.groups(pairs.map((p) => p.c), x, insightValue);
-    $("insights-comparison").innerHTML = insightBars(
-      `Mean ${yMetric.label.toLowerCase()} × ${xLabel.toLowerCase()}`,
-      groups.filter((g) => g.rows.length).map((g) => ({
-        label: g.label,
-        value: g.rows.reduce((sum, c) => sum + insightValue(c, y), 0) / g.rows.length,
-        sample: `n=${g.rows.length}`,
-      })),
-      `${pairs.length} of ${rows.length} catches with both values · means, not fishing success`,
-      yMetric.unit,
-    );
-    return;
-  }
-  if (!pairs.length) {
-    $("insights-comparison").innerHTML =
-      '<p class="insight-empty">No catches have both selected measurements. Missing values are excluded, never treated as zero.</p>';
-    return;
-  }
-  const xs = pairs.map((p) => p.x),
-    ys = pairs.map((p) => p.y),
-    minX = Math.min(...xs),
-    maxX = Math.max(...xs),
-    minY = Math.min(...ys),
-    maxY = Math.max(...ys);
-  const px = (v) => 55 + (v - minX) / (maxX - minX || 1) * 490,
-    py = (v) => 200 - (v - minY) / (maxY - minY || 1) * 160;
-  $("insights-comparison").innerHTML = `<article class="insight-card"><h3>${esc(yMetric.label)} × ${
-    esc(xLabel.toLowerCase())
-  }</h3><p class="insight-caption">${pairs.length} of ${rows.length} catches with both values · each dot is one catch</p><svg class="insight-scatter" viewBox="0 0 600 260" role="img" aria-label="${
-    esc(yMetric.label + " versus " + xLabel)
-  }"><path d="M55 30v170h490" fill="none" stroke="#a99d81"/>${
-    pairs.map((p) =>
-      `<circle cx="${px(p.x)}" cy="${py(p.y)}" r="4" fill="#487565" fill-opacity=".55"><title>${
-        esc(insightValue(p.c, "species"))
-      }: ${p.x.toFixed(2)}, ${p.y.toFixed(2)}</title></circle>`
-    ).join("")
-  }<g fill="#5e6d61" font-size="12"><text x="55" y="220">${
-    minX.toFixed(1)
-  }</text><text x="510" y="220">${maxX.toFixed(1)}</text><text x="5" y="45">${
-    maxY.toFixed(1)
-  }</text><text x="5" y="200">${minY.toFixed(1)}</text><text x="55" y="245">${esc(xLabel)} (${
-    esc(JournalInsights.metrics[x].unit || "")
-  })</text><text x="55" y="18">${esc(yMetric.label)} (${
-    esc(yMetric.unit)
-  })</text></g></svg><p class="small muted">Observed association only. Repeated catches from the same session are not independent experiments.</p>${
-    insightTable(
-      pairs.map((p) => ({
-        label: dateLabel(p.c.caught_at) + " · " + insightValue(p.c, "species"),
-        value: `${p.x.toFixed(2)} / ${p.y.toFixed(2)}`,
-        sample: "one catch",
-      })),
-      `${xLabel} / ${yMetric.label}`,
-    )
-  }${insightPairSummary(pairs, xLabel, yMetric.label)}</article>`;
 }
 function renderInsightsMap(rows) {
   if (!window.L || !window.FishingDensity) {
@@ -661,14 +566,10 @@ function setupInsights() {
   $("insights-x").innerHTML = Object.entries(JournalInsights.metrics).map(([id, m]) =>
     `<option value="${id}">${esc(m.label)}</option>`
   ).join("");
-  $("insights-y").innerHTML = '<option value="count">Total catches</option>';
-  for (const id of ["insights-x", "insights-y"]) {
-    $(id).addEventListener("change", () =>
-      renderInsightsComparison(
-        uniqueRecords(visible),
-        collectSpotProductivity(diaryTripRows(false)).ranked,
-      ));
-  }
+  $("insights-x").value = "day";
+  $("insights-x").addEventListener("change", () => renderInsightsComparison(
+    uniqueRecords(visible), collectSpotProductivity(diaryTripRows(false)).ranked,
+  ));
   $("insights-retry").onclick = () => {
     insightsFetchGeneration = -1;
     renderInsights();
@@ -723,7 +624,7 @@ function renderInsightsRatings() {
           `<div class="rating-score-row" style="--rating-colour:${colours[r.fishing_mode]}"><span class="rating-mode">${esc(fishingModeLabels[r.fishing_mode])}</span><div class="rating-score-track" role="img" aria-label="${esc(label)} · ${esc(fishingModeLabels[r.fishing_mode])}: ${r[metric.key]} out of 10"><i style="width:${r[metric.key] * 10}%"></i></div><strong>${r[metric.key]}<small> / 10</small></strong></div>`
         ).join("")}</div>`;
       }).join("")}</div>` : '<p class="insight-empty">No saved scores for these filters.</p>'}
-      ${insightTable(table, "Fishing event date", "rating:" + metric.key)}${insightRatingSummary(used, metric.key)}</article>`;
+      ${used.length ? insightTable(table, "Fishing event date", "rating:" + metric.key) : ""}${insightRatingSummary(used, metric.key)}</article>`;
   }).join("");
   restoreDisclosures(target, expanded);
 }

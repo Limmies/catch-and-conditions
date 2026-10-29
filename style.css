@@ -4354,11 +4354,7 @@ footer {
   height:36px;
   animation:fish-swim 1.2s ease-in-out infinite;
 }
-#journal {
-  animation:journal-appear .22s ease-out;
-}
 @keyframes fish-swim { 0%,100% { transform:translateX(-3px) rotate(-3deg); } 50% { transform:translateX(3px) rotate(3deg); } }
-@keyframes journal-appear { from { opacity:0; } to { opacity:1; } }
 @media(prefers-reduced-motion:reduce) {
   .loading-fish,#login-form[aria-busy=true] #login-button::after,#status.is-loading::before,#journal {
     animation:none;
@@ -5603,11 +5599,6 @@ body[data-page=home] .heading::before {
     scroll-padding-top:84px;
   }
 }
-.fishing-mode-label {
-  display:block;
-  font-size:12px;
-  letter-spacing:.03em;
-}
 .fishing-modes {
   border-style:solid;
   padding:4px;
@@ -5648,22 +5639,6 @@ body[data-page=home] .heading::before {
   border:1px solid #cfc4ab;
   border-radius:5px;
   box-shadow:0 3px 0 #ded2b74d;
-}
-.mode-sketch {
-  width:96px;
-  height:42px;
-  float:right;
-  margin:-4px 0 6px 14px;
-  fill:none;
-  stroke:#557365;
-  stroke-width:1.4;
-  stroke-linecap:round;
-  stroke-linejoin:round;
-}
-.fishing-mode-label {
-  font:italic 17px/1.5 Georgia,serif;
-  color:#526052;
-  margin:0 0 10px;
 }
 .fishing-modes {
   clear:both;
@@ -5821,8 +5796,6 @@ body::before { opacity:.075; }
 .tabs a[data-selected=false]:hover { background:#f4eddc; color:#314f42; }
 .journal-controls { gap:18px; align-items:start; }
 .fishing-style-panel { padding:15px 16px; border-color:#d1c8b4; background:#fffaf0; box-shadow:0 2px 7px #453f2b08; }
-.fishing-mode-label { font-size:16px; margin-bottom:10px; }
-.mode-sketch { width:78px; height:32px; margin-top:-1px; opacity:.8; }
 .fishing-modes { background:#eeeadd; }
 .fishing-modes button { font-size:13px; }
 .filter-panel { background:#fffaf0; border:1px solid #d1c8b4; border-radius:5px; box-shadow:none; }
@@ -5979,7 +5952,6 @@ body::before { opacity:.075; }
 .insights-map-controls input[type=range] { display:block; width:min(100%,400px); margin:12px 0; }
 .insights-switch input { width:18px; height:18px; min-height:18px; margin:0; }
 #insights-map { height:480px; min-height:300px; border:1px solid #b8ac8c; border-radius:8px; background:#e7e4d8; isolation:isolate; z-index:0; }
-.insight-scatter { width:100%; height:auto; display:block; }
 .insight-empty { color:var(--muted); font-size:13px; padding:12px 0; }
 .multiple-views #insights-page .insights-grid { grid-template-columns:minmax(0,1fr); }
 @media(max-width:1100px) { .insights-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
@@ -6003,13 +5975,10 @@ body::before { opacity:.075; }
 
 @media(max-width:650px) { .insight-line-plot .insight-axis-label,.insight-line-plot .insight-axis-title,.insight-line-plot .insight-gridlines text { font-size:20px; } }
 
-.insight-rating-legend { display:flex; flex-wrap:wrap; gap:8px 14px; margin-bottom:8px; color:var(--muted); font-size:12px; }
-.insight-rating-legend span { display:flex; align-items:center; gap:6px; }
-.insight-rating-legend i { display:block; width:16px; height:3px; border-radius:2px; }
 
 /* Insights shares the map's species identity colours. */
 #insights-page { --insight-accent:#297a88; }
-#insights-page .insights-page-filter { border-left:4px solid #7c4fa3; background:#f0ebf5; border-radius:10px; }
+#insights-page .insights-page-filter { border-left:4px solid #297a88; background:#edf1e9; border-radius:10px; }
 #insights-page .insight-card { border-radius:12px; border-top:4px solid var(--insight-accent); background:color-mix(in srgb,var(--insight-accent) 5%,#fffaf0); }
 #insights-page .insight-card:nth-child(4n+2) { --insight-accent:#bb483c; }
 #insights-page .insight-card:nth-child(4n+3) { --insight-accent:#7c4fa3; }
@@ -6071,3 +6040,66 @@ body::before { opacity:.075; }
   .day-photo-preview { max-height:280px; }
   .day-photo-actions button { flex:1 1 120px; }
 }
+
+/* Finishing pass: consistent surfaces, focus states and compact practical controls. */
+.skip-link { position:fixed; top:8px; left:12px; z-index:10000; padding:12px 18px; background:#fffaf0; color:#176a47; border:2px solid #176a47; border-radius:6px; transform:translateY(-180%); }
+.skip-link:focus { transform:translateY(0); }
+#main-content:focus { outline:none; }
+button:focus-visible,a:focus-visible,summary:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible { outline:2px solid #297a88; outline-offset:3px; }
+#status:empty,#trip-status:empty,.day-photo-actions [role=status]:empty { display:none; }
+#journal .section-heading { gap:12px; flex-wrap:wrap; }
+.insights-page-filter p { font-size:11px; }
+.insight-chart-settings { padding:12px 0; margin:8px 0 18px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+.insight-chart-settings summary { min-height:32px; display:list-item; }
+.insight-chart-settings .insights-bin-controls { margin:14px 0; }
+.insight-card,.day-card,.spot-productivity-card { border-radius:8px; }
+.insight-card h3 { font-size:22px; }
+.insight-caption { line-height:1.65; }
+.insight-data summary { padding:8px 0; }
+.insight-data .table-wrap { margin-top:8px; }
+.insights-section>summary { padding:8px 0; }
+.spot-list-note { margin:0 0 18px; }
+.day-photo-panel { padding-bottom:12px; margin-bottom:14px; }
+.day-photo-actions { margin-top:8px; }
+.home-chapter { margin-top:30px; }
+.home-letter p,.home-paper p { line-height:1.75; }
+.home-letter .home-lead { line-height:1.6; }
+button.quiet,.text-action { min-height:44px; }
+@media(max-width:650px) {
+  .insights-page-filter { padding:12px 14px; margin-bottom:16px; }
+  .insights-page-filter label { gap:8px; }
+  .insight-card h3 { font-size:21px; }
+  .insights-grid { gap:14px; }
+  .insights-section { margin-top:22px; padding-top:18px; }
+  .insights-compare-controls label { flex:1 1 100%; }
+  .day-photo-actions { gap:6px 10px; }
+  .day-photo-actions button { font-size:12px; }
+  .home-chapter { margin-top:24px; }
+  .filter-panel summary #filter-summary { white-space:normal; overflow-wrap:anywhere; text-align:right; }
+  .spot-title { overflow-wrap:anywhere; }
+}
+
+/* Bring the working content higher on phones; keep filters and style controls compact. */
+.fishing-style-panel { padding:6px; box-shadow:none; border-radius:8px; }
+.fishing-modes { margin:0; }
+.fishing-modes button { min-height:44px; }
+.journal-controls { gap:10px; }
+.filter-panel { border-radius:8px; }
+.filter-panel>summary { min-height:56px; }
+@media(max-width:650px) {
+  .heading { margin-bottom:14px; }
+  .journal-controls { gap:10px; }
+  .filter-panel>summary { min-height:48px; padding:10px 12px; }
+  .overview { padding:8px 0; margin:12px 0 16px; }
+  .overview>div { padding:5px 8px; }
+  .overview strong { font-size:20px; }
+  .overview span { font-size:11px; }
+  #status { margin:8px 0; }
+  .section-heading { margin:16px 0 12px; }
+  .map-toolbar { gap:10px; margin-bottom:12px; }
+  #fit { padding:8px 12px; }
+  .spot-cover-fish { margin-bottom:12px; }
+  .spot-cover-fish .spot-fish { max-height:140px; }
+}
+
+@media(max-width:650px) { .insight-bar-plot .insight-axis-label,.insight-dot-plot .insight-axis-label { font-size:14px; } }

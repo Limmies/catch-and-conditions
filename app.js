@@ -361,6 +361,7 @@ async function refreshJournal() {
   const generation = ++loadGeneration;
   const owner = session.user.id;
   void refreshDayRatings(owner, generation);
+  void loadDayPhotos({ refresh: true });
   $("refresh").disabled = true;
   message("Refreshing…");
   $("status").classList.add("is-loading");
@@ -1048,7 +1049,7 @@ function renderSpotProductivity(rows) {
   const { ranked, unlocated } = collectSpotProductivity(rows);
   const maximum = Math.max(1, ...ranked.map((s) => s.count * 3600 / s.seconds));
   $("spot-productivity").innerHTML =
-    `<div class="section-heading"><h3>Productivity by spot</h3><span class="small muted">20 metre matching radius</span></div>${
+    `<p class="small muted spot-list-note">Ranked by catches per fishing hour · includes zero-catch sessions</p>${
       ranked.length
         ? `<div class="spot-productivity-list">${
           ranked.map((spot) =>
@@ -1427,8 +1428,8 @@ function updateMapControls() {
     $("density-species").options[0].textContent = "All fish";
   }
   $("fit").textContent = mapViewMode === "species"
-    ? "Show species catches"
-    : "Show all " + mapViewMode;
+    ? "Fit catches"
+    : "Fit " + mapViewMode;
   if (selectedPages().includes("map") && !selectedPages().includes("totals")) {
     $("empty").hidden = mapViewMode !== "catches" || visible.length > 0;
   }
@@ -2295,7 +2296,7 @@ function renderTotals() {
     }<span>${
       esc(species[id]?.[0] || id)
     }</span></span></button></td><td><strong>${count}</strong></td><td>${
-      visible.length ? Math.round(count / visible.length * 100) : 0
+      visible.length && count > 0 && count / visible.length * 100 < 1 ? "<1" : visible.length ? Math.round(count / visible.length * 100) : 0
     }%</td></tr><tr class="species-bar-row" aria-hidden="true" style="--species-colour:${
       species[id]?.[1] || "#11543e"
     }"><td colspan="3"><span class="species-visual-track"><span style="width:${
@@ -3314,6 +3315,11 @@ async function showDetail(c) {
     }
   }
 }
+document.querySelector(".skip-link").addEventListener("click", (event) => {
+  event.preventDefault();
+  $("main-content").focus();
+  $("main-content").scrollIntoView({ block: "start", behavior: "instant" });
+});
 const viewKeys = ["home", "map", "totals", "diary", "spots", "insights"];
 const viewNames = {
   home: "Home",
@@ -3567,7 +3573,7 @@ function setupHomeAlbum() {
   const pages = [...book.querySelectorAll("[data-album-page]")];
   let index = 0, gesture = null, timer = null, visible = false;
   const motion = matchMedia("(prefers-reduced-motion: reduce)");
-  let paused = motion.matches;
+  let paused = true;
   const play = $("album-play");
   function schedule() {
     clearTimeout(timer);

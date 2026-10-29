@@ -17,9 +17,10 @@ function resetDayPhotos() {
   for (const photo of dayPhotos.values()) if (photo.url) URL.revokeObjectURL(photo.url);
   dayPhotos.clear(); dayPhotoBusy.clear(); dayPhotoOwner = null; dayPhotoState = "idle";
 }
-async function loadDayPhotos() {
+async function loadDayPhotos({ refresh = false } = {}) {
   if (!session || !client?.storage) return;
   if (dayPhotoOwner !== session.user.id) { resetDayPhotos(); dayPhotoOwner = session.user.id; }
+  if (refresh && dayPhotoState !== "loading") dayPhotoState = "idle";
   if (dayPhotoState !== "idle") return;
   const owner = dayPhotoOwner, epoch = dayPhotoEpoch;
   dayPhotoState = "loading";
@@ -32,8 +33,17 @@ async function loadDayPhotos() {
       names.push(...data);
       if (data.length < 100) break;
     }
-    for (const file of names) if (/^\d{4}-\d{2}-\d{2}\.jpg$/.test(file.name) && !dayPhotos.has(file.name.slice(0, 10))) {
-      dayPhotos.set(file.name.slice(0, 10), { url: null, loading: false });
+    const files = new Map(names.filter((file) => /^\d{4}-\d{2}-\d{2}\.jpg$/.test(file.name)).map((file) => [file.name.slice(0, 10), file]));
+    for (const [date, photo] of dayPhotos) {
+      if (dayPhotoBusy.has(date)) continue;
+      const file = files.get(date), version = file?.updated_at || file?.created_at || "";
+      if (!file || photo.version !== version) {
+        if (photo.url) URL.revokeObjectURL(photo.url);
+        dayPhotos.delete(date);
+      }
+    }
+    for (const [date, file] of files) if (!dayPhotos.has(date) && !dayPhotoBusy.has(date)) {
+      dayPhotos.set(date, { url: null, loading: false, version: file.updated_at || file.created_at || "" });
     }
     dayPhotoState = "ready";
   } catch { if (epoch === dayPhotoEpoch) dayPhotoState = "error"; }
@@ -68,7 +78,7 @@ function paintDayPhotos() {
     const retry = panel.querySelector(".day-photo-retry");
     retry.hidden = dayPhotoState !== "error" && !photo?.error;
     const status = panel.querySelector("[role=status]");
-    if (!status.dataset.message) status.textContent = busy ? "Saving photo…" : photo?.error || dayPhotoState === "error" ? "Photo could not load. Try again when connected." : photo ? "Your photo for this fishing day." : "Add a photo to remember this day. Saved privately across your devices.";
+    if (!status.dataset.message) status.textContent = busy ? "Saving photo…" : photo?.error || dayPhotoState === "error" ? "Photo could not load. Try again when connected." : photo ? "" : "One private photo to remember this day.";
     if (photo && !photo.url && !photo.loading && !photo.error) {
       if (dayPhotoObserver) dayPhotoObserver.observe(panel.closest(".day-card"));
       else void downloadDayPhoto(date, photo);
