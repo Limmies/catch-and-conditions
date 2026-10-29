@@ -149,37 +149,51 @@ function limitMapToSouthAfrica(target) {
 function setupMapGestures(target) {
   target.scrollWheelZoom.disable();
   const container = target.getContainer();
-  let wheelDelta = 0, timer = null, gestureZoom = null;
+  const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+  let frame = null, desiredZoom = null, anchor = null, gestureZoom = null, previousFrame = 0;
+  const clamp = (zoom) => Math.max(target.getMinZoom(), Math.min(target.getMaxZoom(), zoom));
+  const cancel = () => {
+    if (frame !== null) cancelAnimationFrame(frame);
+    frame = null; desiredZoom = null;
+  };
+  const draw = () => {
+    frame = null;
+    const current = target.getZoom(), goal = clamp(desiredZoom), difference = goal - current;
+    const now = performance.now(), blend = 1 - Math.exp(-(now - previousFrame) / 50);
+    previousFrame = now;
+    const next = reducedMotion.matches || Math.abs(difference) < .002 ? goal : current + difference * blend;
+    target.setZoomAround(anchor, next, { animate: false });
+    if (next !== goal) frame = requestAnimationFrame(draw);
+    else desiredZoom = null;
+  };
+  const move = (zoom, point) => {
+    desiredZoom = clamp(zoom); anchor = point;
+    if (frame === null) { previousFrame = performance.now(); frame = requestAnimationFrame(draw); }
+  };
   const wheel = (event) => {
     if (!event.ctrlKey || !Number.isFinite(event.deltaY) || gestureZoom !== null) return;
     event.preventDefault();
-    wheelDelta += event.deltaY;
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      const change = Math.max(-2, Math.min(2, -wheelDelta / 100));
-      wheelDelta = 0;
-      if (Math.abs(change) < .1) return;
-      const step = change > 0 ? Math.ceil(change) : Math.floor(change);
-      target.setZoomAround(target.mouseEventToContainerPoint(event), Math.max(target.getMinZoom(), Math.min(target.getMaxZoom(), target.getZoom() + step)), { animate: false });
-    }, 60);
+    const delta = Math.max(-.75, Math.min(.75, -event.deltaY / 200));
+    move((desiredZoom ?? target.getZoom()) + delta, target.mouseEventToContainerPoint(event));
   };
   const start = (event) => {
     if (matchMedia("(pointer: coarse)").matches) return;
-    event.preventDefault(); clearTimeout(timer); wheelDelta = 0; gestureZoom = target.getZoom();
+    event.preventDefault(); cancel(); gestureZoom = target.getZoom();
   };
   const change = (event) => {
     if (gestureZoom === null || !Number.isFinite(event.scale) || event.scale <= 0) return;
     event.preventDefault();
-    const zoom = Math.round(gestureZoom + Math.log2(event.scale));
-    target.setZoom(Math.max(target.getMinZoom(), Math.min(target.getMaxZoom(), zoom)), { animate: false });
+    move(gestureZoom + Math.log2(event.scale), target.getSize().divideBy(2));
   };
-  const end = (event) => { event.preventDefault(); gestureZoom = null; };
+  const end = (event) => { if (gestureZoom !== null) event.preventDefault(); gestureZoom = null; };
   container.addEventListener("wheel", wheel, { passive: false });
   container.addEventListener("gesturestart", start, { passive: false });
   container.addEventListener("gesturechange", change, { passive: false });
   container.addEventListener("gestureend", end, { passive: false });
+  target.on("dragstart", cancel);
   target.on("unload", () => {
-    clearTimeout(timer);
+    cancel();
+    target.off("dragstart", cancel);
     container.removeEventListener("wheel", wheel);
     container.removeEventListener("gesturestart", start);
     container.removeEventListener("gesturechange", change);

@@ -1631,7 +1631,9 @@ function initMap() {
     doubleClickZoom: true,
     scrollWheelZoom: false,
     inertia: false,
-    zoomAnimation: false,
+    zoomAnimation: !matchMedia("(prefers-reduced-motion: reduce)").matches,
+    zoomSnap: 0,
+    zoomDelta: .5,
     fadeAnimation: !matchMedia("(prefers-reduced-motion: reduce)").matches,
     markerZoomAnimation: false,
     bounceAtZoomLimits: false,
@@ -3575,40 +3577,25 @@ function setupHomeAlbum() {
   const pages = [...book.querySelectorAll("[data-album-page]")];
   let index = 0, gesture = null, timer = null, visible = false;
   const motion = matchMedia("(prefers-reduced-motion: reduce)");
-  let paused = true;
-  const play = $("album-play");
   function schedule() {
     clearTimeout(timer);
-    play.textContent = paused ? "Play" : "Pause";
-    play.setAttribute("aria-label", paused ? "Play photo album" : "Pause photo album");
-    $("album-position").setAttribute("aria-live", paused ? "polite" : "off");
-    if (!paused && visible && !document.hidden) {
+    $("album-position").setAttribute("aria-live", "off");
+    if (visible && !document.hidden) {
       timer = setTimeout(() => {
         turn((index + 1) % pages.length);
         schedule();
-      }, 3000);
+      }, 5000);
     }
   }
   function manual(next) {
-    paused = true;
     turn(next);
     schedule();
   }
-  play.onclick = () => {
-    paused = !paused;
-    schedule();
-  };
   new IntersectionObserver((entries) => {
     visible = entries[0].isIntersecting;
     schedule();
   }, { threshold: .25 }).observe(book);
   document.addEventListener("visibilitychange", schedule);
-  motion.addEventListener("change", (event) => {
-    if (event.matches) {
-      paused = true;
-      schedule();
-    }
-  });
   function turn(next) {
     const target = Math.max(0, Math.min(pages.length - 1, next));
     book.querySelector(".album-ghost")?.remove();

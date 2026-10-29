@@ -6103,3 +6103,33 @@ button.quiet,.text-action { min-height:44px; }
 }
 
 @media(max-width:650px) { .insight-bar-plot .insight-axis-label,.insight-dot-plot .insight-axis-label { font-size:14px; } }
+
+/* Home: the purpose, the evidence and a readable guide to saved parameters. */
+.home-mission-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
+.home-mission-grid .home-paper { padding:24px; }
+.home-mission-grid p { margin-bottom:0; }
+.home-data .home-chapter-heading { max-width:76ch; }
+.home-data-flow { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:22px 0; }
+.home-data-flow>span { display:flex; align-items:flex-start; gap:10px; padding:14px; border:1px solid var(--line); border-radius:8px; background:#f1f2e5; font-size:13px; line-height:1.6; }
+.home-data-flow b { color:#176a47; font-size:20px; line-height:1.2; }
+.home-parameter-wrap { overflow:hidden; border:1px solid #cdbf96; border-radius:10px; background:#fffaf0; }
+.home-parameter-table { width:100%; table-layout:fixed; border-collapse:collapse; }
+.home-parameter-table caption { text-align:left; padding:18px; font-size:15px; font-weight:600; background:#eee9d8; }
+.home-parameter-table th,.home-parameter-table td { padding:12px 16px; text-align:left; vertical-align:top; font-size:13px; line-height:1.6; overflow-wrap:anywhere; border-bottom:1px solid #ded6c4; }
+.home-parameter-table thead th { background:#e9ecdf; font-weight:600; }
+.home-parameter-table thead th:nth-child(1) { width:29%; }
+.home-parameter-table thead th:nth-child(2) { width:23%; }
+.home-parameter-table tbody th[scope=row] { font-weight:500; }
+.home-parameter-table .home-parameter-group th { background:#f0eddf; padding-top:16px; color:#315e4a; font-size:12px; font-weight:700; }
+.home-data-note { max-width:90ch; color:var(--muted); font-size:12px; line-height:1.8; }
+.home-research-note { max-width:80ch; margin:24px 0; }
+@media(max-width:650px) {
+  .home-mission-grid { grid-template-columns:minmax(0,1fr); gap:14px; }
+  .home-mission-grid .home-paper { padding:20px; }
+  .home-data-flow { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+  .home-data-flow>span { font-size:12px; padding:12px 10px; }
+  .home-parameter-table th,.home-parameter-table td { padding:10px 8px; font-size:11px; line-height:1.6; }
+  .home-parameter-table caption { font-size:13px; padding:14px 10px; }
+  .home-parameter-table thead th:nth-child(1) { width:30%; }
+  .home-parameter-table thead th:nth-child(2) { width:25%; }
+}

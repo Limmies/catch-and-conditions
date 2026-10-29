@@ -487,7 +487,7 @@ function renderInsightsMap(rows) {
     return;
   }
   if (!insightsMap) {
-    insightsMap = L.map("insights-map", { zoomAnimation: false, fadeAnimation: false, scrollWheelZoom: false, touchZoom: true, bounceAtZoomLimits: false }).setView([
+    insightsMap = L.map("insights-map", { zoomAnimation: !matchMedia("(prefers-reduced-motion: reduce)").matches, zoomSnap: 0, zoomDelta: .5, fadeAnimation: false, scrollWheelZoom: false, touchZoom: true, bounceAtZoomLimits: false }).setView([
       -34.08,
       22.97,
     ], 8);
