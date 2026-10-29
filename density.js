@@ -119,20 +119,70 @@
   });
 })();
 
-// Keep the widest map view at South Africa's extent on each screen size.
+// A regional overview that stays regional even in a very wide map pane.
 function limitMapToSouthAfrica(target) {
   const bounds = L.latLngBounds([[-35.5, 16], [-21.5, 33.5]]);
+  const region = L.latLngBounds([[-48, -5.25], [-8, 54.75]]);
+  target.setMaxBounds(region);
   const centreAtLimit = () => {
     if (target.getZoom() <= target.getMinZoom()) target.panTo(bounds.getCenter(), { animate: false });
   };
   const updateLimit = () => {
     const size = target.getSize();
     if (size.x <= 0 || size.y <= 0) return;
-    target.setMinZoom(target.getBoundsZoom(bounds, false, [24, 24]));
+    // Calculate from projected coordinates rather than the previous minimum,
+    // which would prevent the limit adapting back down after a pane shrinks.
+    const extent = L.bounds(target.project(bounds.getNorthWest(), 0), target.project(bounds.getSouthEast(), 0)).getSize();
+    const fit = Math.floor(Math.log2(Math.min(Math.max(1, size.x - 24) / extent.x, Math.max(1, size.y - 24) / extent.y)));
+    const regionalWidth = Math.ceil(Math.log2(size.x / (256 * 60 / 360)));
+    target.setMinZoom(Math.max(4, fit, regionalWidth));
     centreAtLimit();
   };
   target.setMinZoom(4);
   target.on("resize", updateLimit);
   target.on("zoomend", centreAtLimit);
   updateLimit();
+}
+
+// Trackpads report pinch as ctrl+wheel; Safari also exposes gesture events.
+// Ordinary wheel/parallel two-finger scroll is deliberately left to the page.
+function setupMapGestures(target) {
+  target.scrollWheelZoom.disable();
+  const container = target.getContainer();
+  let wheelDelta = 0, timer = null, gestureZoom = null;
+  const wheel = (event) => {
+    if (!event.ctrlKey || !Number.isFinite(event.deltaY) || gestureZoom !== null) return;
+    event.preventDefault();
+    wheelDelta += event.deltaY;
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const change = Math.max(-2, Math.min(2, -wheelDelta / 100));
+      wheelDelta = 0;
+      if (Math.abs(change) < .1) return;
+      const step = change > 0 ? Math.ceil(change) : Math.floor(change);
+      target.setZoomAround(target.mouseEventToContainerPoint(event), Math.max(target.getMinZoom(), Math.min(target.getMaxZoom(), target.getZoom() + step)), { animate: false });
+    }, 60);
+  };
+  const start = (event) => {
+    if (matchMedia("(pointer: coarse)").matches) return;
+    event.preventDefault(); clearTimeout(timer); wheelDelta = 0; gestureZoom = target.getZoom();
+  };
+  const change = (event) => {
+    if (gestureZoom === null || !Number.isFinite(event.scale) || event.scale <= 0) return;
+    event.preventDefault();
+    const zoom = Math.round(gestureZoom + Math.log2(event.scale));
+    target.setZoom(Math.max(target.getMinZoom(), Math.min(target.getMaxZoom(), zoom)), { animate: false });
+  };
+  const end = (event) => { event.preventDefault(); gestureZoom = null; };
+  container.addEventListener("wheel", wheel, { passive: false });
+  container.addEventListener("gesturestart", start, { passive: false });
+  container.addEventListener("gesturechange", change, { passive: false });
+  container.addEventListener("gestureend", end, { passive: false });
+  target.on("unload", () => {
+    clearTimeout(timer);
+    container.removeEventListener("wheel", wheel);
+    container.removeEventListener("gesturestart", start);
+    container.removeEventListener("gesturechange", change);
+    container.removeEventListener("gestureend", end);
+  });
 }

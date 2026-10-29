@@ -1629,7 +1629,7 @@ function initMap() {
   }
   map = L.map("map", {
     doubleClickZoom: true,
-    scrollWheelZoom: true,
+    scrollWheelZoom: false,
     inertia: false,
     zoomAnimation: false,
     fadeAnimation: !matchMedia("(prefers-reduced-motion: reduce)").matches,
@@ -1638,6 +1638,7 @@ function initMap() {
     touchZoom: true,
   }).setView([-34.08, 22.97], 8);
   limitMapToSouthAfrica(map);
+  setupMapGestures(map);
   const osmCredit =
     '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
   const tileStatus = document.createElement("div");
@@ -1649,6 +1650,7 @@ function initMap() {
   let tileTimer;
   const tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
+    noWrap: true,
     attribution: osmCredit,
   });
   tiles.on("loading", () => {

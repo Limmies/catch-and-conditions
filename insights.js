@@ -487,13 +487,15 @@ function renderInsightsMap(rows) {
     return;
   }
   if (!insightsMap) {
-    insightsMap = L.map("insights-map", { zoomAnimation: false, fadeAnimation: false }).setView([
+    insightsMap = L.map("insights-map", { zoomAnimation: false, fadeAnimation: false, scrollWheelZoom: false, touchZoom: true, bounceAtZoomLimits: false }).setView([
       -34.08,
       22.97,
     ], 8);
     limitMapToSouthAfrica(insightsMap);
+    setupMapGestures(insightsMap);
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
+      noWrap: true,
       attribution:
         '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(insightsMap);
