@@ -6139,3 +6139,12 @@ button.quiet,.text-action { min-height:44px; }
 .home-kob-banner { margin:0; padding:8px; border:1px solid #cdbf96; border-radius:10px; background:#fffaf0; }
 .home-kob-banner-window { position:relative; aspect-ratio:3 / 1; overflow:hidden; border-radius:6px; }
 .home-kob-banner-window > img { display:block; width:100%; height:auto; max-height:none; transform:none; }
+
+/* The owner's Kob field sheet, blended into the paper behind the journal notes. */
+.home-doodle { position:relative; isolation:isolate; overflow:clip; }
+.home-doodle::before { content:""; position:absolute; z-index:-1; pointer-events:none; right:0; top:-64px; width:min(76%,720px); aspect-ratio:560 / 745; background:url('fish/studies/kob_field_doodle.jpg') center top / 100% auto no-repeat; opacity:.23; filter:grayscale(1) sepia(.3); mix-blend-mode:multiply; transform:rotate(-7deg); mask-image:linear-gradient(transparent,black 12%,black 75%,transparent); }
+.home-doodle-mission::before { right:auto; left:0; top:-130px; width:min(82%,760px); transform:rotate(6deg); opacity:.18; }
+.home-doodle .home-paper { background-color:#fff8e5e8; }
+.home-doodle .home-paper-sage { background-color:#e9ecd6ed; }
+.home-doodle .home-paper-blue { background-color:#e4ece4ed; }
+@media(max-width:600px) { .home-doodle::before { width:100%; top:15px; right:0; transform:rotate(-4deg); opacity:.18; }.home-doodle-mission::before { top:10px; transform:rotate(4deg); opacity:.15; } }
