@@ -251,7 +251,7 @@ function resetPrivateView() {
   mapViewMode = "catches";
   densityLayer = null;
   densityModel = null;
-  densityRadius = null;
+  densityRadius = 500;
   $("density-enabled").checked = true;
   $("density-controls").hidden = true;
   if (map) map.remove();
@@ -1248,7 +1248,7 @@ function renderTrips() {
 let mapViewMode = "catches";
 let mapSummaryLayer = null;
 let densityLayer = null;
-let densityRadius = null;
+let densityRadius = 500;
 let densityModel = null;
 function densityRadiusLabel(radius) {
   return radius >= 1000

@@ -139,3 +139,5 @@ Shell v101 makes both maps scroll-safe: ordinary mouse-wheel/parallel trackpad s
 Shell v102 smooths pinch zoom using fractional zoom levels and animation-frame easing rather than delayed whole-level steps. Touch pinch and zoom buttons support fractional levels; ordinary scrolling remains page scrolling and the regional zoom limit is retained. Reduced-motion preferences disable the easing.
 
 Shell v103 explains the journal's personal research mission, limited fishing time, use of fish-finder technology and ten-year learning goal for a general audience. Home includes a field/unit guide checked against saved model data, separates API estimates from calculations and watch records, and preserves the photo collection. The album automatically cycles every five seconds while visible, with Previous/Next and swipe navigation and no Play/Pause button. Includes the pending fractional pinch-zoom smoothing fix.
+
+Shell v104 starts both density maps at a 500 metre smoothing radius on each fresh opening or sign-in. The slider and automatic-radius option remain available.

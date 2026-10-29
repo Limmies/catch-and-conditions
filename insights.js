@@ -162,14 +162,14 @@ let insightsSnapshots = new Map(),
   insightsFetchGeneration = -1,
   insightsRequest = 0,
   insightsState = "idle",
-  insightsRadius = null;
+  insightsRadius = 500;
 function resetInsights() {
   insightsRequest++;
   insightsFetchGeneration = -1;
   insightsSnapshots.clear();
   insightsState = "idle";
   insightsModel = null;
-  insightsRadius = null;
+  insightsRadius = 500;
   if (insightsMap) insightsMap.remove();
   insightsMap = null;
   insightsHeat = null;
