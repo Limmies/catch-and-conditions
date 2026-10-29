@@ -6146,3 +6146,6 @@ button.quiet,.text-action { min-height:44px; }
 .home-sketch-page img { display:block; width:100%; height:auto; mix-blend-mode:multiply; filter:grayscale(1) contrast(1.14) brightness(1.07); margin:10px 0 8px; }
 .home-sketch-page figcaption { color:#5b6250; font-size:17px; font-style:italic; }
 @media(max-width:600px) { .home-sketch-page { width:calc(100% - 16px); padding:24px 14px 18px 30px; margin:34px auto 40px; transform:rotate(-.7deg); background-position:-12px 0,0 0,0 0; }.home-sketch-label h3 { font-size:25px; }.home-sketch-page::before,.home-sketch-page::after { width:64px; height:24px; } }
+
+.home-opening-copy { min-width:0; }
+.home-opening-copy .home-sketch-page { max-width:100%; margin:34px auto 12px; }

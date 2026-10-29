@@ -155,3 +155,5 @@ Shell v111 blends the supplied Kob field-study sheet behind the Home About and M
 Shell v112 removes the enhanced Kob life-cycle banner, its section and the public image asset at the owner’s request. The separate field-sheet background doodles remain.
 
 Shell v113 replaces the faded field-sheet backgrounds with a graphite Kob study on a taped, lined-paper sketchbook insert. The single 1000px image loads lazily and stays out of installation precaching.
+
+Shell v114 places the taped Kob sketch directly below the opening letter in the left column, alongside the hero photo. On phones it follows the opening text.
