@@ -6136,11 +6136,13 @@ button.quiet,.text-action { min-height:44px; }
 
 /* Two lightweight field notes on Home; detailed images open only on request. */
 
-/* The owner's Kob field sheet, blended into the paper behind the journal notes. */
-.home-doodle { position:relative; isolation:isolate; overflow:clip; }
-.home-doodle::before { content:""; position:absolute; z-index:-1; pointer-events:none; right:0; top:-64px; width:min(76%,720px); aspect-ratio:560 / 745; background:url('fish/studies/kob_field_doodle.jpg') center top / 100% auto no-repeat; opacity:.23; filter:grayscale(1) sepia(.3); mix-blend-mode:multiply; transform:rotate(-7deg); mask-image:linear-gradient(transparent,black 12%,black 75%,transparent); }
-.home-doodle-mission::before { right:auto; left:0; top:-130px; width:min(82%,760px); transform:rotate(6deg); opacity:.18; }
-.home-doodle .home-paper { background-color:#fff8e5e8; }
-.home-doodle .home-paper-sage { background-color:#e9ecd6ed; }
-.home-doodle .home-paper-blue { background-color:#e4ece4ed; }
-@media(max-width:600px) { .home-doodle::before { width:100%; top:15px; right:0; transform:rotate(-4deg); opacity:.18; }.home-doodle-mission::before { top:10px; transform:rotate(4deg); opacity:.15; } }
+/* A loose sketchbook sheet, taped into the diary beside the photographs. */
+.home-sketch-page { position:relative; isolation:isolate; width:calc(100% - 32px); max-width:700px; margin:46px auto 54px; padding:28px 24px 20px 46px; border:1px solid #d1c8ad; border-bottom:2px dashed #d1c8ad; border-radius:2px 3px 4px 2px; background:linear-gradient(90deg,transparent 32px,#c9857245 32px,#c9857245 33px,transparent 33px),repeating-linear-gradient(transparent 0,transparent 27px,#8baab52b 27px,#8baab52b 28px),#fff9e8; box-shadow:2px 5px 12px #4b3e2520; transform:rotate(-1.3deg); }
+.home-sketch-page::before,.home-sketch-page::after { content:""; position:absolute; top:-12px; width:94px; height:28px; border:1px solid #b8a97655; background:#dbcd9fad; box-shadow:0 1px 2px #594c2610; pointer-events:none; }
+.home-sketch-page::before { left:28px; transform:rotate(-13deg); }
+.home-sketch-page::after { right:22px; transform:rotate(15deg); }
+.home-sketch-label h3 { margin:5px 0 2px; font-size:30px; }
+.home-sketch-scientific { font-style:italic; font-size:13px; color:var(--muted); }
+.home-sketch-page img { display:block; width:100%; height:auto; mix-blend-mode:multiply; filter:grayscale(1) contrast(1.14) brightness(1.07); margin:10px 0 8px; }
+.home-sketch-page figcaption { color:#5b6250; font-size:17px; font-style:italic; }
+@media(max-width:600px) { .home-sketch-page { width:calc(100% - 16px); padding:24px 14px 18px 30px; margin:34px auto 40px; transform:rotate(-.7deg); background-position:-12px 0,0 0,0 0; }.home-sketch-label h3 { font-size:25px; }.home-sketch-page::before,.home-sketch-page::after { width:64px; height:24px; } }

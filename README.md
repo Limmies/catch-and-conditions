@@ -153,3 +153,5 @@ Shell v110 adds Atlantic Bonito (Sarda sarda) to the offshore species list, filt
 Shell v111 blends the supplied Kob field-study sheet behind the Home About and Mission notes with a single small decorative image. CSS masks soften its edges into the paper, and it remains non-interactive and outside installation precaching.
 
 Shell v112 removes the enhanced Kob life-cycle banner, its section and the public image asset at the owner’s request. The separate field-sheet background doodles remain.
+
+Shell v113 replaces the faded field-sheet backgrounds with a graphite Kob study on a taped, lined-paper sketchbook insert. The single 1000px image loads lazily and stays out of installation precaching.
