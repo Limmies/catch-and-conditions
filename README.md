@@ -143,3 +143,5 @@ Shell v103 explains the journal's personal research mission, limited fishing tim
 Shell v104 starts both density maps at a 500 metre smoothing radius on each fresh opening or sign-in. The slider and automatic-radius option remain available.
 
 Shell v105 adds the supplied Dusky Kob and Miss Lucy life-cycle artwork to Home and an eight-species illustrated field-guide gallery on Species. Matching species profiles include all nine individual field/life-cycle plates with full-size links. Small previews load lazily; full-size plates keep their original pixel dimensions. Original PNGs and future additions belong in `resources/species-studies/originals/`, outside the public package. Prepared site images are in `phone-journal/fish/studies/`. Dusky Kob plates are kept separate from the offshore Silver Kob entry.
+
+Shell v106 removes all study artwork from Species and its profiles. Home displays only the lower Kob life-cycle panel as a wide, lazy-loaded banner. Two small Red Roman and Spotted Grunter previews remain at the end of the automatic album. Other artwork is archived outside the website, and no study images are precached at install time.

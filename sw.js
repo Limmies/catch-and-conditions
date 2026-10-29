@@ -1,16 +1,16 @@
 // Cache the public app shell only. Never cache Auth, database requests or maps.
-const CACHE = 'catch-conditions-shell-v105';
+const CACHE = 'catch-conditions-shell-v106';
 const IMAGE_CACHE = 'catch-conditions-fish-mobile-v6';
 // Both styles keep their background illustrations with the public shell.
 const FILES = [
   './',
   './index.html',
-  './style.css?v=105',
-  './app.js?v=105',
-  './day-photos.js?v=105',
+  './style.css?v=106',
+  './app.js?v=106',
+  './day-photos.js?v=106',
   './config.js',
-  './density.js?v=105',
-  './insights.js?v=105',
+  './density.js?v=106',
+  './insights.js?v=106',
   './photos/offshore-memory.jpg',
   './photos/bass-closeup.jpg',
   './photos/release.jpg',
@@ -22,7 +22,6 @@ const FILES = [
   './photos/mentor-steenbras.jpg',
   './photos/offshore-closeup.jpg',
   './photos/atlantic-bonito.jpg',
-  './fish/studies/kob_miss_lucy_life_cycles_preview.jpg',
   './fish/mobile/kabeljo.png',
   './fish/mobile/red_steenbras.png',
   './fish/mobile/miss_lucy.png',

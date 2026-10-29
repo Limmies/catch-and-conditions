@@ -6134,25 +6134,8 @@ button.quiet,.text-action { min-height:44px; }
   .home-parameter-table thead th:nth-child(2) { width:25%; }
 }
 
-/* Owner-created field plates: preserve complete artwork and readable full-size links. */
-.home-life-cycle-figure { margin:20px 0 12px; padding:10px; border:1px solid #cdbf96; border-radius:10px; background:#fffaf0; }
-.home-life-cycle-figure img { display:block; width:100%; height:auto; border-radius:5px; }
-.home-life-cycle-figure figcaption { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px 16px; padding:12px 6px 4px; font-size:12px; color:var(--muted); }
-.home-life-cycle-links { display:flex; flex-wrap:wrap; gap:8px 20px; }
-.species-study-library { padding:14px 18px; margin-bottom:20px; border:1px solid var(--line); border-radius:8px; background:#fffaf0; }
-.species-study-library>summary { cursor:pointer; font-size:15px; min-height:32px; }
-.species-study-library>summary span { margin-left:12px; font-size:12px; color:var(--muted); }
-.species-study-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; margin-top:16px; }
-.species-study-card { min-width:0; margin:0; border:1px solid #d4c9ac; border-radius:8px; overflow:hidden; background:#f8f0d8; }
-.species-study-card img { display:block; width:100%; height:auto; aspect-ratio:4/5; object-fit:contain; }
-.species-study-card figcaption { display:flex; flex-direction:column; align-items:flex-start; gap:6px; padding:12px; font-size:12px; }
-.species-study-card strong { font-size:14px; }
-.species-study-card .text-action { padding:0; text-align:left; }
-.species-study-profile { padding-top:22px; margin-top:22px; border-top:1px solid var(--line); }
-.species-study-figure { margin:16px 0; }
-.species-study-figure img { display:block; width:100%; height:auto; border:1px solid #cdbf96; border-radius:6px; }
-.species-study-figure figcaption { margin-top:10px; font-size:12px; line-height:1.7; color:var(--muted); }
-@media(max-width:950px) { .species-study-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-@media(max-width:480px) { .species-study-library { padding:12px; }.species-study-grid { gap:10px; }.species-study-card figcaption { padding:10px; }.species-study-card strong { font-size:12px; }.home-life-cycle-figure { padding:6px; }.home-life-cycle-links { gap:4px 14px; } }
-
-.home-life-cycle-figure figcaption a,.species-study-card figcaption a,.species-study-figure figcaption a { color:#176a47; text-underline-offset:3px; }
+/* Two lightweight field notes on Home; detailed images open only on request. */
+/* Keep the supplied lower Kob panel as a wide strip, without resampling its labels. */
+.home-kob-banner { margin:0; padding:8px; border:1px solid #cdbf96; border-radius:10px; background:#fffaf0; }
+.home-kob-banner-window { aspect-ratio:3 / 1; overflow:hidden; border-radius:6px; }
+.home-kob-banner img { display:block; width:100%; height:auto; transform:translateY(-50%); }
