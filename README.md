@@ -147,3 +147,5 @@ Shell v105 adds the supplied Dusky Kob and Miss Lucy life-cycle artwork to Home 
 Shell v106 removes all study artwork from Species and its profiles. Home displays only the lower Kob life-cycle panel as a wide, lazy-loaded banner. Two small Red Roman and Spotted Grunter previews remain at the end of the automatic album. Other artwork is archived outside the website, and no study images are precached at install time.
 
 Shell v109 moves the 26 unchanged 160px fish previews out of JavaScript into independently cached, lazy-loaded image files. The main script shrinks from 823 KB to 160 KB. Unchanged Species counts retain their existing rows and decoded images. Home photos and full-size fish portraits load on demand instead of competing with app installation; cached artwork and versioned scripts render without waiting for the network.
+
+Shell v110 adds Atlantic Bonito (Sarda sarda) to the offshore species list, filters, maps, Insights and guide. Its watch, companion, database and upload validation ID is atlantic_bonito; existing IDs are unchanged.

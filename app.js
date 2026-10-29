@@ -2,6 +2,7 @@
 const $ = (id) => document.getElementById(id);
 const config = window.JOURNAL_CONFIG;
 const species = {
+  atlantic_bonito: ["Atlantic Bonito", "#287b91"],
   kabeljo: ["Kabeljou", "#176a47"],
   red_roman: ["Red Roman", "#bb483c"],
   red_steenbras: ["Red Steenbras", "#9e396c"],
@@ -134,6 +135,7 @@ const nameOf = (c) => species[c.species_id]?.[0] || c.recorded_label || c.specie
 // Small previews travel with the app shell: no separate download is needed.
 // BEGIN GENERATED FISH PREVIEWS (tools/prepare_phone_images.py)
 const fishPreviews = {
+  atlantic_bonito: "fish/mobile/preview_atlantic_bonito.png",
   belman: "fish/mobile/preview_belman.png",
   blacktail: "fish/mobile/preview_blacktail.png",
   carpenter: "fish/mobile/preview_carpenter.png",
@@ -1751,6 +1753,7 @@ function fitMap() {
 }
 
 const speciesScientific = {
+  atlantic_bonito: "Sarda sarda",
   kabeljo: "Argyrosomus inodorus",
   red_roman: "Chrysoblephus laticeps",
   red_steenbras: "Petrus rupestris",
@@ -1780,6 +1783,7 @@ const speciesScientific = {
 };
 // Editorial reference profiles; independent of catch records and recommendation rules.
 const fishProfiles = {
+  atlantic_bonito: ["A hunter in the open water", "Atlantic bonito are streamlined schooling predators. Adults feed on small schooling fish and squid. Their dark upper stripes, long first dorsal fin and deeply forked tail help distinguish them from other pelagic fish.", "https://www.hi.no/en/hi/temasider/species/atlantic-bonito", "Institute of Marine Research: Atlantic bonito"],
   "kabeljo": [
     "A coastline split in two",
     "Silver kob off Namibia are genetically separate from their South African relatives: the cold Benguela region forms a barrier between the populations. Their nursery is also different from what many anglers expect—young fish favour shallow sandy or muddy bays before moving offshore as they grow.",
@@ -1938,6 +1942,7 @@ const fishProfiles = {
   ],
 };
 const fishReference = {
+  atlantic_bonito: ["Check current species rules", "Not verified", "Small schooling fish and squid.", "A mobile schooling fish in coastal and open water.", "https://www.hi.no/en/hi/temasider/species/atlantic-bonito"],
   "kabeljo": [
     "50 cm from a boat at sea between Cape Agulhas and the Umtamvuna River; 40 cm in KZN. Shore/estuaries east of Cape Agulhas: 60 cm. West of Cape Agulhas: 50 cm.",
     "28",
@@ -2122,6 +2127,7 @@ const fishReference = {
   ],
 };
 const fishAgeNotes = {
+  atlantic_bonito: "A verified maximum age has not yet been added to this guide.",
   "kabeljo": "Namibian record; 25 years reported in South Africa.",
   "red_roman": "Maximum reported in the SANBI species account.",
   "red_steenbras": "Estimated using ear-stone growth layers, supported by radiocarbon dating.",
@@ -2187,7 +2193,7 @@ function fishReferenceHTML(id) {
   }</dt><dd><strong class="fish-age-number${id === "haai" ? " fish-age-varies" : ""}">${
     esc(r[1])
   }</strong>${
-    id === "haai" ? "" : '<span class="fish-age-unit">years</span>'
+    id === "haai" || id === "atlantic_bonito" ? "" : '<span class="fish-age-unit">years</span>'
   }<p class="fish-card-caption">${
     esc(fishAgeNotes[id])
   }</p></dd></div><div class="fish-reference-card">${art("size")}<dt>Minimum legal size</dt><dd>${
