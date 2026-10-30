@@ -174,6 +174,7 @@ function resetInsights() {
       "insights-conditions",
       "insights-comparison",
       "insights-spot-species",
+      "insights-spot-picker",
     ]
   ) $(id)?.replaceChildren();
   if ($("insights-species")) $("insights-species").replaceChildren();
@@ -262,7 +263,8 @@ function insightRatingSummary(rows, key) {
   }).join(" ") + " Personal scores for separate fishing events; not a measure of catch rate.");
 }
 function insightBars(title, rows, note = "", unit = "catches") {
-  const maximum = Math.max(1, ...rows.map((r) => r.value)), shown = rows.slice(0, 12);
+  rows = rows.slice().sort((a, b) => b.value - a.value || a.label.localeCompare(b.label));
+  const maximum = Math.max(1, ...rows.map((r) => r.value)), shown = rows.slice(0, 10);
   return `<article class="insight-card"><h3>${esc(title)}</h3><p class="insight-caption">${
     esc(note)
   }</p>${
@@ -278,7 +280,7 @@ function insightBars(title, rows, note = "", unit = "catches") {
           }</strong>${r.sample ? `<small>${esc(r.sample)}</small>` : ""}</div>`
         ).join("")
       }</div><p class="small muted">${esc(unit)} · scale starts at zero${
-        rows.length > 12 ? ` · showing 12 of ${rows.length}; all rows below` : ""
+        rows.length > 10 ? ` · top 10 of ${rows.length}; open the table below for every result` : ""
       }</p>${insightTable(rows, "Value", title)}`
       : '<p class="insight-empty">No usable records for these filters.</p>'
   }${insightSummary(rows, unit, title)}</article>`;
@@ -418,27 +420,14 @@ function renderInsights() {
       s.sessions === 1 ? "session" : "sessions"
     }`,
   }));
-  $("insights-overview").innerHTML = insightPlot("Catches by species", speciesRows, `${rows.length} filtered catches`, "catches", "bars", "Species") + insightPlot("Catches by spot", spotCounts, "Stored fishing sessions with known spots") +
+  $("insights-overview").innerHTML = insightPlot("Catches by species", speciesRows, `${rows.length} filtered catches`, "catches", "bars", "Species") + insightBars("Catches by spot", spotCounts, "Highest catch totals · up to 10 spots. Full results in the table below.") +
     insightBars(
       "Productivity by spot",
       spotRates,
-      "Total catches ÷ classified fishing hours, including zero-catch sessions",
+      "Top 10 by catches per fishing hour, including zero-catch sessions. Full results in the table below.",
       "catches / fishing hour",
     );
-  const matrix = ranked.flatMap((s) =>
-    Object.entries(s.speciesCounts).filter(([id]) =>
-      !$("species").value || id === $("species").value
-    ).filter(([, count]) => count > 0).map(([id, count]) => ({
-      label: `${sessionSpotLabel(s.session)} · ${species[id]?.[0] || id}`,
-      value: count,
-      sample: `${s.sessions} ${s.sessions === 1 ? "session" : "sessions"}`,
-    }))
-  ).sort((a, b) => b.value - a.value);
-  $("insights-spot-species").innerHTML = insightBars(
-    "Which species, which spot?",
-    matrix,
-    "Species breakdown from stored sessions. Catch totals can differ from catches without a recorded session.",
-  );
+  renderInsightsSpotSpecies(ranked);
   $("insights-condition-status").textContent = insightsState === "loading"
     ? "Loading saved catch conditions…"
     : insightsState === "error"
@@ -454,13 +443,23 @@ function renderInsights() {
   renderInsightsComparison(rows, ranked);
   restoreDisclosures($("insights-page"), expanded);
 }
+function renderInsightsSpotSpecies(ranked) {
+  const selector = $("insights-spot-picker"), previous = selector.value;
+  const ordered = ranked.slice().sort((a, b) => sessionSpotLabel(a.session).localeCompare(sessionSpotLabel(b.session), undefined, { numeric: true }));
+  selector.innerHTML = ordered.map((spot) => `<option value="${esc(spot.session.spot_archive_id)}">${esc(sessionSpotLabel(spot.session))}</option>`).join("");
+  selector.disabled = !ordered.length;
+  if (ordered.some((spot) => spot.session.spot_archive_id === previous)) selector.value = previous;
+  const spot = ordered.find((entry) => entry.session.spot_archive_id === selector.value);
+  const rows = spot ? Object.entries(spot.speciesCounts).filter(([id, count]) => count > 0 && (!$("species").value || id === $("species").value)).map(([id, value]) => ({ label: species[id]?.[0] || id, value })) : [];
+  $("insights-spot-species").innerHTML = insightBars(spot ? `Species at ${sessionSpotLabel(spot.session)}` : "Species at a spot", rows, "One spot at a time. Counts come from stored fishing sessions; all species results are available in the table.");
+}
 function renderInsightsComparison(rows, ranked) {
   const x = $("insights-x").value, metric = JournalInsights.metrics[x];
   if (x === "spot") {
-    $("insights-comparison").innerHTML = insightPlot("Catches by spot", ranked.map((s) => ({
+    $("insights-comparison").innerHTML = insightBars("Catches by spot", ranked.map((s) => ({
       label: sessionSpotLabel(s.session), value: s.count,
       sample: `${s.sessions} ${s.sessions === 1 ? "session" : "sessions"}`,
-    })), "Recorded catches linked to fishing spots");
+    })), "Top 10 spots by recorded catches. Full results in the table below.");
     return;
   }
   const { used, values } = insightBinnedRows(rows, x);
@@ -471,6 +470,7 @@ function renderInsightsComparison(rows, ranked) {
   );
 }
 function setupInsights() {
+  $("insights-spot-picker").onchange = () => renderInsightsSpotSpecies(collectSpotProductivity(diaryTripRows(false)).ranked);
   document.querySelectorAll("[data-insight-step]").forEach((select) =>
     select.addEventListener("change", () => {
       insightSteps[select.dataset.insightStep] = Number(select.value);

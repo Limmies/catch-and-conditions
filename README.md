@@ -167,3 +167,9 @@ Shell v117 removes side-by-side page selection. Every tab opens one full-width p
 Shell v118 keeps Add photo and Write notes & ratings visible on each Days card outside the disclosure. Detailed catch/trip information and conditions remain collapsible, while saved photos can identify the day without expanding it. Existing private photo storage and rating saving are unchanged.
 
 Shell v119 removes the Insights density map, overlay checkbox, smoothing controls and map initialization. The Insights species selector continues to filter every chart. Density on the dedicated Map page is unchanged.
+
+Local shell v120 makes Days cards compact with distinct colour accents, small round photo thumbnails and tap-to-expand private photo viewing. Add photo and Notes & ratings stay visible. Website updates are now held locally until explicitly requested for publication.
+
+Local shell v121 uses varied handwriting font stacks throughout Home, with uppercase hand-printed headings and different note/caption sizes. Device fonts avoid additional font downloads; exact letterforms depend on the viewer’s installed fonts. Other app pages retain their existing typography. Held locally pending publication instruction.
+
+Local shell v122 prepares Insights for large spot collections: spot comparisons are sorted horizontal Top 10 rankings with complete results in expandable tables. Species breakdown uses a single-spot selector rather than plotting every spot/species pair. Held locally until publication is requested.

@@ -2318,13 +2318,14 @@ function renderDays(tripRows = diaryTripRows()) {
     const reference = rows[0] || { caught_at: dayTrips[0].trip.started_at };
     const section = document.createElement("section");
     section.className = "day-card";
+    section.style.setProperty("--day-accent", dayPalette.get(key) || "#607b68");
     const totals = new Map();
     for (const c of rows) {
       totals.set(nameOf(c), (totals.get(nameOf(c)) || 0) + 1);
     }
     section.innerHTML = `<details class="day-record" data-disclosure="day-card:${
       esc(key)
-    }"><summary class="day-card-summary"><img class="day-photo-thumb" alt="" width="60" height="60" hidden><strong>${esc(dateLabel(reference.caught_at))}${
+    }"><summary class="day-card-summary"><button type="button" class="day-photo-open" aria-label="View photo from ${esc(dateLabel(reference.caught_at))}" hidden><img class="day-photo-thumb" alt="" width="48" height="48" hidden></button><strong>${esc(dateLabel(reference.caught_at))}${
       dayRatingBadge(key, fishingMode)
     }</strong><span class="record-metrics"><span title="Based on completed trips starting on this date"><b>${
       productivity === null ? "—" : productivity.toFixed(1)
@@ -2336,6 +2337,11 @@ function renderDays(tripRows = diaryTripRows()) {
       )
         .join("")
     }</div></div></details>`;
+    section.querySelector(".day-photo-open").onclick = (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      openDayPhoto(key);
+    };
     const body = section.querySelector(".day-record-body");
     const photoPanel = createDayPhotoPanel(key);
     section.append(photoPanel);
@@ -2348,7 +2354,7 @@ function renderDays(tripRows = diaryTripRows()) {
     const rate = document.createElement("button");
     rate.type = "button";
     rate.className = "quiet day-rate";
-    rate.textContent = "Write notes & ratings";
+    rate.textContent = "Notes & ratings";
     rate.onclick = () => showDayObservations(reference);
     const actions = document.createElement("div");
     actions.className = "day-actions";

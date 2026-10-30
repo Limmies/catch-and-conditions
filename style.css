@@ -6118,3 +6118,66 @@ button.quiet,.text-action { min-height:44px; }
 .day-card > .day-photo-panel .day-photo-actions { margin-top:0; }
 .day-card > .day-photo-panel .day-photo-preview:not([hidden]) { margin-bottom:12px; }
 .day-card > .day-photo-panel .day-photo-choose,.day-card > .day-photo-panel .day-rate { min-height:46px; padding:12px 16px; font-weight:600; }
+
+/* Compact day rows: one thumbnail, clear date, and quick actions. */
+#days .day-card { padding:12px 14px; margin-bottom:10px; border-left:4px solid var(--day-accent,#607b68); }
+#days .day-card-summary { display:grid; grid-template-columns:48px minmax(0,1fr); align-items:center; gap:2px 12px; padding:0 24px 0 0; }
+#days .day-card-summary > strong { grid-column:2; font-size:19px; line-height:1.3; }
+#days .day-card-summary .record-metrics { grid-column:2; display:flex; flex-wrap:wrap; gap:4px 16px; font-size:11px; line-height:1.5; }
+#days .record-metrics b { display:inline; font-size:12px; }
+#days .day-photo-open { grid-column:1; grid-row:1 / 3; width:48px; height:48px; padding:0; border:0; border-radius:50%; background:#e5e8d6; cursor:zoom-in; }
+#days .day-photo-thumb { display:block; width:48px; height:48px; border-radius:50%; object-fit:cover; }
+#days .day-photo-open[hidden],#days .day-photo-thumb[hidden] { display:none; }
+#days .day-card-summary:has(.day-photo-open[hidden]) { grid-template-columns:minmax(0,1fr); }
+#days .day-card-summary:has(.day-photo-open[hidden]) > strong,#days .day-card-summary:has(.day-photo-open[hidden]) .record-metrics { grid-column:1; }
+#days .day-card > .day-photo-panel { margin-top:8px; padding-top:8px; }
+#days .day-photo-actions { gap:6px 8px; }
+#days .day-photo-actions .day-photo-choose,#days .day-photo-actions .day-rate { min-height:44px; padding:8px 12px; font-size:12px; }
+.day-photo-viewer { width:min(900px,calc(100% - 24px)); max-height:90dvh; padding:16px; }
+.day-photo-viewer-heading { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:12px; }
+.day-photo-viewer-heading h2 { font-size:22px; margin:0; }
+.day-photo-viewer-heading button { min-height:44px; }
+.day-photo-viewer > img { display:block; width:100%; max-height:72dvh; object-fit:contain; border-radius:5px; }
+.day-photo-viewer::backdrop { background:#172e27b8; }
+
+/* Different diary hands, confined to Home and using lightweight device fonts. */
+#home-page {
+  --home-hand:'Bradley Hand','Segoe Print','Comic Sans MS',cursive;
+  --home-print:'Chalkboard SE','Chalkboard','Comic Sans MS',cursive;
+  --home-notes:'Noteworthy','Marker Felt','Segoe Print',cursive;
+}
+#home-page .home-book { font-family:var(--home-hand); font-size:21px; }
+#home-page :is(h2,h3,h4) { font-family:var(--home-print); text-transform:uppercase; font-weight:600; letter-spacing:.035em; line-height:1.25; text-wrap:balance; }
+#home-page h2 { font-size:clamp(29px,3vw,43px); }
+#home-page h3 { font-size:clamp(23px,2vw,29px); }
+#home-page .home-letter p,#home-page .home-paper p { font-family:var(--note-hand,var(--home-hand)); font-size:1em; line-height:1.65; }
+#home-page .home-letter .home-lead { font-size:1.12em; }
+#home-page .home-letter-ending { --note-hand:var(--home-notes); font-size:22px; }
+#home-page .home-paper-sage { --note-hand:var(--home-notes); font-size:22px; }
+#home-page .home-paper-blue { --note-hand:var(--home-print); font-size:20px; }
+#home-page .home-note { font-family:var(--home-notes); font-size:20px; }
+#home-page .home-note p { font-family:var(--home-notes); font-size:1.3em; line-height:1.45; }
+#home-page .home-kicker,#home-page .home-note-label { font-family:var(--home-print); text-transform:uppercase; font-size:13px; letter-spacing:.12em; }
+#home-page .home-print figcaption { font-family:var(--home-hand); font-size:19px; font-style:normal; line-height:1.5; }
+#home-page .home-photo-strip .home-print:nth-child(2) figcaption { font-family:var(--home-notes); font-size:20px; }
+#home-page .home-photo-strip .home-print:nth-child(3) figcaption { font-family:var(--home-print); font-size:18px; }
+#home-page .home-book-quote blockquote { font-style:normal; }
+#home-page .home-book-quote:first-child { font-size:23px; }
+#home-page .home-book-quote figcaption { font-family:var(--home-print); font-size:14px; }
+#home-page .home-book-author,#home-page .home-sketch-scientific { font-family:var(--home-notes); font-size:17px; }
+#home-page .home-sketch-page figcaption { font-family:var(--home-hand); font-size:21px; font-style:normal; }
+#home-page .home-workflow { font-family:var(--home-print); font-size:19px; }
+#home-page .home-parameter-table { font-family:var(--home-print); }
+#home-page .home-data-note { font-family:var(--home-notes); font-size:16px; }
+#home-page .home-book-file { font-family:var(--home-print); }
+@media(max-width:600px) {
+  #home-page .home-book { font-size:19px; }
+  #home-page .home-paper-sage,#home-page .home-letter-ending { font-size:20px; }
+  #home-page .home-paper-blue { font-size:19px; }
+  #home-page .home-book-quote:first-child { font-size:21px; }
+  #home-page .home-print figcaption { font-size:18px; }
+  #home-page .home-note { font-size:18px; }
+}
+
+.insights-spot-choice { display:flex; flex-direction:column; gap:8px; margin:16px 0; max-width:420px; font-size:14px; }
+.insights-spot-choice select { width:100%; min-height:44px; }

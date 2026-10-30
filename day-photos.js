@@ -13,6 +13,7 @@ const dayPhotoObserver = typeof IntersectionObserver === "function" ? new Inters
 }, { rootMargin: "300px" }) : null;
 function resetDayPhotos() {
   dayPhotoEpoch++;
+  document.getElementById("day-photo-viewer")?.close();
   dayPhotoObserver?.disconnect();
   for (const photo of dayPhotos.values()) if (photo.url) URL.revokeObjectURL(photo.url);
   dayPhotos.clear(); dayPhotoBusy.clear(); dayPhotoOwner = null; dayPhotoState = "idle";
@@ -65,12 +66,9 @@ async function downloadDayPhoto(date, photo) {
 function paintDayPhotos() {
   document.querySelectorAll("[data-day-photo]").forEach((panel) => {
     const date = panel.dataset.dayPhoto, photo = dayPhotos.get(date), busy = dayPhotoBusy.has(date);
-    const image = panel.querySelector("img");
-    image.hidden = !photo?.url;
-    if (photo?.url) { if (image.src !== photo.url) image.src = photo.url; }
-    else image.removeAttribute("src");
     const thumbnail = panel.closest(".day-card").querySelector(".day-photo-thumb");
     thumbnail.hidden = !photo?.url;
+    thumbnail.closest(".day-photo-open").hidden = !photo?.url;
     if (photo?.url) thumbnail.src = photo.url; else thumbnail.removeAttribute("src");
     panel.querySelector(".day-photo-choose").textContent = photo ? "Replace photo" : "Add photo";
     panel.querySelector(".day-photo-remove").hidden = !photo;
@@ -78,7 +76,7 @@ function paintDayPhotos() {
     const retry = panel.querySelector(".day-photo-retry");
     retry.hidden = dayPhotoState !== "error" && !photo?.error;
     const status = panel.querySelector("[role=status]");
-    if (!status.dataset.message) status.textContent = busy ? "Saving photo…" : photo?.error || dayPhotoState === "error" ? "Photo could not load. Try again when connected." : photo ? "" : "One private photo to remember this day.";
+    if (!status.dataset.message) status.textContent = busy ? "Saving photo…" : photo?.error || dayPhotoState === "error" ? "Photo could not load. Try again when connected." : "";
     if (photo && !photo.url && !photo.loading && !photo.error) {
       if (dayPhotoObserver) dayPhotoObserver.observe(panel.closest(".day-card"));
       else void downloadDayPhoto(date, photo);
@@ -136,7 +134,7 @@ async function saveDayPhoto(date, file, remove = false) {
 }
 function createDayPhotoPanel(date) {
   const panel = document.createElement("div"); panel.className = "day-photo-panel"; panel.dataset.dayPhoto = date;
-  panel.innerHTML = `<img class="day-photo-preview" loading="lazy" alt="Photo from fishing on ${esc(date)}" hidden><div class="day-photo-actions"><button type="button" class="quiet day-photo-choose">Add photo</button><button type="button" class="quiet day-photo-remove" hidden>Remove photo</button><button type="button" class="quiet day-photo-retry" hidden>Retry photos</button><input class="sr-only" type="file" accept="image/*" aria-label="Choose a photo for ${esc(date)}"><p class="small muted" role="status"></p></div>`;
+  panel.innerHTML = `<div class="day-photo-actions"><button type="button" class="quiet day-photo-choose">Add photo</button><button type="button" class="quiet day-photo-remove" hidden>Remove photo</button><button type="button" class="quiet day-photo-retry" hidden>Retry photos</button><input class="sr-only" type="file" accept="image/*" aria-label="Choose a photo for ${esc(date)}"><p class="small muted" role="status"></p></div>`;
   const input = panel.querySelector("input");
   panel.querySelector(".day-photo-choose").onclick = () => input.click();
   input.onchange = () => { const file = input.files[0]; input.value = ""; if (file) void saveDayPhoto(date, file); };
@@ -147,4 +145,27 @@ function createDayPhotoPanel(date) {
     paintDayPhotos();
   };
   return panel;
+}
+
+function openDayPhoto(date) {
+  const photo = dayPhotos.get(date);
+  if (!photo?.url) return;
+  let viewer = document.getElementById("day-photo-viewer");
+  if (!viewer) {
+    viewer = document.createElement("dialog");
+    viewer.id = "day-photo-viewer";
+    viewer.className = "day-photo-viewer";
+    viewer.setAttribute("aria-labelledby", "day-photo-viewer-title");
+    viewer.innerHTML = '<div class="day-photo-viewer-heading"><h2 id="day-photo-viewer-title"></h2><button type="button" class="quiet">Close</button></div><img alt="">';
+    viewer.querySelector("button").onclick = () => viewer.close();
+    viewer.addEventListener("click", (event) => { if (event.target === viewer) viewer.close(); });
+    viewer.addEventListener("close", () => viewer.querySelector("img").removeAttribute("src"));
+    document.body.append(viewer);
+  }
+  const label = dateLabel(date + "T12:00:00+02:00");
+  viewer.querySelector("h2").textContent = label;
+  const image = viewer.querySelector("img");
+  image.alt = "Fishing photo from " + label;
+  image.src = photo.url;
+  if (!viewer.open) viewer.showModal();
 }
