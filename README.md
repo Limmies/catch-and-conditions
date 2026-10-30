@@ -175,3 +175,5 @@ Local shell v121 uses varied handwriting font stacks throughout Home, with upper
 Local shell v122 prepares Insights for large spot collections: spot comparisons are sorted horizontal Top 10 rankings with complete results in expandable tables. Species breakdown uses a single-spot selector rather than plotting every spot/species pair. Held locally until publication is requested.
 
 Local shell v123 folds each Home parameter category into a separate closed-by-default disclosure. Opening a category reveals its own table headers and original rows. All 89 parameters remain available. Held locally until publication is requested.
+
+Local shell v124 gives the Home data guide a personal title and an accurate count: “89 details I save about my fishing”. Category and column titles use everyday language. Optional values are still explained. Held locally until publication is requested.
