@@ -163,3 +163,5 @@ Shell v115 adds three verbatim extracts from the owner’s Saltwater Pages fishi
 Shell v116 expands the Home parameter catalogue to cover catch GPS/species/length, all six daily ratings and notes, private day photos, trips, effort, sessions, movement, spots, optional instrument imports, estimates and source/record metadata. Checked against live Supabase tables and the saved JSON payload keys; optional and unavailable values are explicitly labelled. Existing catch and rating persistence was verified; no records or schema were changed.
 
 Shell v117 removes side-by-side page selection. Every tab opens one full-width page on desktop and phone; old paired links open only their last requested page. Map/spot links also switch to a single page.
+
+Shell v118 keeps Add photo and Write notes & ratings visible on each Days card outside the disclosure. Detailed catch/trip information and conditions remain collapsible, while saved photos can identify the day without expanding it. Existing private photo storage and rating saving are unchanged.

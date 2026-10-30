@@ -72,7 +72,7 @@ function paintDayPhotos() {
     const thumbnail = panel.closest(".day-card").querySelector(".day-photo-thumb");
     thumbnail.hidden = !photo?.url;
     if (photo?.url) thumbnail.src = photo.url; else thumbnail.removeAttribute("src");
-    panel.querySelector(".day-photo-choose").textContent = photo ? "Replace photo" : "Add day photo";
+    panel.querySelector(".day-photo-choose").textContent = photo ? "Replace photo" : "Add photo";
     panel.querySelector(".day-photo-remove").hidden = !photo;
     panel.querySelectorAll("button,input").forEach((control) => { control.disabled = busy; });
     const retry = panel.querySelector(".day-photo-retry");
@@ -136,7 +136,7 @@ async function saveDayPhoto(date, file, remove = false) {
 }
 function createDayPhotoPanel(date) {
   const panel = document.createElement("div"); panel.className = "day-photo-panel"; panel.dataset.dayPhoto = date;
-  panel.innerHTML = `<img class="day-photo-preview" loading="lazy" alt="Photo from fishing on ${esc(date)}" hidden><div class="day-photo-actions"><button type="button" class="quiet day-photo-choose">Add day photo</button><button type="button" class="quiet day-photo-remove" hidden>Remove photo</button><button type="button" class="quiet day-photo-retry" hidden>Retry photos</button><input class="sr-only" type="file" accept="image/*" aria-label="Choose a photo for ${esc(date)}"><p class="small muted" role="status"></p></div>`;
+  panel.innerHTML = `<img class="day-photo-preview" loading="lazy" alt="Photo from fishing on ${esc(date)}" hidden><div class="day-photo-actions"><button type="button" class="quiet day-photo-choose">Add photo</button><button type="button" class="quiet day-photo-remove" hidden>Remove photo</button><button type="button" class="quiet day-photo-retry" hidden>Retry photos</button><input class="sr-only" type="file" accept="image/*" aria-label="Choose a photo for ${esc(date)}"><p class="small muted" role="status"></p></div>`;
   const input = panel.querySelector("input");
   panel.querySelector(".day-photo-choose").onclick = () => input.click();
   input.onchange = () => { const file = input.files[0]; input.value = ""; if (file) void saveDayPhoto(date, file); };

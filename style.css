@@ -6116,3 +6116,9 @@ button.quiet,.text-action { min-height:44px; }
 .home-book-quote figcaption a { color:#38604f; text-underline-offset:3px; }
 @media(max-width:800px) { .home-book-quotes { grid-template-columns:minmax(0,1fr); } }
 @media(max-width:600px) { .home-book-feature { grid-template-columns:minmax(0,1fr); gap:24px; padding:22px; }.home-book-cover { width:150px; margin:0 auto; }.home-book-actions { align-items:stretch; }.home-book-actions .primary { width:100%; } }
+
+/* Primary diary actions stay available when the day details are collapsed. */
+.day-card > .day-photo-panel { margin:14px 0 0; padding:12px 0 0; border-bottom:0; border-top:1px dashed #c9bea3; }
+.day-card > .day-photo-panel .day-photo-actions { margin-top:0; }
+.day-card > .day-photo-panel .day-photo-preview:not([hidden]) { margin-bottom:12px; }
+.day-card > .day-photo-panel .day-photo-choose,.day-card > .day-photo-panel .day-rate { min-height:46px; padding:12px 16px; font-weight:600; }

@@ -2337,7 +2337,8 @@ function renderDays(tripRows = diaryTripRows()) {
         .join("")
     }</div></div></details>`;
     const body = section.querySelector(".day-record-body");
-    body.prepend(createDayPhotoPanel(key));
+    const photoPanel = createDayPhotoPanel(key);
+    section.append(photoPanel);
     const weather = document.createElement("button");
     weather.className = "quiet day-weather";
     weather.textContent = "View day conditions";
@@ -2347,11 +2348,12 @@ function renderDays(tripRows = diaryTripRows()) {
     const rate = document.createElement("button");
     rate.type = "button";
     rate.className = "quiet day-rate";
-    rate.textContent = "Rate this day";
+    rate.textContent = "Write notes & ratings";
     rate.onclick = () => showDayObservations(reference);
     const actions = document.createElement("div");
     actions.className = "day-actions";
-    actions.append(weather, rate);
+    actions.append(weather);
+    photoPanel.querySelector(".day-photo-actions").insertBefore(rate, photoPanel.querySelector(".day-photo-remove"));
     body.append(actions);
     const effort = document.createElement("p");
     effort.className = "small muted";
