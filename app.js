@@ -421,7 +421,7 @@ function render() {
   $("catch-count").textContent = visible.length;
   $("species-count").textContent = new Set(visible.map((c) => c.species_id)).size;
   $("day-count").textContent = new Set(visible.map((c) => dayKey(c.caught_at))).size;
-  $("empty").hidden = !(desktopViews.matches ? selectedPages() : [selectedPages().at(-1)]).some((
+  $("empty").hidden = !selectedPages().some((
     key,
   ) => (key === "totals" || (key === "map" && mapViewMode === "catches"))) || visible.length > 0;
   $("empty").textContent = catches.length
@@ -794,12 +794,7 @@ function openSpotOnMap(latitude, longitude, label) {
   ) return;
   setMapView("spots");
   focusedSpot = { latitude, longitude, label };
-  const pages = desktopViews.matches ? selectedPages() : [];
-  if (!pages.includes("map")) {
-    if (pages.length === 2) pages.splice(0, 1);
-    pages.push("map");
-  }
-  location.hash = pages.join(",");
+  location.hash = "map";
   route();
   requestAnimationFrame(() => {
     if (!focusedSpot || !map) return;
@@ -1563,8 +1558,7 @@ function renderMapGroups() {
     ).join("") || "<span>No matching locations.</span>";
 }
 function openSpotCard(id) {
-  const pages = desktopViews.matches ? selectedPages().filter((key) => key !== "spots") : [];
-  location.hash = [...pages.slice(-1), "spots"].join(",");
+  location.hash = "spots";
   route();
   requestAnimationFrame(() => {
     const card = [...document.querySelectorAll("[data-spot-id]")].find((node) =>
@@ -3317,7 +3311,6 @@ const viewNames = {
   spots: "Spots",
   insights: "Insights",
 };
-const desktopViews = matchMedia("(min-width: 951px) and (hover: hover) and (pointer: fine)");
 function selectedPages() {
   const pages = [
     ...new Set(
@@ -3326,21 +3319,17 @@ function selectedPages() {
       ).filter((key) => viewKeys.includes(key)),
     ),
   ];
-  return pages.length > 2 ? [pages[0], pages.at(-1)] : pages.length ? pages : ["home"];
+  return [pages.at(-1) || "home"];
 }
 function route() {
-  const requested = selectedPages();
-  const page = requested[requested.length - 1];
-  const pages = desktopViews.matches ? requested : [page];
-  document.body.classList.toggle("multiple-views", pages.length > 1);
-  document.body.classList.toggle("map-left", pages.length === 2 && pages[0] === "map");
-  document.body.classList.toggle("map-right", pages.length === 2 && pages[1] === "map");
+  const pages = selectedPages();
+  const page = pages[0];
   document.body.classList.toggle("home-only", pages.length === 1 && pages[0] === "home");
   for (const key of viewKeys) {
     const section = $(`${key}-page`);
     section.hidden = !pages.includes(key);
     section.dataset.viewLabel = viewNames[key];
-    section.style.order = desktopViews.matches ? String(pages.indexOf(key) + 1) : "";
+    section.style.order = "";
     const tab = document.querySelector(`.tabs [data-page="${key}"]`);
     tab.dataset.selected = String(pages.includes(key));
     tab.setAttribute("aria-current", page === key ? "page" : "false");
@@ -3366,26 +3355,9 @@ const accountBarSize = new ResizeObserver(() => {
   );
 });
 accountBarSize.observe(accountBar);
-desktopViews.addEventListener("change", route);
 document.querySelectorAll(".tabs [data-page]").forEach((tab) => {
   tab.addEventListener("click", (event) => {
-    if (!desktopViews.matches || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
-      return;
-    }
-    event.preventDefault();
-    if (event.detail > 1) return;
-    const key = tab.dataset.page;
-    let pages = selectedPages();
-    pages = pages.includes(key)
-      ? (pages.length > 1 ? pages.filter((page) => page !== key) : [key])
-      : pages.length === 2
-      ? [pages[0], key]
-      : [...pages, key];
-    location.hash = pages.join(",");
-    route();
-  });
-  tab.addEventListener("dblclick", (event) => {
-    if (!desktopViews.matches) return;
+    if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
     location.hash = tab.dataset.page;
     route();
