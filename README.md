@@ -165,3 +165,5 @@ Shell v116 expands the Home parameter catalogue to cover catch GPS/species/lengt
 Shell v117 removes side-by-side page selection. Every tab opens one full-width page on desktop and phone; old paired links open only their last requested page. Map/spot links also switch to a single page.
 
 Shell v118 keeps Add photo and Write notes & ratings visible on each Days card outside the disclosure. Detailed catch/trip information and conditions remain collapsible, while saved photos can identify the day without expanding it. Existing private photo storage and rating saving are unchanged.
+
+Shell v119 removes the Insights density map, overlay checkbox, smoothing controls and map initialization. The Insights species selector continues to filter every chart. Density on the dedicated Map page is unchanged.

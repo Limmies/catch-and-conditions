@@ -157,23 +157,15 @@
   });
 })();
 
-let insightsMap = null, insightsHeat = null, insightsPoints = null, insightsModel = null;
 let insightsSnapshots = new Map(),
   insightsFetchGeneration = -1,
   insightsRequest = 0,
-  insightsState = "idle",
-  insightsRadius = 500;
+  insightsState = "idle";
 function resetInsights() {
   insightsRequest++;
   insightsFetchGeneration = -1;
   insightsSnapshots.clear();
   insightsState = "idle";
-  insightsModel = null;
-  insightsRadius = 500;
-  if (insightsMap) insightsMap.remove();
-  insightsMap = null;
-  insightsHeat = null;
-  insightsPoints = null;
   for (
     const id of [
       "insights-overview",
@@ -182,11 +174,9 @@ function resetInsights() {
       "insights-conditions",
       "insights-comparison",
       "insights-spot-species",
-      "insights-density-summary",
-      "insights-map",
     ]
   ) $(id)?.replaceChildren();
-  if ($("insights-density-species")) $("insights-density-species").replaceChildren();
+  if ($("insights-species")) $("insights-species").replaceChildren();
 }
 async function loadInsightsConditions() {
   if (!session || insightsFetchGeneration === loadGeneration) return;
@@ -403,7 +393,7 @@ function insightConditionChart(rows, key) {
 function renderInsights() {
   if (!session || $("insights-page").hidden) return;
   const expanded = disclosureState($("insights-page"));
-  const selector = $("insights-density-species");
+  const selector = $("insights-species");
   if (!selector.options.length || selector.dataset.options !== $("species").innerHTML) {
     selector.innerHTML = $("species").innerHTML;
     selector.dataset.options = $("species").innerHTML;
@@ -462,7 +452,6 @@ function renderInsights() {
   ).join("");
   renderInsightsRatings();
   renderInsightsComparison(rows, ranked);
-  renderInsightsMap(rows);
   restoreDisclosures($("insights-page"), expanded);
 }
 function renderInsightsComparison(rows, ranked) {
@@ -480,83 +469,6 @@ function renderInsightsComparison(rows, ranked) {
     `${used} of ${rows.length} catches with usable data`, "catches",
     metric.step ? "line" : x === "species" ? "bars" : "dots", metric.label,
   );
-}
-function renderInsightsMap(rows) {
-  if (!window.L || !window.FishingDensity) {
-    $("insights-map").textContent = "The density map could not load. Your charts remain available.";
-    return;
-  }
-  if (!insightsMap) {
-    insightsMap = L.map("insights-map", { zoomAnimation: !matchMedia("(prefers-reduced-motion: reduce)").matches, zoomSnap: 0, zoomDelta: .5, fadeAnimation: false, scrollWheelZoom: false, touchZoom: true, bounceAtZoomLimits: false }).setView([
-      -34.08,
-      22.97,
-    ], 8);
-    limitMapToSouthAfrica(insightsMap);
-    setupMapGestures(insightsMap);
-    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      noWrap: true,
-      attribution:
-        '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    }).addTo(insightsMap);
-    insightsPoints = L.featureGroup().addTo(insightsMap);
-  }
-  const id = $("species").value,
-    points = FishingDensity.locations(rows),
-    radius = insightsRadius || FishingDensity.bandwidth(points);
-  $("insights-radius-label").textContent = (insightsRadius ? "" : "Auto · ") +
-    densityRadiusLabel(radius);
-  $("insights-radius").value = String(
-    Math.max(0, Math.min(100, Math.log(radius / 25) / Math.log(2000) * 100)),
-  );
-  $("insights-auto").disabled = insightsRadius === null;
-  const signature = JSON.stringify([
-    id,
-    points,
-    radius,
-    $("insights-density-enabled").checked,
-    rows.map((c) => [c.archive_id, c.caught_at]),
-  ]);
-  requestAnimationFrame(() => insightsMap?.invalidateSize({ pan: false }));
-  if (insightsMap.insightsSignature === signature) return;
-  insightsMap.insightsSignature = signature;
-  const sourceSignature = JSON.stringify([id, points]);
-  const sourceChanged = insightsMap.insightsSource !== sourceSignature;
-  insightsMap.insightsSource = sourceSignature;
-  if (insightsHeat) {
-    insightsMap.removeLayer(insightsHeat);
-    insightsHeat = null;
-  }
-  insightsPoints.clearLayers();
-  insightsModel = points.length
-    ? { points, radius, peak: FishingDensity.peak(points, radius) }
-    : null;
-  const count = points.reduce((n, p) => n + p.weight, 0);
-  $("insights-density-scale").hidden = !count || !$("insights-density-enabled").checked;
-  $("insights-density-summary").textContent = !count
-    ? "No located catches for these filters."
-    : `${id ? species[id][0] : "All fish"} · ${count} located catches${
-      count < 20 || points.length < 5 || new Set(rows.map((c) => dayKey(c.caught_at))).size < 3
-        ? " · Limited data"
-        : ""
-    } · Recorded concentration, not catch probability`;
-  for (const p of points) {
-    L.circleMarker([p.latitude, p.longitude], {
-      radius: $("insights-density-enabled").checked ? 1.25 : 3,
-      color: "#344e47",
-      weight: 1,
-      fillOpacity: .3,
-    }).addTo(insightsPoints);
-  }
-  if (insightsModel && $("insights-density-enabled").checked) {
-    insightsHeat = makeDensityLayer(() => insightsModel);
-    insightsHeat.addTo(insightsMap);
-  }
-  if (points.length && sourceChanged) {
-    const bounds = insightsPoints.getBounds();
-    for (const p of points) bounds.extend(L.latLng(p.latitude, p.longitude).toBounds(radius * 8));
-    insightsMap.fitBounds(bounds, { padding: [35, 35], maxZoom: 14, animate: false });
-  }
 }
 function setupInsights() {
   document.querySelectorAll("[data-insight-step]").forEach((select) =>
@@ -576,26 +488,11 @@ function setupInsights() {
     insightsFetchGeneration = -1;
     renderInsights();
   };
-  $("insights-density-species").onchange = () => {
-    $("species").value = $("insights-density-species").value;
+  $("insights-species").onchange = () => {
+    $("species").value = $("insights-species").value;
     render();
   };
-  $("insights-density-enabled").onchange = () => renderInsightsMap(uniqueRecords(visible));
-  $("insights-radius").oninput = () => {
-    insightsRadius = Math.round(25 * 2000 ** (Number($("insights-radius").value) / 100));
-    renderInsightsMap(uniqueRecords(visible));
-  };
-  $("insights-auto").onclick = () => {
-    insightsRadius = null;
-    renderInsightsMap(uniqueRecords(visible));
-  };
-  $("insights-fit").onclick = () => {
-    if (insightsMap) {
-      insightsMap.insightsSignature = null;
-      insightsMap.insightsSource = null;
-      renderInsightsMap(uniqueRecords(visible));
-    }
-  };
+
 }
 // Entry points shared with the journal's classic script.
 globalThis.resetInsights = resetInsights;
