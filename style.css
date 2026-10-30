@@ -6181,3 +6181,15 @@ button.quiet,.text-action { min-height:44px; }
 
 .insights-spot-choice { display:flex; flex-direction:column; gap:8px; margin:16px 0; max-width:420px; font-size:14px; }
 .insights-spot-choice select { width:100%; min-height:44px; }
+
+/* Parameter categories fold into their titles instead of a long open table. */
+#home-page .home-parameter-caption { margin:0; padding:18px; font-family:var(--home-print); font-size:16px; line-height:1.5; font-weight:600; background:#eee9d8; }
+.home-parameter-section + .home-parameter-section { border-top:1px solid #d9d0b9; }
+.home-parameter-section > summary { display:flex; align-items:center; gap:12px; min-height:54px; padding:14px 18px; list-style:none; cursor:pointer; background:#f0eddf; color:#315e4a; font-size:15px; font-weight:600; }
+.home-parameter-section > summary::-webkit-details-marker { display:none; }
+.home-parameter-section > summary > span { flex:1; min-width:0; }
+.home-parameter-section > summary small { flex:none; color:var(--muted); font-size:11px; font-weight:400; }
+.home-parameter-section > summary::after { content:'+'; font:22px/1 system-ui,sans-serif; }
+.home-parameter-section[open] > summary::after { content:'−'; }
+.home-parameter-section > summary:focus-visible { outline:2px solid #287c83; outline-offset:-3px; }
+@media(max-width:600px) { .home-parameter-section > summary { padding:12px; font-size:14px; }.home-parameter-section > summary small { font-size:10px; } }

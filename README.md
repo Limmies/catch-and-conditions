@@ -173,3 +173,5 @@ Local shell v120 makes Days cards compact with distinct colour accents, small ro
 Local shell v121 uses varied handwriting font stacks throughout Home, with uppercase hand-printed headings and different note/caption sizes. Device fonts avoid additional font downloads; exact letterforms depend on the viewer’s installed fonts. Other app pages retain their existing typography. Held locally pending publication instruction.
 
 Local shell v122 prepares Insights for large spot collections: spot comparisons are sorted horizontal Top 10 rankings with complete results in expandable tables. Species breakdown uses a single-spot selector rather than plotting every spot/species pair. Held locally until publication is requested.
+
+Local shell v123 folds each Home parameter category into a separate closed-by-default disclosure. Opening a category reveals its own table headers and original rows. All 89 parameters remain available. Held locally until publication is requested.
