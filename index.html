@@ -19,15 +19,15 @@
     <link rel="stylesheet" href="vendor/leaflet.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.Default.css">
-    <link rel="stylesheet" href="style.css?v=124">
+    <link rel="stylesheet" href="style.css?v=126">
     <script defer src="vendor/supabase.js"></script>
     <script defer src="vendor/leaflet.js"></script>
     <script defer src="vendor/leaflet.markercluster.js"></script>
     <script defer src="config.js"></script>
-    <script defer src="density.js?v=124"></script>
-    <script defer src="insights.js?v=124"></script>
-    <script defer src="day-photos.js?v=124"></script>
-    <script defer src="app.js?v=124"></script>
+    <script defer src="density.js?v=126"></script>
+    <script defer src="insights.js?v=126"></script>
+    <script defer src="day-photos.js?v=126"></script>
+    <script defer src="app.js?v=126"></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
@@ -77,6 +77,11 @@
         </div>
         <section id="home-page" aria-label="About Catch and Conditions">
           <div class="home-book">
+            <aside class="home-goal-quote" aria-label="My reason for building this journal">
+              <span class="home-kicker">The reason I’m building this</span>
+              <blockquote><p>And in ten years, if a few lighties say, “That’s the guy to speak to if you want to go fishing,” I’ll know this was worth building.</p></blockquote>
+              <p class="home-goal-belief">I want to enjoy my fishing, keep getting better and let the way I fish speak for itself. I believe learning from every trip is how I’ll get there.</p>
+            </aside>
             <div class="home-opening">
               <div class="home-opening-copy">
               <article class="home-letter">
@@ -99,20 +104,20 @@
             </div>
 
             <section class="home-chapter" aria-labelledby="home-about-title">
-              <div class="home-chapter-heading"><span class="home-kicker">01 / About the journal</span><h2 id="home-about-title">Your journal at a glance.</h2></div>
+              <div class="home-chapter-heading"><span class="home-kicker">Your journal</span><h2 id="home-about-title">Your journal at a glance.</h2></div>
               <div class="home-about-grid">
-                <article class="home-paper"><h3>The catch</h3><p>Choose the fish on the watch. Its species, time and GPS position become a record you can find again on the map or in your fishing diary.</p><a href="#totals" class="text-action">Explore species →</a></article>
-                <article class="home-paper home-paper-sage"><h3>The effort</h3><p>Record the time spent fishing as well as the fish caught. A trip with no catches still teaches us something: it shows how much effort went into the result.</p><a href="#diary" class="text-action">View fishing days →</a></article>
-                <article class="home-paper home-paper-blue"><h3>The place & conditions</h3><p>Put each catch in context: the spot, weather, water and your own observations. Compare visits to the same place rather than trying to remember which day worked.</p><a href="#spots" class="text-action">Find the fishing spots →</a></article>
+                <article class="home-paper"><h3>The catch</h3><p>Record the fish, time and location. Find every catch again in your diary or on the map.</p><a href="#totals" class="text-action">Explore species →</a></article>
+                <article class="home-paper home-paper-sage"><h3>The effort</h3><p>Keep the fishing time as well as the catch count. Quiet days matter too.</p><a href="#diary" class="text-action">View fishing days →</a></article>
+                <article class="home-paper home-paper-blue"><h3>The place & conditions</h3><p>Compare spots, conditions and your own observations across different visits.</p><a href="#spots" class="text-action">Find the fishing spots →</a></article>
               </div>
             </section>
 
 
             <section class="home-chapter" aria-labelledby="home-mission-title">
-              <div class="home-chapter-heading"><span class="home-kicker">Why this matters</span><h2 id="home-mission-title">We don’t all get a lifetime on the water.</h2></div>
+              <div class="home-chapter-heading"><h2 id="home-mission-title">We don’t all get a lifetime on the water.</h2></div>
               <div class="home-mission-grid">
-                <article class="home-paper"><h3>The problem with occasional fishing</h3><p>Unless fishing is your profession, there never seems to be enough time for it. If you return to the water once a year, or whenever life allows, it is hard to build a clear picture of what is happening beneath the surface.</p><p>We hear things like “they bite when the southwester blows.” That might be a useful clue, but a story is hard to check without a record of the days it worked—and the days it didn’t. Someone who lives at the coast and fishes all the time has years of experience that an occasional visitor cannot easily catch up with.</p></article>
-                <article class="home-paper home-paper-sage"><h3>Make better use of the tools we have</h3><p>The biggest improvement in my own fishing has come from learning to use technology properly. I have spent hours understanding my fish finder—the sonar screen that helps me read fish and the seabed: its settings, what changes at speed, and what different fish and bottom shapes look like.</p><p>This journal is the next step. Instead of trying to remember every detail, I can keep it, compare it and learn from it. The idea is useful even if you don’t fish: collect evidence about a question you care about, then use it to make better decisions.</p></article>
+                <article class="home-paper"><h3>Make the trips count</h3><p>When fishing days are far apart, it’s hard to remember what worked. Keeping a record helps me build on each trip instead of starting again.</p></article>
+                <article class="home-paper home-paper-sage"><h3>Learn from what happens</h3><p>Understanding my fish finder has improved my fishing. This journal takes that further: save the catches, effort and conditions, then compare the results.</p></article>
               </div>
             </section>
 
@@ -121,28 +126,18 @@
                 <a class="home-book-cover" href="books/saltwater-pages.pdf" target="_blank" rel="noopener" aria-label="Read Saltwater Pages, the full fishing book"><img src="books/saltwater-pages-cover.jpg" width="420" height="594" alt="Cover of the book: Deep Sea Fishing — Lessons from Buffelsbaai" loading="lazy" decoding="async"></a>
                 <div class="home-book-intro"><span class="home-kicker">Pages from my fishing book</span><h2 id="home-book-title">Saltwater Pages</h2><p class="home-book-author">By Limrik Andreas Swanepoel</p><p>A personal collection of lessons from fishing off Buffelsbaai: reading the water, understanding the fish finder and learning from every trip. Here are three extracts from the book.</p><div class="home-book-actions"><a class="primary" href="books/saltwater-pages.pdf" download="Saltwater Pages - Limrik Swanepoel.pdf">Download the book ↓</a><a class="text-action" href="books/saltwater-pages.pdf" target="_blank" rel="noopener">Read online ↗</a></div><p class="home-book-file">PDF · 48 pages · 3.2 MB</p></div>
               </div>
-              <div class="home-book-quotes">
+              <details class="home-extra-reading"><summary>Read three extracts from the book</summary><div class="home-book-quotes">
                 <figure class="home-paper home-book-quote"><h3>Lessons from the water</h3><blockquote><p>“After countless trips, successes, failures, and lessons, this guide serves as a collection of refined techniques, spot insights, seasonal patterns, and practical tips.”</p></blockquote><figcaption><a href="books/saltwater-pages.pdf#page=6" target="_blank" rel="noopener">Introduction · page 5 ↗</a></figcaption></figure>
                 <figure class="home-paper home-paper-sage home-book-quote"><h3>Keep the details</h3><blockquote><p>“Add details like depth, temperature, current direction, and what you saw. Over time, this builds a custom map more valuable than any chart.”</p></blockquote><figcaption><a href="books/saltwater-pages.pdf#page=23" target="_blank" rel="noopener">Underwater Eyes · page 22 ↗</a></figcaption></figure>
                 <figure class="home-paper home-paper-blue home-book-quote"><h3>Turn footage into learning</h3><blockquote><p>“Use your footage not just to tell stories, but to review your technique. Watch your drift angle, how quickly you hook up after sonar marks, or how fish behave once hooked. It becomes a tool for improvement.”</p></blockquote><figcaption><a href="books/saltwater-pages.pdf#page=48" target="_blank" rel="noopener">Combining Tech with Tactics · page 47 ↗</a></figcaption></figure>
-              </div>
+              </div></details>
             </section>
 
             <div class="home-photo-strip" aria-label="Pages from the water">
               <figure class="home-print"><img src="photos/bass-closeup.jpg" width="768" height="1024" alt="A large largemouth bass caught near Jonkershoek in the Stellenbosch mountains" loading="lazy"><figcaption>One of my biggest largemouth bass, caught in the Stellenbosch mountains near Jonkershoek.</figcaption></figure>
               <figure class="home-print"><img src="photos/offshore-memory.jpg" width="1186" height="662" alt="Santer caught on a SquidTrex jig on a calm offshore day" loading="lazy"><figcaption>Santer on a SquidTrex jig. A wind-still day with perfect conditions near Gericke’s Point.</figcaption></figure>
-              <figure class="home-print"><img src="photos/spearfishing-staal.jpg" width="1067" height="1600" alt="Staal Erasmus holding a knifejaw after spearfishing" loading="lazy"><figcaption>Staal Erasmus with a knifejaw from a spearfishing trip. A lovely eating fish, and a privilege to take friends out spearfishing.</figcaption></figure>
+              <figure class="home-print"><img src="photos/spearfishing-staal.jpg" width="1067" height="1600" alt="Steyl Erasmus holding a knifejaw after spearfishing" loading="lazy"><figcaption>Steyl Erasmus with a knifejaw from a spearfishing trip. A lovely eating fish, and a privilege to take friends out spearfishing.</figcaption></figure>
             </div>
-
-            <section class="home-chapter" aria-labelledby="home-watch-title">
-              <div class="home-chapter-heading"><span class="home-kicker">02 / From wrist to journal</span><h2 id="home-watch-title">Fish first. Keep a record as you go.</h2><p>The current setup pairs a Garmin fēnix 5X with Garmin Connect on the phone and this private web journal.</p></div>
-              <ol class="home-workflow">
-                <li><span class="home-step">1</span><h3>On the watch</h3><p>Start a trip and select the species when you catch a fish. The watch saves its time and position while you carry on fishing.</p></li>
-                <li><span class="home-step">2</span><h3>Across the connection</h3><p>Garmin Connect on the phone transfers the saved catch and trip records to your private online journal.</p></li>
-                <li><span class="home-step">3</span><h3>In your journal</h3><p>The catch’s time and position link it to weather and sea information from online data services (APIs). The original records, conditions and their sources are saved together in the database.</p></li>
-              </ol>
-              <aside class="home-note home-accuracy"><h3>Two taps start a much bigger record</h3><p>You record the fish. The system adds the surrounding conditions, including the hours leading up to the catch. Photos, notes and day ratings add what you saw and experienced yourself.</p></aside>
-            </section>
 
             <section class="home-chapter home-data" aria-labelledby="home-data-title">
               <div class="home-chapter-heading"><span class="home-kicker">My fishing notes</span><h2 id="home-data-title">What I record about my fishing</h2><p>From the fish I catch and where I find them to the weather, water and how the day felt—these details help me learn from each trip. Open a heading below to see what I keep. Some details are optional or calculated, so they won’t all be available for every fishing day.</p></div>
@@ -159,23 +154,22 @@
 <details class="home-parameter-section"><summary><span id="home-parameters-9">Readings from my boat electronics</span><small>7 parameters</small></summary><table class="home-parameter-table" aria-labelledby="home-parameters-9"><thead><tr><th scope="col">What I save</th><th scope="col">How it’s recorded</th><th scope="col">What it means</th></tr></thead><tbody><tr data-parameter="sonar_depth_m"><th scope="row">Fish-finder depth</th><td>m · metres, if imported</td><td>Depth recorded by boat electronics, kept separate from mapped seabed estimates.</td></tr><tr data-parameter="water_temperature_c"><th scope="row">Instrument water temperature</th><td>°C, if imported</td><td>Temperature from boat electronics, kept separate from modelled sea temperature.</td></tr><tr data-parameter="sog_m_s"><th scope="row">Instrument speed over ground</th><td>m/s · metres per second, if imported</td><td>The boat’s recorded speed over the ground.</td></tr><tr data-parameter="cog_degrees"><th scope="row">Course over ground</th><td>° · compass degrees, if imported</td><td>The direction the boat was moving over the ground.</td></tr><tr data-parameter="heading_degrees heading_reference"><th scope="row">Boat heading &amp; reference</th><td>° / true or magnetic reference</td><td>The direction the boat was pointing and the heading reference, when supplied.</td></tr><tr data-parameter="observed_at source_device source_record_id"><th scope="row">Instrument reading time &amp; source</th><td>Timestamp / instrument record</td><td>When each imported boat reading was taken and which device supplied it.</td></tr><tr data-parameter="time_difference_seconds distance_m association_version"><th scope="row">Instrument-to-catch match</th><td>s / m / matching version</td><td>How far apart in time and distance a boat reading and catch were, and the rule used to link them.</td></tr></tbody></table></details>
 <details class="home-parameter-section"><summary><span id="home-parameters-10">Extra calculations &amp; where the information comes from</span><small>11 parameters</small></summary><table class="home-parameter-table" aria-labelledby="home-parameters-10"><thead><tr><th scope="col">What I save</th><th scope="col">How it’s recorded</th><th scope="col">What it means</th></tr></thead><tbody><tr data-parameter="a b length_type min_length_cm max_length_cm citation verified model_id version"><th scope="row">Weight-estimation method</th><td>Coefficients / cm / source</td><td>The length–weight formula, valid length range, reference and verification status used for any estimated weight.</td></tr><tr data-parameter="thresholds temporal_policy estimated_depth_band_m"><th scope="row">History thresholds &amp; depth band</th><td>Defined limits / m</td><td>The limits used to flag events such as strong wind, plus depth grouping and the rule excluding samples after the catch.</td></tr><tr data-parameter="current_anomaly seasonal_sst_anomaly upwelling_indicator coastline_relative_wind geography"><th scope="row">Uncomputed environmental indicators</th><td>Missing until supported</td><td>Reserved anomaly, upwelling and coastal-context fields are stored as unavailable where the required reference data is absent; they are not measured results.</td></tr><tr data-parameter="inputs outputs validation target_start target_end information_cutoff"><th scope="row">Experimental model runs</th><td>Inputs / results / target times</td><td>When model runs are generated, their inputs, outputs, validation and information cutoff can be stored. Not a promise of a reliable prediction.</td></tr><tr data-parameter="grid_latitude grid_longitude"><th scope="row">Environmental model grid position</th><td>° · latitude &amp; longitude</td><td>The provider’s grid location, which can differ from the actual catch GPS position.</td></tr><tr data-parameter="sample_day time history_start history_end history_reference"><th scope="row">Hourly source history</th><td>Date / time range</td><td>The original hourly provider series and the history window used to describe each catch.</td></tr><tr data-parameter="resolution_arc_seconds terrain neighbourhood_cells"><th scope="row">Seabed estimate detail</th><td>arcsec / surrounding grid cells</td><td>The underlying depth-map resolution and nearby terrain cells used to calculate slope and elevation range.</td></tr><tr data-parameter="provider product data_kind source sources dataset_version model_version feature_version derivation_version astronomy features units metadata method astronomy_method moon_method season_convention local_solar_offset_minutes moon_illumination_fraction timestamps"><th scope="row">Sources, methods &amp; units</th><td>Provider / version / units</td><td>Which service or calculation produced a value, the measurement units, model or algorithm version, and the time conventions used.</td></tr><tr data-parameter="event_at sample_at issued_at retrieved_at computed_at available_at received_at created_at updated_at"><th scope="row">Capture, retrieval &amp; processing times</th><td>Date and time</td><td>When the event happened, source data applied, records arrived and calculations or updates were saved.</td></tr><tr data-parameter="status unavailable_sources requested_at http_status elapsed_ms"><th scope="row">Collection status &amp; missing data</th><td>Status / response code / milliseconds</td><td>Whether source retrieval and processing succeeded, why data is missing, and how long requests took.</td></tr><tr data-parameter="id owner_id device_id archive_id catch_id watch_trip_id catch_archive_id trip_archive_id spot_archive_id series_id telemetry_id bathymetry_id schema_version cache_key raw_payload"><th scope="row">Record links &amp; original data</th><td>Record IDs / format version</td><td>Private account and device links connect catches, trips, sessions, spots and sources. Original uploaded records and provider responses are retained for traceability.</td></tr></tbody></table></details>
 </div>
-              <aside class="home-note home-research-note"><h3>Observe. Record. Compare. Test again.</h3><p>This is a growing personal field study: original catch records linked to their conditions and the time spent fishing. It gives us evidence to examine patterns, check familiar advice and ask better questions. One good day does not prove a rule; repeated, comparable results are how confidence grows.</p></aside>
             </section>
 
-            <div class="home-photo-strip home-photo-strip-wide" aria-label="Fishing memories">
+            
+
+            <section class="home-chapter home-next" aria-labelledby="home-next-title">
+              <article class="home-letter"><span class="home-kicker">The long-term goal</span><h2 id="home-next-title">Build the knowledge we wish we had today.</h2><p>Over years of fishing, I want to learn which species to target, where and when to go, and what bait or technique to use. The plan is to keep recording, comparing and testing—learning from quiet days as well as successful ones.</p><a class="text-action" href="#insights">See what we’re learning →</a></article>
+              <figure class="home-print home-print-feature"><img src="photos/mentor-steenbras.jpg" width="1600" height="1067" alt="Fishing mentor Johnny McSeveny holding a red steenbras" loading="lazy"><figcaption>Johnny McSeveny with a red steenbras. My all-time fishing mentor—the person who taught me so much of what I know, and someone I’ll always look up to.</figcaption></figure>
+            </section>
+            <details class="home-extra-reading home-more-photos"><summary>More photos from the water</summary><div class="home-photo-strip home-photo-strip-wide" aria-label="Fishing memories">
               <figure class="home-print"><img src="photos/marcus-roman.jpg" width="1600" height="1067" alt="Marcus Swanepoel holding a red roman caught on a SquidTrex jig" loading="lazy"><figcaption>My youngest brother, Marcus Swanepoel, with a red roman caught on a SquidTrex jig.</figcaption></figure>
               <figure class="home-print"><img src="photos/grunter-day.jpg" width="2048" height="1153" alt="The angler with his first spotted grunter caught on fly" loading="lazy"><figcaption>My first spotted grunter on fly.</figcaption></figure>
               <figure class="home-print"><img src="photos/river-day.jpg" width="1078" height="729" alt="A friend with a fly-caught smallmouth bass in a river near Franschhoek" loading="lazy"><figcaption>My buddy with a smallmouth bass caught on fly in a river near Franschhoek.</figcaption></figure>
-            </div>
-
-            <section class="home-chapter home-next" aria-labelledby="home-next-title">
-              <article class="home-letter"><span class="home-kicker">The ten-year goal</span><h2 id="home-next-title">Build the knowledge we wish we had today.</h2><p>Over the next ten years, I want to build a record across hundreds or thousands of fishing trips—hopefully tens of thousands of fish—and learn from the quiet days as carefully as the successful ones.</p><p>The questions are simple: how do different fish behave and feed? When do they eat? Which species should we target, when and where should we go, and what bait, lure or technique should we try? That is the long-term destination. Today’s work is collecting the evidence, improving the record and testing what it can tell us.</p><p>My hope is to head out one day with a clear, well-supported plan: this is the species we’re targeting, this is where we’re going, and this is what we’ll offer it.</p><p class="home-letter-ending">And in ten years, if a few lighties say, “That’s the guy to speak to if you want to go fishing,” I’ll know this was worth building.</p><a class="text-action" href="#insights">See what we’re learning →</a></article>
-              <figure class="home-print home-print-feature"><img src="photos/mentor-steenbras.jpg" width="1600" height="1067" alt="Fishing mentor Johnny McSeveny holding a red steenbras" loading="lazy"><figcaption>Johnny McSeveny with a red steenbras. My all-time fishing mentor—the person who taught me so much of what I know, and someone I’ll always look up to.</figcaption></figure>
-            </section>
-            <div class="home-last-prints" aria-label="More pages from the diary">
+            </div><div class="home-last-prints" aria-label="More pages from the diary">
               <figure class="home-print"><img src="photos/offshore-closeup.jpg" width="2048" height="1141" alt="A large santer caught on a SquidTrex jig, photographed for a thumbnail" loading="lazy"><figcaption>Big santer on a SquidTrex jig. Another awesome day on the water, and another thumbnail.</figcaption></figure>
               <div class="home-release-sequence"><figure class="home-print"><img src="photos/release.jpg" width="1182" height="665" alt="A fly-caught spotted grunter being released in the Sedgefield lagoon" loading="lazy"><figcaption>Spotted grunter on fly in the Sedgefield lagoon, near the river mouth, with Mavungana Fly Fishing Adventures. Released back into the water.</figcaption></figure><figure class="home-print"><img src="photos/release-after.jpg" width="1600" height="901" alt="The splash just after the spotted grunter is released" loading="lazy"><figcaption>Just after the release—the next moment in the same sequence.</figcaption></figure></div>
-            </div>
+            </div></details>
 
             <section class="home-album" aria-labelledby="album-title">
               <div class="home-chapter-heading"><span class="home-kicker">Loose pages / The photo album</span><h2 id="album-title">A few more moments from the water.</h2><p>A few more days worth remembering. The photographs keep turning as you browse.</p></div>
@@ -194,16 +188,16 @@
             <details class="density-settings"><summary>Smoothing · <span id="density-radius-label">Auto</span></summary><label for="density-radius">Smoothing radius (metres)</label><input id="density-radius" type="range" min="0" max="100" step="1"><button id="density-auto" type="button" class="quiet">Use automatic radius</button><p class="small muted">Wider smoothing joins nearby catch locations. This shows recorded concentration, not fishing probability.</p></details>
           </div>
           <div id="map" aria-label="Map of catch locations"></div>
-          <p id="map-view-summary" class="map-view-summary" role="status"></p><div id="legend" class="legend"></div>
+          <p id="map-view-summary" class="map-view-summary" role="status"></p><details class="map-legend"><summary>Map key</summary><div id="legend" class="legend"></div></details>
         </section>
         <section id="insights-page" hidden aria-label="Fishing insights">
           <div class="insights-page-filter"><label>Species<select id="insights-species"></select></label><p class="small muted">Applies to every chart.</p></div>
           <div id="insights-overview" class="insights-grid"></div>
           <details class="insights-section"><summary>Species at a spot</summary><label class="insights-spot-choice" for="insights-spot-picker">Choose a fishing spot<select id="insights-spot-picker"></select></label><div id="insights-spot-species"></div></details>
-          <section class="insights-section"><h3>Ratings by fishing event</h3><p id="insights-ratings-status" class="small muted" role="status"></p><div id="insights-ratings" class="insights-grid conditions-grid"></div></section>
-          <section class="insights-section"><h3>Conditions when you caught fish</h3><p id="insights-condition-status" class="small muted" role="status"></p><button id="insights-retry" class="quiet" type="button" hidden>Retry conditions</button><p class="small muted">Catch-time model estimates and astronomy. These distributions do not account for time spent fishing in each condition.</p><details class="insight-data insight-chart-settings" data-disclosure="insight:intervals"><summary>Adjust chart intervals</summary><div class="insights-bin-controls"><label>Temperature intervals<select data-insight-step="sea"><option value="0.5">0.5°C</option><option value="1" selected>1°C</option><option value="2">2°C</option></select></label><label>Pressure intervals<select data-insight-step="pressure"><option value="1">1 hPa</option><option value="2" selected>2 hPa</option><option value="5">5 hPa</option></select></label><label>Moon intervals<select data-insight-step="illumination"><option value="5">5%</option><option value="10" selected>10%</option></select></label><label>Current intervals<select data-insight-step="current"><option value="0.5">0.5 km/h</option><option value="1" selected>1 km/h</option><option value="2">2 km/h</option></select></label></div><p class="small muted">Moon illumination: 0% new to 100% full, combining waxing and waning. Pressure: hPa, equivalent to mbar.</p></details><div id="insights-conditions" class="insights-grid conditions-grid"></div></section>
+          <details class="insights-section" data-disclosure="insight:ratings"><summary>Enjoyment &amp; bite activity</summary><p id="insights-ratings-status" class="small muted" role="status"></p><div id="insights-ratings" class="insights-grid conditions-grid"></div></details>
+          <section class="insights-section"><h3>Catch conditions</h3><p id="insights-condition-status" class="small muted" role="status"></p><button id="insights-retry" class="quiet" type="button" hidden>Retry conditions</button><p class="small muted">Catches grouped by the conditions at the time. Fishing time is not included in these comparisons.</p><details class="insight-data insight-chart-settings" data-disclosure="insight:intervals"><summary>Adjust chart intervals</summary><div class="insights-bin-controls"><label>Temperature intervals<select data-insight-step="sea"><option value="0.5">0.5°C</option><option value="1" selected>1°C</option><option value="2">2°C</option></select></label><label>Pressure intervals<select data-insight-step="pressure"><option value="1">1 hPa</option><option value="2" selected>2 hPa</option><option value="5">5 hPa</option></select></label><label>Moon intervals<select data-insight-step="illumination"><option value="5">5%</option><option value="10" selected>10%</option></select></label><label>Current intervals<select data-insight-step="current"><option value="0.5">0.5 km/h</option><option value="1" selected>1 km/h</option><option value="2">2 km/h</option></select></label></div><p class="small muted">Moon illumination: 0% new to 100% full, combining waxing and waning. Pressure: hPa, equivalent to mbar.</p></details><div id="insights-conditions" class="insights-grid conditions-grid"></div></section>
           <details class="insights-section" data-disclosure="insight:comparison"><summary>Explore another comparison</summary><div class="insights-compare-controls"><label>Catches by<select id="insights-x"></select></label></div><div id="insights-comparison"></div></details>
-          <details class="insight-data"><summary>Data quality &amp; interpretation</summary><p>Each chart reports its sample. Missing or unrecognised measurements are excluded, never replaced with zero. Calm currents and zero lunar phase are valid. Conditions are matched within one hour of the catch; only compatible units are compared. Repeated snapshots do not create extra catches.</p><p>Spot rates use recorded fishing sessions, including zero-catch sessions. Unclassified time is excluded from fishing hours. Small samples and incomplete GPS or recording can change rankings. No confidence intervals, causal claims or calibrated fishing predictions are implied. Charts reflect the records in your account and the selected filters.</p></details>
+          <details class="insight-data"><summary>About these results</summary><p>Each chart reports its sample. Missing or unrecognised measurements are excluded, never replaced with zero. Calm currents and zero lunar phase are valid. Conditions are matched within one hour of the catch; only compatible units are compared. Repeated snapshots do not create extra catches.</p><p>Spot rates use recorded fishing sessions, including zero-catch sessions. Unclassified time is excluded from fishing hours. Small samples and incomplete GPS or recording can change rankings. No confidence intervals, causal claims or calibrated fishing predictions are implied. Charts reflect the records in your account and the selected filters.</p></details>
         </section>
         <section id="totals-page" hidden aria-label="Species totals">
 
@@ -222,14 +216,14 @@
           </div>
         </section>
         <section id="diary-page" hidden aria-label="Fishing days">
-          <div class="section-heading"><h2>Your fishing days</h2><a href="#spots" class="text-action">Compare spots →</a></div>
+          <div class="section-heading"><h2>Fishing days</h2><a href="#spots" class="text-action">Compare spots →</a></div>
           <p id="trip-status" role="status" class="muted"></p>
           <details class="diary-totals"><summary>Trip totals</summary><div id="trip-summary" class="trip-summary"></div></details>
           <div id="trip-rows"><div id="days"></div></div>
         </section>
         <section id="spots-page" hidden aria-label="Fishing spot productivity">
           <div class="section-heading"><h2>Saved spots</h2><a href="#diary" class="text-action">View days →</a></div>
-          <section id="spot-productivity" class="spot-productivity" aria-label="Productivity by fishing spot"></section>
+          <div class="spot-search-controls"><label for="spot-search">Find a spot<input id="spot-search" type="search" placeholder="Search by spot name" autocomplete="off"></label><p id="spot-search-status" class="small muted" role="status"></p></div><section id="spot-productivity" class="spot-productivity" aria-label="Productivity by fishing spot"></section>
         </section>
         <p id="empty" class="empty"
           hidden>No catches yet. Save one on your watch and sync it to see it here.</p>

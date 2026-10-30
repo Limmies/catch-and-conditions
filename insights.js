@@ -233,7 +233,7 @@ function insightTable(rows, heading = "Value", key = heading) {
   }</tbody></table></div></details>`;
 }
 function insightInterpretation(message) {
-  return `<aside class="insight-interpretation"><h4>What this shows</h4><p>${esc(message)}</p></aside>`;
+  return `<details class="insight-interpretation"><summary>What this shows</summary><p>${esc(message)}</p></details>`;
 }
 function insightSummary(rows, unit = "catches", title = "") {
   const valid = rows.filter((r) => Number.isFinite(r.value));

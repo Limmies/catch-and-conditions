@@ -210,6 +210,7 @@ function loginMessage(text, error = false) {
 }
 function resetPrivateView() {
   resetDayPhotos();
+  $("spot-search").value = "";
   resetInsights();
   loadGeneration++;
   conditionsGeneration++;
@@ -1015,6 +1016,19 @@ document.addEventListener("contextmenu", (event) => {
   event.preventDefault();
   showSpotRename(card.dataset.spotId);
 });
+function filterSpotCards() {
+  const query = $("spot-search").value.trim().toLocaleLowerCase();
+  const cards = [...$("spot-productivity").querySelectorAll(".spot-productivity-card")];
+  let shown = 0;
+  for (const card of cards) {
+    const match = !query || card.querySelector(".spot-title").textContent.toLocaleLowerCase().includes(query);
+    card.hidden = !match;
+    if (match) shown++;
+  }
+  $("spot-search-status").textContent = query
+    ? `${shown} of ${cards.length} spots${shown ? "" : " · try another name"}`
+    : `${cards.length} ${cards.length === 1 ? "spot" : "spots"}`;
+}
 function renderSpotProductivity(rows) {
   const expanded = disclosureState($("spot-productivity"));
   const { ranked, unlocated } = collectSpotProductivity(rows);
@@ -1077,6 +1091,7 @@ function renderSpotProductivity(rows) {
         : ""
     }`;
   restoreDisclosures($("spot-productivity"), expanded);
+  filterSpotCards();
 }
 function disclosureState(container) {
   return new Map(
@@ -1560,6 +1575,8 @@ function renderMapGroups() {
 function openSpotCard(id) {
   location.hash = "spots";
   route();
+  $("spot-search").value = "";
+  filterSpotCards();
   requestAnimationFrame(() => {
     const card = [...document.querySelectorAll("[data-spot-id]")].find((node) =>
       node.dataset.spotId === id
@@ -3390,6 +3407,7 @@ for (const id of ["species", "from", "to"]) {
 $("filter-species-info").onclick = () => {
   if ($("species").value) showSpeciesProfile($("species").value);
 };
+$("spot-search").addEventListener("input", filterSpotCards);
 $("clear").onclick = () => {
   for (const id of ["species", "from", "to"]) $(id).value = "";
   render();

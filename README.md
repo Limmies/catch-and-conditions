@@ -177,3 +177,7 @@ Local shell v122 prepares Insights for large spot collections: spot comparisons 
 Local shell v123 folds each Home parameter category into a separate closed-by-default disclosure. Opening a category reveals its own table headers and original rows. All 89 parameters remain available. Held locally until publication is requested.
 
 Local shell v124 gives the Home data guide a personal title and an accurate count: “89 details I save about my fishing”. Category and column titles use everyday language. Optional values are still explained. Held locally until publication is requested.
+
+Local shell v125 moves the personal ten-year ambition quote to a prominent taped note at the top of Home, with the owner’s goal of enjoying fishing and letting skill speak for itself. Removes the duplicate quote from the lower goal section. Includes the pending Steyl Erasmus spelling correction. Held locally until publication is requested.
+
+Local shell v126 simplifies the journal: shorter Home explanations, one workflow instead of repeated setup sections, optional book extracts and secondary photos, compact Species rows, a collapsible Map key and chart interpretations, optional enjoyment/bite charts, and persistent spot-name search. Keeps the opening ambition quote, taped sketch, complete book download, every photograph, all 89 parameters and all data-entry actions. No database changes. Held locally until publication is requested.
