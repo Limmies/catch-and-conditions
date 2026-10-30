@@ -283,6 +283,13 @@ async function setSession(next) {
   $("login").hidden = true;
   $("app-loading").hidden = false;
   $("password").value = "";
+  // Public Home content does not need to wait for private fishing records.
+  if (selectedPages()[0] === "home") {
+    $("app-loading").hidden = true;
+    $("journal").hidden = false;
+    $("signout").hidden = false;
+    route();
+  }
   await refreshJournal();
   if (session?.user.id !== next.user.id) return;
   $("app-loading").hidden = true;
@@ -338,7 +345,8 @@ async function refreshJournal() {
   const generation = ++loadGeneration;
   const owner = session.user.id;
   void refreshDayRatings(owner, generation);
-  void loadDayPhotos({ refresh: true });
+  if (selectedPages()[0] === "diary") void loadDayPhotos({ refresh: true });
+  else if (dayPhotoState !== "loading") dayPhotoState = "idle";
   $("refresh").disabled = true;
   message("Refreshing…");
   $("status").classList.add("is-loading");
@@ -1197,6 +1205,7 @@ function renderTrips() {
       a.created.localeCompare(b.created) || a.id.localeCompare(b.id)
     ).map((s, i) => [s.id, s.name || "Spot " + (i + 1)]),
   );
+  if (selectedPages()[0] === "home") return;
   const eligible = diaryTripRows(false);
   const rows = eligible.filter(({ metrics }) => !$("species").value || metrics.count > 0);
   renderSpotProductivity(eligible);
@@ -3365,6 +3374,7 @@ function route() {
     !pages.some((key) => (key === "totals" || (key === "map" && mapViewMode === "catches"))) ||
     visible.length > 0;
   document.title = $("page-title").textContent + " · Catch and Conditions";
+  if ((page === "diary" || page === "spots") && session && !$("journal").hidden) renderTrips();
   if (pages.includes("insights") && session && !$("journal").hidden) renderInsights();
   if (pages.includes("map") && session && !$("journal").hidden) {
     renderMap();

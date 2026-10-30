@@ -1,16 +1,16 @@
 // Cache the public app shell only. Never cache Auth, database requests or maps.
-const CACHE = 'catch-conditions-shell-v126';
+const CACHE = 'catch-conditions-shell-v127';
 const IMAGE_CACHE = 'catch-conditions-fish-mobile-v6';
 // Both styles keep their background illustrations with the public shell.
 const FILES = [
   './',
   './index.html',
-  './style.css?v=126',
-  './app.js?v=126',
-  './day-photos.js?v=126',
+  './style.css?v=127',
+  './app.js?v=127',
+  './day-photos.js?v=127',
   './config.js',
-  './density.js?v=126',
-  './insights.js?v=126',
+  './density.js?v=127',
+  './insights.js?v=127',
   './icon.svg',
   './icon-192.png',
   './icon-512.png',
@@ -51,6 +51,24 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
   if (url.origin !== ROOT.origin) return;
+  if (event.request.mode === 'navigate' && SHELL_PATHS.has(url.pathname)) {
+    // Open the saved public shell immediately; refresh it in the background.
+    const key = new URL(url.pathname, ROOT).href;
+    const update = (async () => {
+      const response = await fetch(event.request);
+      if (response.ok) {
+        const cache = await caches.open(CACHE).catch(() => null);
+        if (cache) await cache.put(key, response.clone()).catch(() => {});
+      }
+      return response;
+    })();
+    event.waitUntil(update.catch(() => {}));
+    event.respondWith((async () => {
+      const cached = await caches.match(key).catch(() => null);
+      return cached || await update;
+    })().catch(() => new Response('Connect to the internet and reopen Catch and Conditions.', { status: 503 })));
+    return;
+  }
   if (
     url.pathname.startsWith(IMAGE_PATH) &&
     /^[a-z_]+\.(?:jpg|png)$/.test(url.pathname.slice(IMAGE_PATH.length))
@@ -99,28 +117,13 @@ self.addEventListener('fetch', (event) => {
   }
   event.respondWith(
     (async () => {
-      // Versioned scripts and immutable artwork can render from local cache.
-      if (albumPhoto || studyPlate || url.searchParams.has('v')) {
-        const cached = await caches.match(event.request).catch(() => null);
-        if (cached) return cached;
-      }
-      return fetch(event.request);
-    })().then((response) => {
+      const cached = await caches.match(event.request).catch(() => null);
+      if (cached) return cached;
+      const response = await fetch(event.request);
       if (response.ok) {
-        const copy = response.clone();
-        event.waitUntil(
-          caches.open(CACHE).then((cache) => cache.put(event.request, copy)),
-        );
+        event.waitUntil(caches.open(CACHE).then((cache) => cache.put(event.request, response.clone())).catch(() => {}));
       }
       return response;
-    }).catch(() =>
-      caches.match(event.request).then((cached) =>
-        cached ||
-        new Response(
-          'Connect to the internet and reopen Catch and Conditions.',
-          { status: 503 },
-        )
-      )
-    ),
+    })().catch(() => new Response('Connect to the internet and reopen Catch and Conditions.', { status: 503 })),
   );
 });
