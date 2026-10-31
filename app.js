@@ -189,6 +189,7 @@ function upgradeFishPortrait(id) {
 let client,
   session,
   catches = [],
+  catchesLoaded = false,
   trips = [],
   map,
   markers,
@@ -204,7 +205,17 @@ function message(text, error = false, kind = "load") {
   $("status").textContent = text;
   $("status").classList.toggle("error", error);
 }
+function finishLoginRestore() {
+  $("login").removeAttribute("data-restoring");
+  $("login-button").disabled = !client;
+}
+function hideLoginPassword() {
+  $("password").type = "password";
+  $("login-password-toggle").textContent = "Show";
+  $("login-password-toggle").setAttribute("aria-pressed", "false");
+}
 function loginMessage(text, error = false) {
+  $("login").removeAttribute("data-restoring");
   $("login-status").textContent = text;
   $("login-status").classList.toggle("error", error);
 }
@@ -218,6 +229,7 @@ function resetPrivateView() {
   dayRatingRows.clear();
   dayRatingLoad = "loading";
   catches = [];
+  catchesLoaded = false;
   trips = [];
   visible = [];
   dayPalette.clear();
@@ -259,6 +271,9 @@ function resetPrivateView() {
   $("refresh").disabled = false;
   $("app-loading").hidden = true;
   $("login-form").removeAttribute("aria-busy");
+  finishLoginRestore();
+  hideLoginPassword();
+  loginMessage("Sign in to open your fishing journal.");
   lastRefreshAt = 0;
 }
 async function setSession(next) {
@@ -283,8 +298,8 @@ async function setSession(next) {
   $("login").hidden = true;
   $("app-loading").hidden = false;
   $("password").value = "";
-  // Public Home content does not need to wait for private fishing records.
-  if (selectedPages()[0] === "home") {
+  // Home and the species guide can open while their catch totals refresh.
+  if (["home", "totals"].includes(selectedPages()[0])) {
     $("app-loading").hidden = true;
     $("journal").hidden = false;
     $("signout").hidden = false;
@@ -340,6 +355,13 @@ async function readRecords(
     if (data.length < pageSize) return uniqueRecords(all);
   }
 }
+function acceptCatchRecords(records, owner, generation) {
+  if (!records || generation !== loadGeneration || session?.user.id !== owner) return;
+  catches = records;
+  catchesLoaded = true;
+  dayPalette = new Map([...new Set(catches.map((c) => dayKey(c.caught_at)))].sort().map((day, i) => [day, dayColours[i % dayColours.length]]));
+  render();
+}
 async function refreshJournal() {
   if (!session || $("refresh").disabled) return;
   const generation = ++loadGeneration;
@@ -359,7 +381,7 @@ async function refreshJournal() {
         "catch",
         owner,
         generation,
-      ),
+      ).then((records) => { acceptCatchRecords(records, owner, generation); return records; }),
       readRecords(
         "fishing_trips",
         "archive_id,device_id,watch_trip_id,started_at,ended_at,fishing_seconds,travelling_seconds,unclassified_seconds,raw_payload,fishing_mode,fishing_sessions(archive_id,session_number,started_at,ended_at,fishing_seconds,catch_count,no_bite_count,species_counts,angler_seconds,line_seconds,latitude,longitude,location_source,spot_archive_id,fishing_spots(archive_id,name,latitude,longitude,created_at))",
@@ -370,15 +392,6 @@ async function refreshJournal() {
       ),
     ]);
     if (generation !== loadGeneration || !session) return;
-    if (catchResult.status === "fulfilled") {
-      catches = catchResult.value;
-      dayPalette = new Map(
-        [...new Set(catches.map((c) => dayKey(c.caught_at)))].sort().map((
-          day,
-          i,
-        ) => [day, dayColours[i % dayColours.length]]),
-      );
-    }
     if (tripResult.status === "fulfilled") {
       trips = tripResult.value.filter((t) => t.ended_at);
     }
@@ -430,7 +443,7 @@ function render() {
   $("catch-count").textContent = visible.length;
   $("species-count").textContent = new Set(visible.map((c) => c.species_id)).size;
   $("day-count").textContent = new Set(visible.map((c) => dayKey(c.caught_at))).size;
-  $("empty").hidden = !selectedPages().some((
+  $("empty").hidden = !catchesLoaded || !selectedPages().some((
     key,
   ) => (key === "totals" || (key === "map" && mapViewMode === "catches"))) || visible.length > 0;
   $("empty").textContent = catches.length
@@ -1205,7 +1218,7 @@ function renderTrips() {
       a.created.localeCompare(b.created) || a.id.localeCompare(b.id)
     ).map((s, i) => [s.id, s.name || "Spot " + (i + 1)]),
   );
-  if (selectedPages()[0] === "home") return;
+  if (["home", "totals"].includes(selectedPages()[0])) return;
   const eligible = diaryTripRows(false);
   const rows = eligible.filter(({ metrics }) => !$("species").value || metrics.count > 0);
   renderSpotProductivity(eligible);
@@ -2290,7 +2303,8 @@ function renderTotals() {
     b[1] - a[1] ||
     (species[a[0]]?.[0] || a[0]).localeCompare(species[b[0]]?.[0] || b[0])
   );
-  const signature = JSON.stringify([visible.length, rows]);
+  const ready = catchesLoaded || catches.length > 0;
+  const signature = JSON.stringify([ready, visible.length, rows]);
   if (signature === totalsSignature && $("totals").childElementCount) return;
   totalsSignature = signature;
   const max = Math.max(1, ...rows.map((row) => row[1]));
@@ -2303,14 +2317,20 @@ function renderTotals() {
       fishImage(id)
     }<span>${
       esc(species[id]?.[0] || id)
-    }</span></span></button></td><td><strong>${count}</strong></td><td>${
-      visible.length && count > 0 && count / visible.length * 100 < 1 ? "<1" : visible.length ? Math.round(count / visible.length * 100) : 0
-    }%</td></tr><tr class="species-bar-row" aria-hidden="true" style="--species-colour:${
+    }</span></span></button></td><td><strong>${ready ? count : "…"}</strong></td><td>${
+      ready ? `${visible.length && count > 0 && count / visible.length * 100 < 1 ? "<1" : visible.length ? Math.round(count / visible.length * 100) : 0}%` : "—"
+    }</td></tr><tr class="species-bar-row" aria-hidden="true" style="--species-colour:${
       species[id]?.[1] || "#11543e"
     }"><td colspan="3"><span class="species-visual-track"><span style="width:${
       count / max * 100
     }%"></span></span></td></tr>`
   ).join("");
+  if (selectedPages()[0] === "totals") warmSpeciesThumbnails();
+}
+function warmSpeciesThumbnails() {
+  $("totals").querySelectorAll(".fish-thumb").forEach((image, index) => {
+    if (index < 8) image.loading = "eager";
+  });
 }
 function diaryTripRows(filterSpecies = true) {
   return trips.filter(matchesFishingMode).map((trip) => ({ trip, metrics: tripMetrics(trip) }))
@@ -3345,12 +3365,15 @@ const viewNames = {
   spots: "Spots",
   insights: "Insights",
 };
+function insightsAvailable() {
+  return document.documentElement.dataset.insights !== "off";
+}
 function selectedPages() {
   const pages = [
     ...new Set(
       location.hash.slice(1).split(",").map((key) =>
         key === "days" || key === "trips" ? "diary" : key
-      ).filter((key) => viewKeys.includes(key)),
+      ).filter((key) => viewKeys.includes(key) && (key !== "insights" || insightsAvailable())),
     ),
   ];
   return [pages.at(-1) || "home"];
@@ -3371,9 +3394,10 @@ function route() {
   document.body.dataset.page = page;
   $("page-title").textContent = pages.map((key) => viewNames[key]).join(" + ");
   $("empty").hidden =
-    !pages.some((key) => (key === "totals" || (key === "map" && mapViewMode === "catches"))) ||
+    !catchesLoaded || !pages.some((key) => (key === "totals" || (key === "map" && mapViewMode === "catches"))) ||
     visible.length > 0;
   document.title = $("page-title").textContent + " · Catch and Conditions";
+  if (page === "totals") { renderTotals(); warmSpeciesThumbnails(); }
   if ((page === "diary" || page === "spots") && session && !$("journal").hidden) renderTrips();
   if (pages.includes("insights") && session && !$("journal").hidden) renderInsights();
   if (pages.includes("map") && session && !$("journal").hidden) {
@@ -3474,29 +3498,51 @@ $("signout").onclick = async () => {
     $("signout").disabled = false;
   }
 };
+$("login-password-toggle").onclick = () => {
+  const show = $("password").type === "password";
+  $("password").type = show ? "text" : "password";
+  $("login-password-toggle").textContent = show ? "Hide" : "Show";
+  $("login-password-toggle").setAttribute("aria-pressed", String(show));
+};
+$("email").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") { event.preventDefault(); $("password").focus(); }
+});
 $("login-form").onsubmit = async (event) => {
   event.preventDefault();
-  if (!client) return;
-  if ($("login-button").disabled) return;
+  if (!client || $("login-button").disabled) return;
   $("login-button").disabled = true;
+  $("login-button").textContent = "Signing in…";
+  $("login-password-toggle").disabled = true;
+  $("email").readOnly = $("password").readOnly = true;
   $("login-form").setAttribute("aria-busy", "true");
   loginMessage("Signing in…");
   try {
     const { data, error } = await client.auth.signInWithPassword({
-      email: $("email").value.trim(),
-      password: $("password").value,
+      email: $("email").value.trim(), password: $("password").value,
     });
     if (error) throw error;
-    if (data?.session) await setSession(data.session);
+    if (!data?.session) throw new Error("No session returned");
+    $("login-button").textContent = "Opening journal…";
+    document.activeElement?.blur();
+    await setSession(data.session);
   } catch (error) {
-    loginMessage(
-      error.message || "Could not sign in. Check your connection.",
-      true,
-    );
+    const text = error?.code === "invalid_credentials"
+      ? "That email or password didn’t match. Please try again."
+      : error?.code === "email_not_confirmed"
+      ? "Please confirm your email before signing in."
+      : error?.status === 429
+      ? "Too many sign-in attempts. Wait a moment, then try again."
+      : /fetch|network|timeout|abort/i.test((error?.name || "") + " " + (error?.message || ""))
+      ? "The connection was interrupted. Your password is still here—try again."
+      : "Could not sign in. Please try again.";
+    loginMessage(text, true);
   } finally {
     $("login-button").disabled = false;
+    $("login-button").textContent = "Sign in";
+    $("login-password-toggle").disabled = false;
+    $("email").readOnly = $("password").readOnly = false;
     $("login-form").removeAttribute("aria-busy");
-    $("password").value = "";
+    hideLoginPassword();
   }
 };
 async function start() {
@@ -3642,7 +3688,7 @@ function setupHomeAlbum() {
   turn(0);
   schedule();
 }
-setupInsights();
+if (insightsAvailable()) setupInsights();
 setupHomeAlbum();
 start();
 if ("serviceWorker" in navigator && location.protocol !== "file:") {
