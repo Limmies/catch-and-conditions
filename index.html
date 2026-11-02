@@ -19,15 +19,15 @@
     <link rel="stylesheet" href="vendor/leaflet.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.Default.css">
-    <link rel="stylesheet" href="style.css?v=130">
+    <link rel="stylesheet" href="style.css?v=132">
     <script defer src="vendor/supabase.js"></script>
     <script defer src="vendor/leaflet.js"></script>
     <script defer src="vendor/leaflet.markercluster.js"></script>
     <script defer src="config.js"></script>
-    <script defer src="density.js?v=130"></script>
-    <script defer src="insights.js?v=130"></script>
-    <script defer src="day-photos.js?v=130"></script>
-    <script defer src="app.js?v=130"></script>
+    <script defer src="density.js?v=132"></script>
+    <script defer src="insights.js?v=132"></script>
+    <script defer src="day-photos.js?v=132"></script>
+    <script defer src="app.js?v=132"></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
@@ -200,6 +200,12 @@
           <details class="insight-data"><summary>About these results</summary><p>Each chart reports its sample. Missing or unrecognised measurements are excluded, never replaced with zero. Calm currents and zero lunar phase are valid. Conditions are matched within one hour of the catch; only compatible units are compared. Repeated snapshots do not create extra catches.</p><p>Spot rates use recorded fishing sessions, including zero-catch sessions. Unclassified time is excluded from fishing hours. Small samples and incomplete GPS or recording can change rankings. No confidence intervals, causal claims or calibrated fishing predictions are implied. Charts reflect the records in your account and the selected filters.</p></details>
         </section>
         <section id="totals-page" hidden aria-label="Species totals">
+          <dl class="catch-size-metrics" aria-label="Catch totals">
+            <div><dt>Fish caught</dt><dd id="catch-total-count">…</dd></div>
+            <div class="size-fish-metric"><dt>Size fish</dt><dd id="size-total-count">…</dd></div>
+          </dl>
+          <p id="catch-size-coverage" class="small muted" aria-live="polite"></p>
+          <details class="catch-size-method"><summary>How size fish are counted</summary><p class="small muted">Size fish meet or exceed the species’ minimum total length in the <a href="https://www.oritag.org.za/Content/UserContent/documents/Linefishing-regs-for-the-smart-phone-interactive.pdf" target="_blank" rel="noopener noreferrer">ORI / SAAMBR linefishing summary</a> (checked 2 November 2026). Missing lengths and species without a listed minimum remain unclassified. Your chosen benchmark for both silver and dusky kob is 50 cm; regional limits can differ. This compares length only; it does not determine whether a fish may be kept. Species are ordered by size fish, then fish caught.</p></details>
 
           <div class="table-wrap">
             <table>
@@ -207,8 +213,8 @@
               <thead>
                 <tr>
                   <th scope="col">Species</th>
-                  <th scope="col">Catches</th>
-                  <th scope="col">Share</th>
+                  <th scope="col">Fish caught</th>
+                  <th scope="col">Size fish</th>
                 </tr>
               </thead>
               <tbody id="totals"></tbody>

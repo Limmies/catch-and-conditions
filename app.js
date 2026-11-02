@@ -2293,36 +2293,67 @@ function scientificCaption(id) {
       : ""
   }`;
 }
+// ORI / SAAMBR recreational linefishing summary, checked 2 November 2026.
+// These are species-summary benchmarks, not regional keep/release decisions.
+// Owner override: both kob categories use 50 cm for this metric.
+// Source: https://www.oritag.org.za/Content/UserContent/documents/Linefishing-regs-for-the-smart-phone-interactive.pdf
+const oriMinimumLengthsCm = Object.freeze({
+  kabeljo: 50, red_roman: 30, red_steenbras: 60, miss_lucy: 30,
+  geelbek: 60, carpenter: 35, santer: 30, yellowbelly: 60,
+  musselcracker: 50, dageraad: 40, scotsman: 40, blacktail: 20,
+  belman: 40, galjoen: 35, shad: 30, dusky_kob: 50,
+  spotted_grunter: 40, white_steenbras: 60, garrick: 70,
+  zebra: 30, white_musselcracker: 60,
+});
+function catchSizeClass(c) {
+  const length = c.raw_payload?.length_cm;
+  const minimum = oriMinimumLengthsCm[c.species_id];
+  if (!Number.isFinite(minimum) || !Number.isFinite(length) || length <= 0) return "unknown";
+  return length >= minimum ? "size" : "undersize";
+}
 let totalsSignature = "";
 function renderTotals() {
-  const counts = new Map(modeSpeciesIds().map((id) => [id, 0]));
+  const counts = new Map(modeSpeciesIds().map((id) => [id, { count: 0, size: 0, undersize: 0, unknown: 0 }]));
   for (const c of visible) {
-    counts.set(c.species_id, (counts.get(c.species_id) || 0) + 1);
+    if (c.species_id === "no_bite") continue;
+    const item = counts.get(c.species_id) || { count: 0, size: 0, undersize: 0, unknown: 0 };
+    item.count++;
+    item[catchSizeClass(c)]++;
+    counts.set(c.species_id, item);
   }
   const rows = [...counts].sort((a, b) =>
-    b[1] - a[1] ||
+    b[1].size - a[1].size || b[1].count - a[1].count ||
     (species[a[0]]?.[0] || a[0]).localeCompare(species[b[0]]?.[0] || b[0])
   );
   const ready = catchesLoaded || catches.length > 0;
-  const signature = JSON.stringify([ready, visible.length, rows]);
+  const signature = JSON.stringify([ready, rows]);
   if (signature === totalsSignature && $("totals").childElementCount) return;
   totalsSignature = signature;
-  const max = Math.max(1, ...rows.map((row) => row[1]));
-  $("totals").innerHTML = rows.map(([id, count]) =>
+  const sum = rows.reduce((sum, [, item]) => ({
+    count: sum.count + item.count, size: sum.size + item.size,
+    undersize: sum.undersize + item.undersize, unknown: sum.unknown + item.unknown,
+  }), { count: 0, size: 0, undersize: 0, unknown: 0 });
+  $("catch-total-count").textContent = ready ? sum.count : "…";
+  $("size-total-count").textContent = ready ? sum.size : "…";
+  $("catch-size-coverage").textContent = ready
+    ? `${sum.undersize} undersize · ${sum.unknown} unclassified. Counts follow your selected filters.`
+    : "Loading catch lengths…";
+  const max = Math.max(1, ...rows.map(([, item]) => item.count));
+  $("totals").innerHTML = rows.map(([id, item]) =>
     `<tr class="species-row" style="--species-colour:${
       species[id]?.[1] || "#11543e"
     }"><td><button type="button" class="species-profile-button" data-profile="${
       esc(id)
     }" aria-label="Read about ${esc(species[id]?.[0] || id)}"><span class="species-cell">${
       fishImage(id)
-    }<span>${
-      esc(species[id]?.[0] || id)
-    }</span></span></button></td><td><strong>${ready ? count : "…"}</strong></td><td>${
-      ready ? `${visible.length && count > 0 && count / visible.length * 100 < 1 ? "<1" : visible.length ? Math.round(count / visible.length * 100) : 0}%` : "—"
+    }<span>${esc(species[id]?.[0] || id)}</span></span></button></td><td><strong>${
+      ready ? item.count : "…"
+    }</strong></td><td class="size-fish-count"><strong>${ready ? item.size : "…"}</strong>${
+      ready && item.unknown ? `<small>${item.unknown} unclassified</small>` : ""
     }</td></tr><tr class="species-bar-row" aria-hidden="true" style="--species-colour:${
       species[id]?.[1] || "#11543e"
     }"><td colspan="3"><span class="species-visual-track"><span style="width:${
-      count / max * 100
+      item.count / max * 100
     }%"></span></span></td></tr>`
   ).join("");
   if (selectedPages()[0] === "totals") warmSpeciesThumbnails();

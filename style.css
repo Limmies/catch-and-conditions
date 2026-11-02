@@ -6245,3 +6245,15 @@ button.quiet,.text-action { min-height:44px; }
 /* Temporarily pause Insights; set data-insights="on" on <html> to restore it. */
 :root[data-insights="off"] a[href="#insights"],:root[data-insights="off"] #insights-page { display:none !important; }
 :root[data-insights="off"] .tabs { grid-template-columns:repeat(5,minmax(0,1fr)); }
+
+/* Separate quantity from fish meeting the guide's size threshold. */
+.catch-size-metrics { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin:0 0 12px; }
+.catch-size-metrics > div { padding:18px; border:1px solid #cbbfa6; border-radius:8px; }
+.catch-size-metrics dt { font-size:14px; }
+.catch-size-metrics dd { margin:6px 0 0; font:600 32px/1.2 system-ui,sans-serif; font-variant-numeric:tabular-nums; }
+.catch-size-metrics .size-fish-metric { background:#e5edde; border-color:#67805b; color:#214d36; }
+.catch-size-method { margin:0 0 18px; }
+.catch-size-method summary { cursor:pointer; padding:10px 0; font-size:13px; }
+#totals-page .size-fish-count { color:#214d36; }
+.size-fish-count small { display:block; font:11px/1.4 system-ui,sans-serif; color:var(--muted); }
+@media(max-width:600px) { #totals-page th { padding:10px 8px; font-size:12px; }#totals-page .species-row td { padding:10px 8px; }.catch-size-metrics > div { padding:14px; } }
