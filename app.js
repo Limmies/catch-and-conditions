@@ -2312,6 +2312,43 @@ function catchSizeClass(c) {
   return length >= minimum ? "size" : "undersize";
 }
 let totalsSignature = "";
+const expandedSpeciesCatches = new Set();
+let speciesSizeOnly = false;
+function speciesCatchListHTML(id) {
+  const rows = visible.filter(c => c.species_id === id &&
+    (!speciesSizeOnly || catchSizeClass(c) === "size")).slice().sort((a, b) => {
+      const length = c => Number.isFinite(c.raw_payload?.length_cm) && c.raw_payload.length_cm > 0 ? c.raw_payload.length_cm : -1;
+      return length(b) - length(a) || new Date(b.caught_at) - new Date(a.caught_at);
+    });
+  return `<div class="species-catch-list"><div class="species-catch-toolbar"><span>${esc(species[id]?.[0] || id)} · Largest first</span><label><input type="checkbox" data-size-only ${speciesSizeOnly ? "checked" : ""}> Size fish only</label></div>
+    <div class="species-catch-scroll" tabindex="0" role="region" aria-label="${esc(species[id]?.[0] || id)} catch history">
+    ${rows.length ? `<table class="species-catch-table"><caption class="sr-only">Catches, largest first</caption><thead><tr><th scope="col">Date</th><th scope="col">Time</th><th scope="col">Length</th><th scope="col">Status</th></tr></thead><tbody>${rows.map(c => {
+      const at = new Date(c.caught_at);
+      const valid = Number.isFinite(at.getTime());
+      const length = c.raw_payload?.length_cm;
+      const status = {size:"Size",undersize:"Undersize",unknown:"Size unknown"}[catchSizeClass(c)];
+      return `<tr><td>${valid ? esc(dateFormat.format(at)) : "—"}</td><td>${valid ? esc(timeFormat.format(at)) : "—"}</td><td>${Number.isFinite(length) && length > 0 ? esc(length) + " cm" : "—"}</td><td>${status}</td></tr>`;
+    }).join("")}</tbody></table>` : '<p class="small muted">No catches match this filter.</p>'}</div></div>`;
+}
+$("totals").addEventListener("click", event => {
+  const button = event.target.closest("[data-species-catches]");
+  if (!button) return;
+  const id = button.dataset.speciesCatches;
+  const open = !expandedSpeciesCatches.has(id);
+  if (open) expandedSpeciesCatches.add(id); else expandedSpeciesCatches.delete(id);
+  button.setAttribute("aria-expanded", String(open));
+  const row = document.getElementById(button.getAttribute("aria-controls"));
+  row.hidden = !open;
+  row.firstElementChild.innerHTML = open ? speciesCatchListHTML(id) : "";
+});
+$("totals").addEventListener("change", event => {
+  if (!event.target.matches("[data-size-only]")) return;
+  speciesSizeOnly = event.target.checked;
+  for (const id of expandedSpeciesCatches) {
+    const row = document.getElementById("species-catches-" + id);
+    if (row) row.firstElementChild.innerHTML = speciesCatchListHTML(id);
+  }
+});
 function renderTotals() {
   const counts = new Map(modeSpeciesIds().map((id) => [id, { count: 0, size: 0, undersize: 0, unknown: 0 }]));
   for (const c of visible) {
@@ -2326,7 +2363,7 @@ function renderTotals() {
     (species[a[0]]?.[0] || a[0]).localeCompare(species[b[0]]?.[0] || b[0])
   );
   const ready = catchesLoaded || catches.length > 0;
-  const signature = JSON.stringify([ready, rows]);
+  const signature = JSON.stringify([ready, rows, visible.map(c => [c.species_id, c.caught_at, c.raw_payload?.length_cm])]);
   if (signature === totalsSignature && $("totals").childElementCount) return;
   totalsSignature = signature;
   const sum = rows.reduce((sum, [, item]) => ({
@@ -2336,7 +2373,7 @@ function renderTotals() {
   $("catch-total-count").textContent = ready ? sum.count : "…";
   $("size-total-count").textContent = ready ? sum.size : "…";
   $("catch-size-coverage").textContent = ready
-    ? `${sum.undersize} undersize · ${sum.unknown} unclassified. Counts follow your selected filters.`
+    ? `${sum.undersize} undersize · ${sum.unknown} size unknown. Counts follow your selected filters.`
     : "Loading catch lengths…";
   const max = Math.max(1, ...rows.map(([, item]) => item.count));
   $("totals").innerHTML = rows.map(([id, item]) =>
@@ -2346,15 +2383,13 @@ function renderTotals() {
       esc(id)
     }" aria-label="Read about ${esc(species[id]?.[0] || id)}"><span class="species-cell">${
       fishImage(id)
-    }<span>${esc(species[id]?.[0] || id)}</span></span></button></td><td><strong>${
+    }<span>${esc(species[id]?.[0] || id)}</span></span></button></td><td><button type="button" class="species-catch-count" data-species-catches="${esc(id)}" aria-expanded="${expandedSpeciesCatches.has(id)}" aria-controls="species-catches-${esc(id)}" aria-label="View ${esc(species[id]?.[0] || id)} catches"><strong>${
       ready ? item.count : "…"
-    }</strong></td><td class="size-fish-count"><strong>${ready ? item.size : "…"}</strong>${
-      ready && item.unknown ? `<small>${item.unknown} unclassified</small>` : ""
-    }</td></tr><tr class="species-bar-row" aria-hidden="true" style="--species-colour:${
+    }</strong><span aria-hidden="true">⌄</span></button></td><td class="size-fish-count"><strong>${ready ? item.size : "…"}</strong></td></tr><tr class="species-bar-row" style="--species-colour:${
       species[id]?.[1] || "#11543e"
-    }"><td colspan="3"><span class="species-visual-track"><span style="width:${
+    }"><td colspan="3">${ready && (item.undersize || item.unknown) ? `<span class="species-size-breakdown">${item.undersize ? `<span>${item.undersize} undersize</span>` : ""}${item.unknown ? `<span>${item.unknown} size unknown</span>` : ""}</span>` : ""}<span class="species-visual-track" aria-hidden="true"><span style="width:${
       item.count / max * 100
-    }%"></span></span></td></tr>`
+    }%"></span></span></td></tr><tr class="species-catch-detail" id="species-catches-${esc(id)}" ${expandedSpeciesCatches.has(id) ? "" : "hidden"}><td colspan="3">${expandedSpeciesCatches.has(id) ? speciesCatchListHTML(id) : ""}</td></tr>`
   ).join("");
   if (selectedPages()[0] === "totals") warmSpeciesThumbnails();
 }

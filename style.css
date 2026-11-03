@@ -6257,3 +6257,41 @@ button.quiet,.text-action { min-height:44px; }
 #totals-page .size-fish-count { color:#214d36; }
 .size-fish-count small { display:block; font:11px/1.4 system-ui,sans-serif; color:var(--muted); }
 @media(max-width:600px) { #totals-page th { padding:10px 8px; font-size:12px; }#totals-page .species-row td { padding:10px 8px; }.catch-size-metrics > div { padding:14px; } }
+
+/* Keep size notes across the row, clear of the narrow numeric columns. */
+#totals-page table { width:100%; table-layout:fixed; }
+#totals-page th:first-child { width:60%; }
+#totals-page th:nth-child(2),#totals-page th:nth-child(3) { width:20%; text-align:right; }
+#totals-page .species-row td { vertical-align:middle; }
+#totals-page .species-row td:nth-child(2),#totals-page .species-row td:nth-child(3) { text-align:right; }
+#totals-page .species-row td strong { font-size:24px; font-variant-numeric:tabular-nums; }
+#totals-page .size-fish-count strong { color:#214d36; }
+#totals-page .species-bar-row td { padding:0 12px 14px; }
+.species-size-breakdown { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:4px 14px; margin:0 0 10px; color:#686957; font:12px/1.5 system-ui,sans-serif; white-space:normal; }
+#totals-page .species-visual-track { height:8px; opacity:.8; }
+@media(max-width:600px) {
+  #totals-page th:first-child { width:56%; }
+  #totals-page th:nth-child(2),#totals-page th:nth-child(3) { width:22%; }
+  #totals-page .species-cell { flex-direction:column; align-items:flex-start; gap:2px; }
+  #totals-page .species-cell > span { white-space:normal; overflow-wrap:anywhere; line-height:1.3; }
+  #totals-page .species-row td strong { font-size:22px; }
+  #totals-page .species-bar-row td { padding:0 8px 12px; }
+}
+
+/* Compact species catch ledger, opened from its catch count. */
+#totals-page .species-catch-count { display:inline-flex; align-items:center; justify-content:flex-end; gap:5px; min-height:44px; min-width:44px; padding:4px; margin:0; border:0; background:transparent; color:var(--ink); box-shadow:none; }
+.species-catch-count strong { text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:4px; }
+.species-catch-count > span { font:14px system-ui,sans-serif; }
+.species-catch-count[aria-expanded="true"] > span { transform:rotate(180deg); }
+#totals-page .species-catch-detail[hidden] { display:none; }
+#totals-page .species-catch-detail > td { padding:0 8px 16px; white-space:normal; }
+.species-catch-list { padding:10px; border:1px solid #d5c9ac; border-radius:6px; background:#faf5e7; }
+.species-catch-toolbar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px 14px; margin-bottom:8px; text-align:left; font:12px/1.5 system-ui,sans-serif; }
+.species-catch-toolbar label { display:flex; align-items:center; gap:6px; min-height:36px; margin:0; font:inherit; }
+.species-catch-toolbar input { width:16px; height:16px; margin:0; }
+.species-catch-scroll { max-height:320px; overflow:auto; }
+#totals-page .species-catch-table { table-layout:auto; font:12px/1.5 system-ui,sans-serif; }
+#totals-page .species-catch-table th,#totals-page .species-catch-table td { width:auto; padding:8px 5px; text-align:left; white-space:nowrap; border-bottom:1px solid #ded5c0; background:transparent; }
+#totals-page .species-catch-table th { position:sticky; top:0; background:#eee9d8; font-size:11px; }
+#totals-page .species-catch-table td { font-variant-numeric:tabular-nums; }
+#totals-page .species-catch-table td:nth-child(3) { text-align:right; }
