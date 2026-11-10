@@ -220,6 +220,7 @@ function loginMessage(text, error = false) {
   $("login-status").classList.toggle("error", error);
 }
 function resetPrivateView() {
+  resetManualCatch();
   resetDayPhotos();
   $("spot-search").value = "";
   resetInsights();
@@ -2407,6 +2408,167 @@ function diaryTripRows(filterSpecies = true) {
         (!filterSpecies || !$("species").value || metrics.count > 0);
     });
 }
+const manualCatchState = { map:null, marker:null, points:null, saving:false, generation:0, request:null, fixedDate:null, suggestedTime:null };
+function manualCatchTime(date, time) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(time)) throw Error("Choose the catch date and time.");
+  const [year,month,day,hour,minute] = (date + "-" + time.replace(":","-")).split("-").map(Number);
+  const target = Date.UTC(year,month-1,day,hour,minute);
+  const format = new Intl.DateTimeFormat("en-GB", {timeZone:config.timezone,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"});
+  const parts = value => Object.fromEntries(format.formatToParts(new Date(value)).map(p=>[p.type,p.value]));
+  let instant=target;
+  for(let i=0;i<3;i++) {
+    const p=parts(instant);
+    const represented=Date.UTC(+p.year,+p.month-1,+p.day,+p.hour,+p.minute,+p.second);
+    instant += target-represented;
+  }
+  const p=parts(instant);
+  if (`${p.year}-${p.month}-${p.day}`!==date || `${p.hour}:${p.minute}`!==time) throw Error("Choose a valid local date and time.");
+  if(instant>Date.now()) throw Error("Catch time cannot be in the future.");
+  return new Date(instant).toISOString();
+}
+function manualCatchMode() { return $("manual-mode").value; }
+function manualCatchRows() { return catches.filter(c=>recordFishingMode(c)===manualCatchMode() && dayKey(c.caught_at)===$("manual-date").value && Number.isFinite(c.latitude) && Number.isFinite(c.longitude)); }
+function manualCatchNearby(latitude,longitude) {
+  return manualCatchRows().filter(c=>dayKey(c.caught_at)===$("manual-date").value && L.latLng(latitude,longitude).distanceTo([c.latitude,c.longitude])<=20).sort((a,b)=>new Date(a.caught_at)-new Date(b.caught_at));
+}
+function manualCatchStatus(text,error=false) { $("manual-status").textContent=text;$("manual-status").classList.toggle("error",error); }
+function setManualCatchLocation(latitude,longitude,pan=true,suggestTime=true) {
+  if(!Number.isFinite(latitude)||!Number.isFinite(longitude)||latitude < -90||latitude > 90||longitude < -180||longitude > 180) return;
+  $("manual-latitude").value=latitude.toFixed(6);$("manual-longitude").value=longitude.toFixed(6);
+  if(manualCatchState.map) {
+    if(!manualCatchState.marker) {
+      manualCatchState.marker=L.marker([latitude,longitude],{draggable:true}).addTo(manualCatchState.map);
+      manualCatchState.marker.on("dragend",()=>{const p=manualCatchState.marker.getLatLng();setManualCatchLocation(p.lat,p.lng,false);});
+    } else manualCatchState.marker.setLatLng([latitude,longitude]);
+    if(pan)manualCatchState.map.setView([latitude,longitude],Math.max(14,manualCatchState.map.getZoom()));
+  }
+  const rows=manualCatchNearby(latitude,longitude);
+  if(suggestTime) {
+    if(rows.length) {
+      const first=new Date(rows[0].caught_at).getTime(),last=new Date(rows[rows.length-1].caught_at).getTime();
+      const middle=new Date(Math.round((first+last)/2/60000)*60000);
+      // Round into the observed range so midnight never moves the catch to another day.
+      const at=new Date(Math.max(first,Math.min(last,middle.getTime())));
+      const parts=Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:config.timezone,hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(at).map(p=>[p.type,p.value]));
+      $("manual-time").value=`${parts.hour}:${parts.minute}`;
+      manualCatchState.suggestedTime=$("manual-time").value;
+      $("manual-time-hint").textContent=rows.length===1 ? `Suggested ${timeLabel(at)} from the catch at this spot. Adjust it if needed.` : `Suggested ${timeLabel(at)} between ${timeLabel(rows[0].caught_at)} and ${timeLabel(rows[rows.length-1].caught_at)} at this spot. Adjust it if needed.`;
+    } else {
+      if($("manual-time").value===manualCatchState.suggestedTime)$("manual-time").value="";
+      manualCatchState.suggestedTime=null;$("manual-time-hint").textContent="No catches at this spot on this day. Choose the time you remember.";
+    }
+    updateManualCatchTrips();
+  }
+  $("manual-nearby").innerHTML=rows.length ? `<p class="small">${rows.length} ${rows.length===1?"catch":"catches"} within 20 m on this date:</p><ul>${rows.map(c=>`<li>${esc(timeLabel(c.caught_at))} · ${esc(nameOf(c))}${Number.isFinite(c.raw_payload?.length_cm)?` · ${esc(c.raw_payload.length_cm)} cm`:""}</li>`).join("")}</ul>` : '<p class="small muted">No recorded catches within 20 m on this date.</p>';
+}
+function updateManualCatchTrips() {
+  const selected=$("manual-trip").value;
+  const rows=trips.filter(t=>recordFishingMode(t)===manualCatchMode() && dayKey(t.started_at)<=$("manual-date").value && dayKey(t.ended_at)>=$("manual-date").value);
+  $("manual-trip").replaceChildren(new Option("No recorded trip / not linked",""));
+  for(const t of rows)$("manual-trip").add(new Option(`${timeLabel(t.started_at)}–${timeLabel(t.ended_at)} · ${dateLabel(t.started_at)}`,t.archive_id));
+  let at=null;try {at=new Date(manualCatchTime($("manual-date").value,$("manual-time").value));}catch{}
+  const matching=at?rows.filter(t=>at>=new Date(t.started_at)&&at<=new Date(t.ended_at)):[];
+  $("manual-trip").value=rows.some(t=>t.archive_id===selected&&(!at||(at>=new Date(t.started_at)&&at<=new Date(t.ended_at)))) ? selected : matching.length===1 ? matching[0].archive_id : "";
+}
+function updateManualCatchOptions() {
+  const mode=manualCatchMode(),selected=$("manual-species").value;
+  const ids=Object.keys(species).filter(id=>mode==="shore" ? shoreOnlySpecies.has(id)||id==="red_roman" : !shoreOnlySpecies.has(id));
+  $("manual-species").replaceChildren(new Option("Choose a species",""));
+  for(const id of ids)$("manual-species").add(new Option(species[id][0],id));
+  if(ids.includes(selected))$("manual-species").value=selected;
+  $("manual-position-label").textContent=mode==="shore"?"Rocks / sand":"Boat movement";
+  for(const [field,options] of [["manual-position",mode==="shore"?[["rocks","Rocks"],["sand","Sand"]]:[["drifting","Drifting"],["anchored","Anchored"]]],["manual-tackle",mode==="shore"?[["bait","Bait fishing"],["spinning","Spinning"]]:[["bait","Bait fishing"],["jigging","Jigging"]]]]) {
+    $(field).replaceChildren(new Option("Not recorded",""));for(const [value,label] of options)$(field).add(new Option(label,value));
+  }
+  updateManualCatchContext();
+}
+function updateManualCatchContext() {
+  updateManualCatchTrips();
+  const picker=$("manual-spot");picker.replaceChildren(new Option("Choose a recorded spot or tap the map",""));
+  const rows=manualCatchRows(),day=$("manual-date").value;
+  const sameDay=rows.filter(c=>dayKey(c.caught_at)===day).sort((a,b)=>new Date(a.caught_at)-new Date(b.caught_at));
+  for(const c of sameDay)picker.add(new Option(`${timeLabel(c.caught_at)} · ${nameOf(c)} · this day's catch`,`${c.latitude},${c.longitude}`));
+  const spots=new Map();
+  for(const t of trips.filter(t=>recordFishingMode(t)===manualCatchMode()))for(const s of t.fishing_sessions||[]) {
+    if(dayKey(s.started_at)>day || dayKey(s.ended_at)<day)continue;
+    const spot=s.fishing_spots;
+    if(spot && Number.isFinite(spot.latitude)&&Number.isFinite(spot.longitude))spots.set(spot.archive_id,spot);
+  }
+  for(const [i,spot] of [...spots.values()].entries())picker.add(new Option(spot.name||`Saved spot ${i+1}`,`${spot.latitude},${spot.longitude}`));
+  const m=manualCatchState.map;
+  if(m) {
+    manualCatchState.points.clearLayers();
+    for(const c of rows)L.circleMarker([c.latitude,c.longitude],{radius:dayKey(c.caught_at)===day?6:4,color:dayKey(c.caught_at)===day?"#176a47":"#777b6d",weight:2,fillOpacity:.6}).bindTooltip(esc(`${dateLabel(c.caught_at)} ${timeLabel(c.caught_at)} · ${nameOf(c)}`)).on("click",()=>setManualCatchLocation(c.latitude,c.longitude)).addTo(manualCatchState.points);
+    const focus=sameDay.length?sameDay:rows;
+    if(focus.length)m.fitBounds(L.latLngBounds(focus.map(c=>[c.latitude,c.longitude])),{padding:[24,24],maxZoom:15});
+  }
+  if($("manual-latitude").value!==""&&$("manual-longitude").value!=="")setManualCatchLocation(+$("manual-latitude").value,+$("manual-longitude").value,false,false);
+}
+function resetManualCatch() {
+  manualCatchState.generation++;manualCatchState.saving=false;manualCatchState.request=null;manualCatchState.fixedDate=null;manualCatchState.suggestedTime=null;
+  $("manual-date").readOnly=false;$("manual-time-hint").textContent="";
+  if(manualCatchState.map)manualCatchState.map.remove();
+  manualCatchState.map=null;manualCatchState.marker=null;manualCatchState.points=null;
+  $("manual-fields").disabled=false;$("manual-close").disabled=false;$("manual-cancel").disabled=false;
+  $("manual-catch").close();$("manual-catch-form").reset();$("manual-nearby").replaceChildren();manualCatchStatus("");
+}
+function openManualCatch(date=dayKey(new Date())) {
+  if(!session)return;
+  resetManualCatch();
+  manualCatchState.fixedDate=arguments.length?date:null;
+  $("manual-date").readOnly=!!manualCatchState.fixedDate;
+  $("manual-title").textContent=manualCatchState.fixedDate?`Add a fish · ${dateLabel(date+"T00:00:00Z")}`:"Add a fish";
+  $("manual-date").value=date;$("manual-date").max=dayKey(new Date());
+  const dayModes=[...new Set(catches.filter(c=>dayKey(c.caught_at)===date).map(recordFishingMode))];
+  $("manual-mode").value=fishingMode==="all"?(dayModes.length===1?dayModes[0]:"offshore"):fishingMode;
+  $("manual-timezone").textContent=`Time in ${config.timezone.replaceAll("_"," ")}. Select when you caught the fish.`;
+  $("manual-catch").showModal();
+  manualCatchState.map=L.map("manual-map",{scrollWheelZoom:false}).setView(map?.getCenter()||[-34.1,23],map?.getZoom()||10);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(manualCatchState.map);
+  manualCatchState.points=L.layerGroup().addTo(manualCatchState.map);
+  manualCatchState.map.on("click",event=>setManualCatchLocation(event.latlng.lat,event.latlng.lng));
+  updateManualCatchOptions();
+  requestAnimationFrame(()=>manualCatchState.map?.invalidateSize({pan:false}));
+}
+async function saveManualCatch(event) {
+  event.preventDefault();
+  if(!session||manualCatchState.saving)return;
+  if(!$("manual-latitude").validity.valid||!$("manual-longitude").validity.valid)document.querySelector(".manual-coordinates").open=true;
+  if(!$("manual-catch-form").reportValidity())return;
+  let payload;
+  try {
+    if(manualCatchState.fixedDate && $("manual-date").value!==manualCatchState.fixedDate)throw Error("This catch belongs to the selected fishing day.");
+    const at=manualCatchTime($("manual-date").value,$("manual-time").value);
+    const latitude=Number($("manual-latitude").value),longitude=Number($("manual-longitude").value);
+    if($("manual-latitude").value===""||$("manual-longitude").value===""||!Number.isFinite(latitude)||!Number.isFinite(longitude)||latitude < -90||latitude > 90||longitude < -180||longitude > 180)throw Error("Choose the catch location on the map or from a recorded spot.");
+    const length=$("manual-length").value===""?null:Number($("manual-length").value);
+    if(length!==null&&(!Number.isInteger(length)||length<1||length>1000))throw Error("Enter a length from 1 to 1000 cm, or leave it blank.");
+    const trip=trips.find(t=>t.archive_id===$("manual-trip").value);
+    if(trip&&(new Date(at)<new Date(trip.started_at)||new Date(at)>new Date(trip.ended_at)))throw Error("Catch time must fall within the selected trip, or choose not linked.");
+    payload={p_species:$("manual-species").value,p_caught_at:at,p_latitude:latitude,p_longitude:longitude,p_length_cm:length,p_trip_archive_id:trip?.archive_id||null,p_fishing_mode:manualCatchMode(),p_position_method:$("manual-position").value||null,p_tackle_method:$("manual-tackle").value||null};
+  } catch(error) {manualCatchStatus(error.message,true);return;}
+  const signature=JSON.stringify(payload);
+  if(manualCatchState.request?.signature!==signature)manualCatchState.request={signature,id:crypto.randomUUID()};
+  payload.p_request_id=manualCatchState.request.id;
+  const owner=session.user.id,generation=manualCatchState.generation;
+  manualCatchState.saving=true;$("manual-fields").disabled=true;$("manual-close").disabled=true;$("manual-cancel").disabled=true;
+  manualCatchStatus("Saving catch…");
+  try {
+    const {data,error}=await client.rpc("add_manual_fishing_catch",payload);
+    if(generation!==manualCatchState.generation||session?.user.id!==owner)return;
+    if(error)throw error;
+    if(!data?.archive_id)throw Error("The save could not be confirmed. Retry to check the same catch safely.");
+    catches=uniqueRecords([data,...catches]);catchesLoaded=true;
+    resetManualCatch();render();
+    message("Fish added. Conditions will be collected for its recorded time and location.");
+    void refreshJournal();
+  } catch(error) {
+    if(generation!==manualCatchState.generation||session?.user.id!==owner)return;
+    manualCatchState.saving=false;$("manual-fields").disabled=false;$("manual-close").disabled=false;$("manual-cancel").disabled=false;
+    manualCatchStatus(error.code==="42501"?"Sign in again and check that the trip belongs to your account.":error.code==="22023"?error.message:"Catch could not be confirmed. Your entries are kept; retry when connected. Retrying the same details will not add a duplicate.",true);
+  }
+}
+
 function renderDays(tripRows = diaryTripRows()) {
   dayPhotoObserver?.disconnect();
   void loadDayPhotos();
@@ -2470,7 +2632,10 @@ function renderDays(tripRows = diaryTripRows()) {
     rate.onclick = () => showDayObservations(reference);
     const actions = document.createElement("div");
     actions.className = "day-actions";
-    actions.append(weather);
+    const addFish=document.createElement("button");
+    addFish.type="button";addFish.className="quiet day-add-fish";addFish.textContent="Add fish";
+    addFish.onclick=()=>openManualCatch(key);
+    actions.append(addFish,weather);
     photoPanel.querySelector(".day-photo-actions").insertBefore(rate, photoPanel.querySelector(".day-photo-remove"));
     body.append(actions);
     const effort = document.createElement("p");
@@ -2827,10 +2992,10 @@ async function showDayObservations(c) {
     if (current()) $("retry-day-observations").onclick = () => showDayObservations(c);
   }
 }
-// Catch setup is captured on the watch; never infer it from GPS or the page filter.
+// Saved setup is explicit; never infer it from GPS or other nearby catches.
 const catchSetupLabels = {
-  position_method: { anchored: "Anchored", drifting: "Drifting" },
-  tackle_method: { bait: "Bait", jigging: "Jigging" },
+  position_method: { anchored: "Anchored", drifting: "Drifting", rocks: "Rocks", sand: "Sand" },
+  tackle_method: { bait: "Bait", jigging: "Jigging", spinning: "Spinning" },
 };
 function catchSetup(c) {
   const raw = c.raw_payload || {};
@@ -2841,7 +3006,7 @@ function catchSetup(c) {
         ? catchSetupLabels[key][value]
         : "Unrecognised setting";
     }
-    return Object.hasOwn(raw, key) ? "Not set on watch" : "Not recorded";
+    return Object.hasOwn(raw, key) && raw.capture_source!=="journal_manual" ? "Not set on watch" : "Not recorded";
   };
   const mode = c.fishing_mode ?? raw.fishing_mode;
   const legacy = mode == null || (mode === "offshore" && c.raw_payload && !raw.fishing_mode);
@@ -3368,13 +3533,13 @@ async function showDetail(c) {
       "Fish length",
       Number.isInteger(c.raw_payload?.length_cm) ? `${c.raw_payload.length_cm} cm` : null,
     )
-  }${field("Fishing style", setup.style)}${field("Boat movement", setup.position)}${
+  }${field("Fishing style", setup.style)}${field(recordFishingMode(c)==="shore"?"Shore terrain":"Boat movement", setup.position)}${
     field("Tackle", setup.tackle)
   }</dl><details class="record-details"><summary>Location &amp; GPS record</summary><dl class="detail-grid">${
     field("Latitude", c.latitude.toFixed(6))
   }${field("Longitude", c.longitude.toFixed(6))}${
-    field("GPS fix", c.gps_quality === 4 ? "Good" : "Usable")
-  }${field("Fix relative to catch", `${gpsDelay}s`)}</dl><p class="record-id muted">Catch ID: ${
+    field("Location source", c.raw_payload?.capture_source==="journal_manual"?"Added afterward · map-selected location":c.gps_quality===4?"Watch GPS · good":"Watch GPS · usable")
+  }${field("Fix relative to catch", c.gps_at ? `${gpsDelay}s` : "No GPS fix recorded")}</dl><p class="record-id muted">Catch ID: ${
     esc(c.catch_id)
   }</p></details><div id="conditions" class="condition"><h3>Conditions</h3><p class="muted">Checking saved conditions…</p></div>`;
   upgradeFishPortrait(c.species_id);
@@ -3762,3 +3927,22 @@ if ("serviceWorker" in navigator && location.protocol !== "file:") {
   navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" })
     .then((registration) => registration.update()).catch(() => {});
 }
+
+$("add-fish").onclick=()=>openManualCatch();
+$("manual-close").onclick=$("manual-cancel").onclick=()=>resetManualCatch();
+$("manual-catch").addEventListener("cancel",event=>{event.preventDefault();if(!manualCatchState.saving)resetManualCatch();});
+$("manual-catch-form").addEventListener("submit",saveManualCatch);
+$("manual-mode").onchange=updateManualCatchOptions;
+$("manual-date").onchange=()=>{
+  if(manualCatchState.fixedDate)$("manual-date").value=manualCatchState.fixedDate;
+  else {
+    if(manualCatchState.marker){manualCatchState.map.removeLayer(manualCatchState.marker);manualCatchState.marker=null;}
+    $("manual-latitude").value="";$("manual-longitude").value="";$("manual-nearby").replaceChildren();
+    if($("manual-time").value===manualCatchState.suggestedTime)$("manual-time").value="";
+    manualCatchState.suggestedTime=null;$("manual-time-hint").textContent="";
+  }
+  updateManualCatchContext();
+};
+$("manual-time").onchange=()=>{manualCatchState.suggestedTime=null;$("manual-time-hint").textContent="";updateManualCatchTrips();};
+$("manual-spot").onchange=()=>{const value=$("manual-spot").value;if(value){const [lat,lon]=value.split(",").map(Number);setManualCatchLocation(lat,lon);}};
+for(const id of ["manual-latitude","manual-longitude"])$(id).onchange=()=>{if($("manual-latitude").value!==""&&$("manual-longitude").value!=="")setManualCatchLocation(+$("manual-latitude").value,+$("manual-longitude").value);};

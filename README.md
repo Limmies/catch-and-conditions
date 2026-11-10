@@ -189,3 +189,28 @@ Local shell v128 decouples Species from slow trip requests: the guide opens imme
 Local shell v129 improves mobile sign-in with 52px fields/buttons, 16px inputs to avoid iPhone focus zoom, password-manager attributes, email Next/password Go hints and a show-password button. The form stays hidden during saved-session restoration, failed attempts preserve entered credentials, duplicate submits are blocked, and errors use clearer messages. Owner checks and Supabase session persistence are unchanged. Held locally until publication is requested.
 
 Shell v130 temporarily hides Insights using `data-insights="off"` on the HTML root. Its tab and Home link are hidden, direct #insights routes fall back to Home, and chart controls are not initialized. All Insights markup, styles, data functions and tests are retained; change the flag to `on` to restore. Includes pending Species loading and phone login improvements from v128–v129.
+
+
+### Add a fish after the outing
+
+Days has an **Add fish** button, including inside each day's actions. Choose the
+fishing type, species, catch date and time (shown in the journal timezone), and
+length in cm if known. Tap the map, drag the pin or choose a recorded spot from the selected day; nearby
+catches from that date are listed within 20 metres. Selecting a spot suggests the
+midpoint of its first/last catch times (or the single catch time), which remains
+editable. Opening Add fish from a day locks the entry to that day. Other days
+never appear in the map or spot picker. Coordinates remain editable
+when map tiles are unavailable. Optional fishing setup follows offshore/shore choices.
+
+Select a recorded trip only when the catch time falls inside it. Linking a trip
+updates its derived catch/session totals without adding fishing time. Leave it
+unlinked if no completed trip is available. Catches use the regular archive and
+conditions pipeline, with explicit journal-manual/map-selected provenance and no
+fabricated watch GPS fix. Retrying unchanged entries reuses the same request ID.
+
+Requires `20261110164754_manual_journal_catches.sql` in Supabase before publishing
+shell v135. The browser uses its signed-in session to call the owner-checked RPC;
+no service key or watch token is exposed. UI validation runs with the existing
+WebKit runner using `JOURNAL_CHECK_SCRIPT=tests/phone_journal_manual_catch_test.js`
+(use an absolute path). Database regression: `deno test --allow-read --allow-env
+--allow-net tests/manual_journal_catches_test.js` with pinned PGlite 0.5.8.

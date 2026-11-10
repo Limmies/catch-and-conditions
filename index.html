@@ -19,15 +19,15 @@
     <link rel="stylesheet" href="vendor/leaflet.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.Default.css">
-    <link rel="stylesheet" href="style.css?v=134">
+    <link rel="stylesheet" href="style.css?v=136">
     <script defer src="vendor/supabase.js"></script>
     <script defer src="vendor/leaflet.js"></script>
     <script defer src="vendor/leaflet.markercluster.js"></script>
     <script defer src="config.js"></script>
-    <script defer src="density.js?v=134"></script>
-    <script defer src="insights.js?v=134"></script>
-    <script defer src="day-photos.js?v=134"></script>
-    <script defer src="app.js?v=134"></script>
+    <script defer src="density.js?v=136"></script>
+    <script defer src="insights.js?v=136"></script>
+    <script defer src="day-photos.js?v=136"></script>
+    <script defer src="app.js?v=136"></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
@@ -222,7 +222,7 @@
           </div>
         </section>
         <section id="diary-page" hidden aria-label="Fishing days">
-          <div class="section-heading"><h2>Fishing days</h2><a href="#spots" class="text-action">Compare spots →</a></div>
+          <div class="section-heading"><h2>Fishing days</h2><button type="button" id="add-fish">Add fish</button><a href="#spots" class="text-action">Compare spots →</a></div>
           <p id="trip-status" role="status" class="muted"></p>
           <details class="diary-totals"><summary>Trip totals</summary><div id="trip-summary" class="trip-summary"></div></details>
           <div id="trip-rows"><div id="days"></div></div>
@@ -240,6 +240,33 @@
       <div
         class="dialog-heading"><span id="detail-label" class="eyebrow">CATCH DETAILS</span><button id="close-detail" class="quiet" aria-label="Close details">Close</button></div>
       <div id="detail-body"></div>
+    </dialog>
+    <dialog id="manual-catch" aria-labelledby="manual-title">
+      <div class="dialog-heading"><h2 id="manual-title">Add a fish</h2><button type="button" class="quiet" id="manual-close" aria-label="Close add fish">Close</button></div>
+      <form id="manual-catch-form">
+        <fieldset id="manual-fields">
+          <div class="manual-grid">
+            <label>Fishing type<select id="manual-mode"><option value="offshore">Offshore</option><option value="shore">Shore</option></select></label>
+            <label>Species<select id="manual-species" required></select></label>
+            <label>Date<input id="manual-date" type="date" required></label>
+            <label>Time<input id="manual-time" type="time" required></label>
+            <label>Length (cm)<input id="manual-length" type="number" min="1" max="1000" step="1" inputmode="numeric" placeholder="Unknown"></label>
+            <label>Recorded trip<select id="manual-trip"></select></label>
+          </div>
+          <p id="manual-timezone" class="small muted"></p>
+          <p id="manual-time-hint" class="small" aria-live="polite"></p>
+          <p class="small">Tap the map, drag the pin, or choose a recorded spot. Only catches from this date appear on the map. Selecting a spot suggests a time from its catches. Leave length blank if unknown.</p>
+          <label>Use a recorded spot<select id="manual-spot"></select></label>
+          <div id="manual-map" aria-label="Choose catch location" role="region"></div>
+          <div id="manual-nearby" aria-live="polite"></div>
+          <details class="manual-coordinates"><summary>Location coordinates</summary><div class="manual-grid"><label>Latitude<input id="manual-latitude" type="number" step="any" min="-90" max="90"></label><label>Longitude<input id="manual-longitude" type="number" step="any" min="-180" max="180"></label></div></details>
+          <details><summary>Fishing setup (optional)</summary><div class="manual-grid"><label><span id="manual-position-label">Boat movement</span><select id="manual-position"></select></label><label>Tackle<select id="manual-tackle"></select></label></div></details>
+          <p class="small muted">Added to your journal with the catch time you choose. The record will show it was added afterward. Linking a trip updates its catch totals without adding fishing time.</p>
+          <button type="submit" id="manual-save">Save fish</button>
+        </fieldset>
+        <p id="manual-status" role="status" aria-live="polite"></p>
+        <button type="button" id="manual-cancel" class="quiet">Cancel</button>
+      </form>
     </dialog>
   </body>
 </html>
