@@ -19,15 +19,15 @@
     <link rel="stylesheet" href="vendor/leaflet.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.Default.css">
-    <link rel="stylesheet" href="style.css?v=136">
+    <link rel="stylesheet" href="style.css?v=137">
     <script defer src="vendor/supabase.js"></script>
     <script defer src="vendor/leaflet.js"></script>
     <script defer src="vendor/leaflet.markercluster.js"></script>
     <script defer src="config.js"></script>
-    <script defer src="density.js?v=136"></script>
-    <script defer src="insights.js?v=136"></script>
-    <script defer src="day-photos.js?v=136"></script>
-    <script defer src="app.js?v=136"></script>
+    <script defer src="density.js?v=137"></script>
+    <script defer src="insights.js?v=137"></script>
+    <script defer src="day-photos.js?v=137"></script>
+    <script defer src="app.js?v=137"></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
@@ -222,7 +222,7 @@
           </div>
         </section>
         <section id="diary-page" hidden aria-label="Fishing days">
-          <div class="section-heading"><h2>Fishing days</h2><button type="button" id="add-fish">Add fish</button><a href="#spots" class="text-action">Compare spots →</a></div>
+          <div class="section-heading"><h2>Fishing days</h2><a href="#spots" class="text-action">Compare spots →</a></div>
           <p id="trip-status" role="status" class="muted"></p>
           <details class="diary-totals"><summary>Trip totals</summary><div id="trip-summary" class="trip-summary"></div></details>
           <div id="trip-rows"><div id="days"></div></div>
@@ -248,7 +248,7 @@
           <div class="manual-grid">
             <label>Fishing type<select id="manual-mode"><option value="offshore">Offshore</option><option value="shore">Shore</option></select></label>
             <label>Species<select id="manual-species" required></select></label>
-            <label>Date<input id="manual-date" type="date" required></label>
+            <label id="manual-date-field">Date<input id="manual-date" type="date" required></label>
             <label>Time<input id="manual-time" type="time" required></label>
             <label>Length (cm)<input id="manual-length" type="number" min="1" max="1000" step="1" inputmode="numeric" placeholder="Unknown"></label>
             <label>Recorded trip<select id="manual-trip"></select></label>

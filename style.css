@@ -6314,3 +6314,7 @@ button.quiet,.text-action { min-height:44px; }
 #manual-status { min-height:1.5em; margin:10px 0; font-size:13px; }
 @media(max-width:400px) { #manual-catch { padding:14px; }.manual-grid { gap:8px; }#manual-map { height:230px; }#diary-page .section-heading { flex-wrap:wrap; } }
 @media(max-width:480px) { .manual-grid { grid-template-columns:minmax(0,1fr); } }
+
+/* The catch action belongs alongside the expanded day's species summary. */
+.day-summary .day-add-fish { margin:0 0 0 auto; min-height:40px; padding:7px 12px; font:600 13px/1.4 system-ui,sans-serif; white-space:nowrap; }
+#manual-date-field[hidden] { display:none; }

@@ -193,7 +193,9 @@ Shell v130 temporarily hides Insights using `data-insights="off"` on the HTML ro
 
 ### Add a fish after the outing
 
-Days has an **Add fish** button, including inside each day's actions. Choose the
+Expand a day in Days and select **Add fish** beside its species summary.
+The entry keeps that day fixed and automatically selects its trip when there is
+only one; the date is shown in the form heading. Choose the
 fishing type, species, catch date and time (shown in the journal timezone), and
 length in cm if known. Tap the map, drag the pin or choose a recorded spot from the selected day; nearby
 catches from that date are listed within 20 metres. Selecting a spot suggests the

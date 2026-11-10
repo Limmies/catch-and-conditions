@@ -2468,7 +2468,7 @@ function updateManualCatchTrips() {
   for(const t of rows)$("manual-trip").add(new Option(`${timeLabel(t.started_at)}–${timeLabel(t.ended_at)} · ${dateLabel(t.started_at)}`,t.archive_id));
   let at=null;try {at=new Date(manualCatchTime($("manual-date").value,$("manual-time").value));}catch{}
   const matching=at?rows.filter(t=>at>=new Date(t.started_at)&&at<=new Date(t.ended_at)):[];
-  $("manual-trip").value=rows.some(t=>t.archive_id===selected&&(!at||(at>=new Date(t.started_at)&&at<=new Date(t.ended_at)))) ? selected : matching.length===1 ? matching[0].archive_id : "";
+  $("manual-trip").value=rows.some(t=>t.archive_id===selected&&(!at||(at>=new Date(t.started_at)&&at<=new Date(t.ended_at)))) ? selected : matching.length===1 ? matching[0].archive_id : !at&&rows.length===1 ? rows[0].archive_id : "";
 }
 function updateManualCatchOptions() {
   const mode=manualCatchMode(),selected=$("manual-species").value;
@@ -2506,7 +2506,7 @@ function updateManualCatchContext() {
 }
 function resetManualCatch() {
   manualCatchState.generation++;manualCatchState.saving=false;manualCatchState.request=null;manualCatchState.fixedDate=null;manualCatchState.suggestedTime=null;
-  $("manual-date").readOnly=false;$("manual-time-hint").textContent="";
+  $("manual-date").readOnly=false;$("manual-date-field").hidden=false;$("manual-time-hint").textContent="";
   if(manualCatchState.map)manualCatchState.map.remove();
   manualCatchState.map=null;manualCatchState.marker=null;manualCatchState.points=null;
   $("manual-fields").disabled=false;$("manual-close").disabled=false;$("manual-cancel").disabled=false;
@@ -2517,9 +2517,10 @@ function openManualCatch(date=dayKey(new Date())) {
   resetManualCatch();
   manualCatchState.fixedDate=arguments.length?date:null;
   $("manual-date").readOnly=!!manualCatchState.fixedDate;
+  $("manual-date-field").hidden=!!manualCatchState.fixedDate;
   $("manual-title").textContent=manualCatchState.fixedDate?`Add a fish · ${dateLabel(date+"T00:00:00Z")}`:"Add a fish";
   $("manual-date").value=date;$("manual-date").max=dayKey(new Date());
-  const dayModes=[...new Set(catches.filter(c=>dayKey(c.caught_at)===date).map(recordFishingMode))];
+  const dayModes=[...new Set([...catches.filter(c=>dayKey(c.caught_at)===date),...trips.filter(t=>dayKey(t.started_at)<=date&&dayKey(t.ended_at)>=date)].map(recordFishingMode))];
   $("manual-mode").value=fishingMode==="all"?(dayModes.length===1?dayModes[0]:"offshore"):fishingMode;
   $("manual-timezone").textContent=`Time in ${config.timezone.replaceAll("_"," ")}. Select when you caught the fish.`;
   $("manual-catch").showModal();
@@ -2635,7 +2636,8 @@ function renderDays(tripRows = diaryTripRows()) {
     const addFish=document.createElement("button");
     addFish.type="button";addFish.className="quiet day-add-fish";addFish.textContent="Add fish";
     addFish.onclick=()=>openManualCatch(key);
-    actions.append(addFish,weather);
+    section.querySelector(".day-summary").append(addFish);
+    actions.append(weather);
     photoPanel.querySelector(".day-photo-actions").insertBefore(rate, photoPanel.querySelector(".day-photo-remove"));
     body.append(actions);
     const effort = document.createElement("p");
@@ -3928,7 +3930,6 @@ if ("serviceWorker" in navigator && location.protocol !== "file:") {
     .then((registration) => registration.update()).catch(() => {});
 }
 
-$("add-fish").onclick=()=>openManualCatch();
 $("manual-close").onclick=$("manual-cancel").onclick=()=>resetManualCatch();
 $("manual-catch").addEventListener("cancel",event=>{event.preventDefault();if(!manualCatchState.saving)resetManualCatch();});
 $("manual-catch-form").addEventListener("submit",saveManualCatch);
