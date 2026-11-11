@@ -19,15 +19,15 @@
     <link rel="stylesheet" href="vendor/leaflet.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.Default.css">
-    <link rel="stylesheet" href="style.css?v=138">
+    <link rel="stylesheet" href="style.css?v=139">
     <script defer src="vendor/supabase.js"></script>
     <script defer src="vendor/leaflet.js"></script>
     <script defer src="vendor/leaflet.markercluster.js"></script>
     <script defer src="config.js"></script>
-    <script defer src="density.js?v=138"></script>
-    <script defer src="insights.js?v=138"></script>
-    <script defer src="day-photos.js?v=138"></script>
-    <script defer src="app.js?v=138"></script>
+    <script defer src="density.js?v=139"></script>
+    <script defer src="insights.js?v=139"></script>
+    <script defer src="day-photos.js?v=139"></script>
+    <script defer src="app.js?v=139"></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
@@ -243,6 +243,7 @@
     </dialog>
     <dialog id="trip-edit" aria-labelledby="trip-edit-title">
       <div class="dialog-heading"><h2 id="trip-edit-title">Adjust trip time</h2><button type="button" class="quiet" id="trip-edit-close">Close</button></div>
+      <div id="trip-edit-missing" hidden><p id="trip-edit-missing-text" class="small"></p><button type="button" id="trip-edit-check-sync">Check for synced trip</button></div>
       <form id="trip-edit-form"><fieldset id="trip-edit-fields">
         <label>Recorded trip<select id="trip-edit-picker"></select></label>
         <p id="trip-edit-original" class="small muted"></p>

@@ -2590,7 +2590,7 @@ function localTripDateTime(value) {
 }
 function resetTripEditor() {
   tripEditState.generation++;tripEditState.saving=false;tripEditState.request=null;tripEditState.trip=null;tripEditState.skipSetup=false;
-  $("trip-edit").close();$("trip-edit-fields").disabled=false;$("trip-edit-close").disabled=false;
+  $("trip-edit").close();$("trip-edit-form").hidden=false;$("trip-edit-missing").hidden=true;$("trip-edit-fields").disabled=false;$("trip-edit-close").disabled=false;
   $("trip-edit-status").textContent="";$("trip-edit-review").hidden=true;$("trip-edit-skip-setup").hidden=true;
 }
 function loadTripEditor() {
@@ -2610,8 +2610,15 @@ function openTripEditor(day) {
   if(!session)return;resetTripEditor();tripEditState.day=day;
   $("trip-edit-title").textContent=`Adjust trip · ${dateLabel(day+"T00:00:00Z")}`;
   $("trip-edit-picker").replaceChildren();
-  for(const t of trips.filter(t=>dayKey(t.started_at)===day&&matchesFishingMode(t)))$("trip-edit-picker").add(new Option(`${timeLabel(t.started_at)}–${timeLabel(t.ended_at)} · ${fishingModeLabels[recordFishingMode(t)]}`,t.archive_id));
-  loadTripEditor();$("trip-edit").showModal();
+  for(const t of trips.filter(t=>dayKey(t.started_at)<=day&&dayKey(t.ended_at)>=day&&matchesFishingMode(t)))$("trip-edit-picker").add(new Option(`${timeLabel(t.started_at)}–${timeLabel(t.ended_at)} · ${fishingModeLabels[recordFishingMode(t)]}`,t.archive_id));
+  const available=$("trip-edit-picker").options.length>0;
+  $("trip-edit-form").hidden=!available;$("trip-edit-missing").hidden=available;
+  if(available)loadTripEditor();
+  else {
+    $("trip-edit-start").value="";$("trip-edit-end").value="";
+    $("trip-edit-missing-text").textContent="Catches for this day are saved, but no completed trip recording is available yet. End the trip on your watch and use UP/MENU → Sync data. Then check again here. Fishing and travelling time cannot be reconstructed accurately from catches alone.";
+  }
+  $("trip-edit").showModal();
 }
 function tripAdjustmentTimes() {
   const read=id=>{const [date,time]=$(id).value.split("T");if(!/^\d{2}:\d{2}(:\d{2})?$/.test(time||""))throw Error("Choose a valid start and end time.");const seconds=Number(time.split(":")[2]||0);if(seconds>59)throw Error("Choose valid seconds.");const at=new Date(new Date(manualCatchTime(date,time.slice(0,5))).getTime()+seconds*1000);if(at.getTime()>Date.now())throw Error("Trip times cannot be in the future.");return at.toISOString();};
@@ -2721,17 +2728,15 @@ function renderDays(tripRows = diaryTripRows()) {
     addFish.type="button";addFish.className="quiet day-add-fish";addFish.textContent="Add fish";
     addFish.onclick=()=>openManualCatch(key);
     section.querySelector(".day-summary").append(addFish);
-    if(dayTrips.length) {
-      const adjust=document.createElement("button");adjust.type="button";adjust.className="quiet day-adjust-trip";adjust.textContent="Adjust trip time";adjust.onclick=()=>openTripEditor(key);actions.append(adjust);
-    }
+    const adjust=document.createElement("button");adjust.type="button";adjust.className="quiet day-adjust-trip";adjust.textContent="Adjust trip time";adjust.onclick=()=>openTripEditor(key);actions.append(adjust);
     actions.append(weather);
     photoPanel.querySelector(".day-photo-actions").insertBefore(rate, photoPanel.querySelector(".day-photo-remove"));
     body.append(actions);
     const effort = document.createElement("p");
     effort.className = "small muted";
-    effort.textContent = `${dayTrips.length} ${dayTrips.length === 1 ? "trip" : "trips"} · ${
+    effort.textContent = dayTrips.length ? `${dayTrips.length} ${dayTrips.length === 1 ? "trip" : "trips"} · ${
       durationLabel(fishing)
-    } fishing · ${totals.size} species`;
+    } fishing · ${totals.size} species` : `Trip recording not synced · fishing time unavailable · ${totals.size} species`;
     body.append(effort);
     if (dayTrips.length) {
       const records = document.createElement("div");
@@ -4042,3 +4047,16 @@ $("trip-edit").addEventListener("cancel",event=>{event.preventDefault();if(!trip
 $("trip-edit-form").addEventListener("submit",saveTripAdjustment);
 $("trip-edit-skip-setup").onclick=()=>{tripEditState.skipSetup=true;$("trip-edit-form").requestSubmit();};
 for(const id of ["trip-edit-start","trip-edit-end"])$(id).onchange=previewTripAdjustment;
+
+$("trip-edit-check-sync").onclick=async()=>{
+  const day=tripEditState.day,owner=session?.user.id,generation=tripEditState.generation;
+  if(!owner)return;$("trip-edit-check-sync").disabled=true;
+  try {
+    while($("refresh").disabled&&session?.user.id===owner)await new Promise(resolve=>setTimeout(resolve,100));
+    if(session?.user.id!==owner)return;
+    await refreshJournal();
+    if(session?.user.id!==owner||tripEditState.generation!==generation||!$("trip-edit").open)return;
+    openTripEditor(day);
+    if(!tripEditState.trip)$("trip-edit-missing-text").textContent="No completed trip has arrived for this day yet. End and sync the watch trip, then check again. Your saved catches are unchanged.";
+  } finally {$("trip-edit-check-sync").disabled=false;}
+};

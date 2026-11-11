@@ -238,3 +238,9 @@ Supabase. Time corrections clip activity at exact timestamps; they do not scale
 or reclassify the retained intervals. Speed summaries crossing a cut-off are
 excluded from the corrected chart. Database tests run in isolated
 PGlite, and the retained WebKit test script exercises both editor dialogs.
+
+
+Shell v139 shows Adjust trip time on every day, including catch-only days.
+If a completed trip has not synced, the dialog explains the missing recording
+and offers Check for synced trip; it never manufactures effort from catches.
+Trips spanning midnight can be opened from either affected day.

@@ -6327,3 +6327,5 @@ button.quiet,.text-action { min-height:44px; }
 #manual-review,#trip-edit-review { padding:10px; background:#eee9d6; font:13px/1.5 system-ui,sans-serif; }
 #manual-review[hidden],#trip-edit-review[hidden],#manual-skip-setup[hidden],#trip-edit-skip-setup[hidden],.manual-coordinates[hidden] { display:none; }
 @media(max-width:480px) { #trip-edit { padding:14px; } }
+
+#trip-edit-form[hidden],#trip-edit-missing[hidden] { display:none; }
