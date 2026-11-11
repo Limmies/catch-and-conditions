@@ -221,6 +221,7 @@ function loginMessage(text, error = false) {
 }
 function resetPrivateView() {
   resetManualCatch();
+  resetTripEditor();
   resetDayPhotos();
   $("spot-search").value = "";
   resetInsights();
@@ -385,7 +386,7 @@ async function refreshJournal() {
       ).then((records) => { acceptCatchRecords(records, owner, generation); return records; }),
       readRecords(
         "fishing_trips",
-        "archive_id,device_id,watch_trip_id,started_at,ended_at,fishing_seconds,travelling_seconds,unclassified_seconds,raw_payload,fishing_mode,fishing_sessions(archive_id,session_number,started_at,ended_at,fishing_seconds,catch_count,no_bite_count,species_counts,angler_seconds,line_seconds,latitude,longitude,location_source,spot_archive_id,fishing_spots(archive_id,name,latitude,longitude,created_at))",
+        "archive_id,device_id,watch_trip_id,started_at,ended_at,recorded_started_at,recorded_ended_at,journal_setup,fishing_seconds,travelling_seconds,unclassified_seconds,raw_payload,fishing_mode,fishing_sessions(archive_id,session_number,started_at,ended_at,fishing_seconds,catch_count,no_bite_count,species_counts,angler_seconds,line_seconds,latitude,longitude,location_source,spot_archive_id,fishing_spots(archive_id,name,latitude,longitude,created_at))",
         "started_at",
         "trip",
         owner,
@@ -482,7 +483,7 @@ function tripMetrics(t) {
     0,
     (new Date(t.ended_at) - new Date(t.started_at)) / 1000,
   );
-  const segments = t.raw_payload?.activity_segments || [];
+  const segments = tripIntervals(t);
   const fishing = t.fishing_seconds ?? 0;
   const travelling = t.travelling_seconds ?? 0;
   const all = catches.filter((c) =>
@@ -620,9 +621,8 @@ function tripVisuals(t, m) {
       esc(title)
     }"></button>`;
   }).join("");
-  const bins = (t.raw_payload?.movement?.bins || []).filter((b) =>
-    Array.isArray(b) && b.length === 10 && b.every(Number.isFinite) && b[6] > 0
-  );
+  const shift=(new Date(t.started_at)-new Date(t.recorded_started_at||t.started_at))/1000;
+  const bins = (t.raw_payload?.movement?.bins || []).filter(b=>Array.isArray(b)&&b.length===10&&b.every(Number.isFinite)&&b[6]>0&&b[1]>=shift&&b[2]<=shift+m.total).map(b=>{const copy=[...b];copy[1]=b[1]-shift;copy[2]=b[2]-shift;return copy;});
   const maxSpeed = Math.max(20, ...bins.map((b) => b[4] * .036));
   const x = (seconds) => 38 + seconds / Math.max(1, m.total) * 640;
   const y = (speed) => 112 - speed / maxSpeed * 90;
@@ -2408,7 +2408,7 @@ function diaryTripRows(filterSpecies = true) {
         (!filterSpecies || !$("species").value || metrics.count > 0);
     });
 }
-const manualCatchState = { map:null, marker:null, points:null, saving:false, generation:0, request:null, fixedDate:null, suggestedTime:null };
+const manualCatchState = { map:null, marker:null, points:null, saving:false, generation:0, request:null, fixedDate:null, suggestedTime:null, skipSetup:false };
 function manualCatchTime(date, time) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(time)) throw Error("Choose the catch date and time.");
   const [year,month,day,hour,minute] = (date + "-" + time.replace(":","-")).split("-").map(Number);
@@ -2505,6 +2505,7 @@ function updateManualCatchContext() {
   if($("manual-latitude").value!==""&&$("manual-longitude").value!=="")setManualCatchLocation(+$("manual-latitude").value,+$("manual-longitude").value,false,false);
 }
 function resetManualCatch() {
+  manualCatchState.skipSetup=false;$("manual-review").hidden=true;$("manual-skip-setup").hidden=true;
   manualCatchState.generation++;manualCatchState.saving=false;manualCatchState.request=null;manualCatchState.fixedDate=null;manualCatchState.suggestedTime=null;
   $("manual-date").readOnly=false;$("manual-date-field").hidden=false;$("manual-time-hint").textContent="";
   if(manualCatchState.map)manualCatchState.map.remove();
@@ -2548,6 +2549,7 @@ async function saveManualCatch(event) {
     if(trip&&(new Date(at)<new Date(trip.started_at)||new Date(at)>new Date(trip.ended_at)))throw Error("Catch time must fall within the selected trip, or choose not linked.");
     payload={p_species:$("manual-species").value,p_caught_at:at,p_latitude:latitude,p_longitude:longitude,p_length_cm:length,p_trip_archive_id:trip?.archive_id||null,p_fishing_mode:manualCatchMode(),p_position_method:$("manual-position").value||null,p_tackle_method:$("manual-tackle").value||null};
   } catch(error) {manualCatchStatus(error.message,true);return;}
+  if(!manualCatchState.skipSetup&&setupReviewNeeded("manual"))return;
   const signature=JSON.stringify(payload);
   if(manualCatchState.request?.signature!==signature)manualCatchState.request={signature,id:crypto.randomUUID()};
   payload.p_request_id=manualCatchState.request.id;
@@ -2567,6 +2569,88 @@ async function saveManualCatch(event) {
     if(generation!==manualCatchState.generation||session?.user.id!==owner)return;
     manualCatchState.saving=false;$("manual-fields").disabled=false;$("manual-close").disabled=false;$("manual-cancel").disabled=false;
     manualCatchStatus(error.code==="42501"?"Sign in again and check that the trip belongs to your account.":error.code==="22023"?error.message:"Catch could not be confirmed. Your entries are kept; retry when connected. Retrying the same details will not add a duplicate.",true);
+  }
+}
+
+const tripEditState={trip:null,day:null,saving:false,generation:0,request:null,skipSetup:false};
+function setupReviewNeeded(prefix) {
+  const missing=[];
+  if(!$(prefix+"-position").value)missing.push($(prefix+"-position-label").textContent.toLowerCase());
+  if(!$(prefix+"-tackle").value)missing.push("tackle");
+  if(!missing.length)return false;
+  $(prefix+"-setup").open=true;$(prefix+"-review").hidden=false;
+  $(prefix+"-review-text").textContent=`Not recorded: ${missing.join(" and ")}. Choose the details you remember, or skip them.`;
+  $(prefix+"-skip-setup").hidden=false;
+  $(prefix+(!$(prefix+"-position").value?"-position":"-tackle")).focus();
+  return true;
+}
+function localTripDateTime(value) {
+  const parts=Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:config.timezone,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"}).formatToParts(new Date(value)).map(p=>[p.type,p.value]));
+  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}`;
+}
+function resetTripEditor() {
+  tripEditState.generation++;tripEditState.saving=false;tripEditState.request=null;tripEditState.trip=null;tripEditState.skipSetup=false;
+  $("trip-edit").close();$("trip-edit-fields").disabled=false;$("trip-edit-close").disabled=false;
+  $("trip-edit-status").textContent="";$("trip-edit-review").hidden=true;$("trip-edit-skip-setup").hidden=true;
+}
+function loadTripEditor() {
+  const t=trips.find(t=>t.archive_id===$("trip-edit-picker").value);if(!t)return;
+  tripEditState.trip=t;tripEditState.skipSetup=false;tripEditState.request=null;
+  $("trip-edit-start").value=localTripDateTime(t.started_at);$("trip-edit-end").value=localTripDateTime(t.ended_at);
+  $("trip-edit-original").textContent=`Original recording: ${dateLabel(t.recorded_started_at||t.started_at)} ${timeLabel(t.recorded_started_at||t.started_at)} – ${dateLabel(t.recorded_ended_at||t.ended_at)} ${timeLabel(t.recorded_ended_at||t.ended_at)}. Times in ${config.timezone.replaceAll("_"," ")}.`;
+  const shore=recordFishingMode(t)==="shore";$("trip-edit-mode").textContent=fishingModeLabels[recordFishingMode(t)];$("trip-edit-position-label").textContent=shore?"Rocks / sand":"Boat movement";
+  for(const [id,options] of [["position",shore?[["rocks","Rocks"],["sand","Sand"]]:[["drifting","Drifting"],["anchored","Anchored"]]],["tackle",shore?[["bait","Bait fishing"],["spinning","Spinning"]]:[["bait","Bait fishing"],["jigging","Jigging"]]]]) {
+    $("trip-edit-"+id).replaceChildren(new Option("Not recorded / skip",""));for(const [value,label] of options)$("trip-edit-"+id).add(new Option(label,value));
+    $("trip-edit-"+id).value=t.journal_setup?.[id==="position"?"position_method":"tackle_method"]||"";
+  }
+  $("trip-edit-status").textContent="";$("trip-edit-review").hidden=true;$("trip-edit-skip-setup").hidden=true;
+  previewTripAdjustment();
+}
+function openTripEditor(day) {
+  if(!session)return;resetTripEditor();tripEditState.day=day;
+  $("trip-edit-title").textContent=`Adjust trip · ${dateLabel(day+"T00:00:00Z")}`;
+  $("trip-edit-picker").replaceChildren();
+  for(const t of trips.filter(t=>dayKey(t.started_at)===day&&matchesFishingMode(t)))$("trip-edit-picker").add(new Option(`${timeLabel(t.started_at)}–${timeLabel(t.ended_at)} · ${fishingModeLabels[recordFishingMode(t)]}`,t.archive_id));
+  loadTripEditor();$("trip-edit").showModal();
+}
+function tripAdjustmentTimes() {
+  const read=id=>{const [date,time]=$(id).value.split("T");if(!/^\d{2}:\d{2}(:\d{2})?$/.test(time||""))throw Error("Choose a valid start and end time.");const seconds=Number(time.split(":")[2]||0);if(seconds>59)throw Error("Choose valid seconds.");const at=new Date(new Date(manualCatchTime(date,time.slice(0,5))).getTime()+seconds*1000);if(at.getTime()>Date.now())throw Error("Trip times cannot be in the future.");return at.toISOString();};
+  const start=read("trip-edit-start"),end=read("trip-edit-end"),t=tripEditState.trip;
+  if(!t)throw Error("Select a recorded trip.");
+  if(new Date(end)<=new Date(start))throw Error("End time must be after start time.");
+  if(new Date(start)<new Date(t.recorded_started_at||t.started_at)||new Date(end)>new Date(t.recorded_ended_at||t.ended_at))throw Error("Keep times within the original recording.");
+  if(catches.some(c=>c.device_id===t.device_id&&c.watch_trip_id===t.watch_trip_id&&(new Date(c.caught_at)<new Date(start)||new Date(c.caught_at)>new Date(end))))throw Error("These times would exclude a logged fish. Keep all logged catches inside the trip.");
+  return {start,end};
+}
+function previewTripAdjustment() {
+  try {const {start,end}=tripAdjustmentTimes();const t={...tripEditState.trip,started_at:start,ended_at:end};const intervals=tripIntervals(t);const fishing=intervals.filter(s=>s.mode==="fishing").reduce((sum,s)=>sum+s.ended_at-s.started_at,0);$("trip-edit-preview").textContent=`Corrected duration: ${durationLabel((new Date(end)-new Date(start))/1000)} · ${durationLabel(fishing)} recorded fishing. Catches remain saved.`;}
+  catch(error){$("trip-edit-preview").textContent=error.message;}
+}
+async function saveTripAdjustment(event) {
+  event.preventDefault();if(!session||tripEditState.saving||!$("trip-edit-form").reportValidity())return;
+  let payload;
+  try {const {start,end}=tripAdjustmentTimes(),t=tripEditState.trip;payload={p_trip_archive_id:t.archive_id,p_started_at:start,p_ended_at:end,p_expected_started_at:t.started_at,p_expected_ended_at:t.ended_at,p_position_method:$("trip-edit-position").value||null,p_tackle_method:$("trip-edit-tackle").value||null};}
+  catch(error){$("trip-edit-status").textContent=error.message;return;}
+  if(!tripEditState.skipSetup&&setupReviewNeeded("trip-edit"))return;
+  const signature=JSON.stringify(payload);if(tripEditState.request?.signature!==signature)tripEditState.request={signature,id:crypto.randomUUID()};payload.p_request_id=tripEditState.request.id;
+  const owner=session.user.id,generation=tripEditState.generation;
+  tripEditState.saving=true;$("trip-edit-fields").disabled=true;$("trip-edit-close").disabled=true;$("trip-edit-status").textContent="Saving corrected trip…";
+  try {
+    const {data,error}=await client.rpc("adjust_fishing_trip_time",payload);
+    if(generation!==tripEditState.generation||session?.user.id!==owner)return;
+    if(error)throw error;if(!data?.archive_id)throw Error("Save could not be confirmed.");
+    // Finish an older refresh first, then discard stale session effort immediately.
+    while($("refresh").disabled&&generation===tripEditState.generation&&session?.user.id===owner)await new Promise(resolve=>setTimeout(resolve,100));
+    if(generation!==tripEditState.generation||session?.user.id!==owner)return;
+    trips=trips.map(t=>t.archive_id===data.archive_id?{...t,...data,fishing_sessions:[]}:t);
+    render();
+    await refreshJournal();
+    if(generation!==tripEditState.generation||session?.user.id!==owner)return;
+    resetTripEditor();message("Trip time adjusted. Original watch recording is preserved.");
+  } catch(error) {
+    if(generation!==tripEditState.generation||session?.user.id!==owner)return;
+    tripEditState.saving=false;$("trip-edit-fields").disabled=false;$("trip-edit-close").disabled=false;
+    $("trip-edit-status").textContent=error.code==="22023"||error.code==="40001"?error.message:"Save could not be confirmed. Your changes are kept; retry safely when connected.";
   }
 }
 
@@ -2637,6 +2721,9 @@ function renderDays(tripRows = diaryTripRows()) {
     addFish.type="button";addFish.className="quiet day-add-fish";addFish.textContent="Add fish";
     addFish.onclick=()=>openManualCatch(key);
     section.querySelector(".day-summary").append(addFish);
+    if(dayTrips.length) {
+      const adjust=document.createElement("button");adjust.type="button";adjust.className="quiet day-adjust-trip";adjust.textContent="Adjust trip time";adjust.onclick=()=>openTripEditor(key);actions.append(adjust);
+    }
     actions.append(weather);
     photoPanel.querySelector(".day-photo-actions").insertBefore(rate, photoPanel.querySelector(".day-photo-remove"));
     body.append(actions);
@@ -2656,7 +2743,7 @@ function renderDays(tripRows = diaryTripRows()) {
     } else {
       const note = document.createElement("p");
       note.className = "small muted";
-      note.textContent = "Catches saved without a completed trip. Fishing effort is unavailable.";
+      note.textContent = "Catches saved without a completed trip. End and sync the trip on your watch before adjusting its times. Fishing effort is unavailable.";
       body.append(note);
     }
     const list = document.createElement("details");
@@ -3947,3 +4034,11 @@ $("manual-date").onchange=()=>{
 $("manual-time").onchange=()=>{manualCatchState.suggestedTime=null;$("manual-time-hint").textContent="";updateManualCatchTrips();};
 $("manual-spot").onchange=()=>{const value=$("manual-spot").value;if(value){const [lat,lon]=value.split(",").map(Number);setManualCatchLocation(lat,lon);}};
 for(const id of ["manual-latitude","manual-longitude"])$(id).onchange=()=>{if($("manual-latitude").value!==""&&$("manual-longitude").value!=="")setManualCatchLocation(+$("manual-latitude").value,+$("manual-longitude").value);};
+
+$("manual-skip-setup").onclick=()=>{manualCatchState.skipSetup=true;$("manual-catch-form").requestSubmit();};
+$("trip-edit-picker").onchange=loadTripEditor;
+$("trip-edit-close").onclick=resetTripEditor;
+$("trip-edit").addEventListener("cancel",event=>{event.preventDefault();if(!tripEditState.saving)resetTripEditor();});
+$("trip-edit-form").addEventListener("submit",saveTripAdjustment);
+$("trip-edit-skip-setup").onclick=()=>{tripEditState.skipSetup=true;$("trip-edit-form").requestSubmit();};
+for(const id of ["trip-edit-start","trip-edit-end"])$(id).onchange=previewTripAdjustment;

@@ -216,3 +216,25 @@ no service key or watch token is exposed. UI validation runs with the existing
 WebKit runner using `JOURNAL_CHECK_SCRIPT=tests/phone_journal_manual_catch_test.js`
 (use an absolute path). Database regression: `deno test --allow-read --allow-env
 --allow-net tests/manual_journal_catches_test.js` with pinned PGlite 0.5.8.
+
+
+### Correct a trip that ran too long
+
+End and sync the watch trip first. Expand its day and choose **Adjust trip time**.
+Select the trip, change its actual start/end, and review the duration preview.
+Corrections stay within the original recording and cannot exclude logged catches.
+The watch's original upload remains unchanged; an owner-only correction history
+records each save. Fishing/travel/unknown totals and stored sessions are rebuilt
+from clipped original intervals, and empty stale sessions are removed.
+
+Both manual fish entry and trip adjustment review missing movement/terrain and
+tackle before submitting. Choose the details you remember or **Skip missing
+details and save**. Known fishing type carries over from the day/trip; fish entry
+still lets you change it. Trip setup is an explicit journal annotation and does
+not rewrite the original catch setups. Coordinate fields are hidden; use the map.
+
+Shell v138 uses `20261111180600_trip_time_adjustments.sql`, now installed in
+Supabase. Time corrections clip activity at exact timestamps; they do not scale
+or reclassify the retained intervals. Speed summaries crossing a cut-off are
+excluded from the corrected chart. Database tests run in isolated
+PGlite, and the retained WebKit test script exercises both editor dialogs.

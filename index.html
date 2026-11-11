@@ -19,15 +19,15 @@
     <link rel="stylesheet" href="vendor/leaflet.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.Default.css">
-    <link rel="stylesheet" href="style.css?v=137">
+    <link rel="stylesheet" href="style.css?v=138">
     <script defer src="vendor/supabase.js"></script>
     <script defer src="vendor/leaflet.js"></script>
     <script defer src="vendor/leaflet.markercluster.js"></script>
     <script defer src="config.js"></script>
-    <script defer src="density.js?v=137"></script>
-    <script defer src="insights.js?v=137"></script>
-    <script defer src="day-photos.js?v=137"></script>
-    <script defer src="app.js?v=137"></script>
+    <script defer src="density.js?v=138"></script>
+    <script defer src="insights.js?v=138"></script>
+    <script defer src="day-photos.js?v=138"></script>
+    <script defer src="app.js?v=138"></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
@@ -241,6 +241,19 @@
         class="dialog-heading"><span id="detail-label" class="eyebrow">CATCH DETAILS</span><button id="close-detail" class="quiet" aria-label="Close details">Close</button></div>
       <div id="detail-body"></div>
     </dialog>
+    <dialog id="trip-edit" aria-labelledby="trip-edit-title">
+      <div class="dialog-heading"><h2 id="trip-edit-title">Adjust trip time</h2><button type="button" class="quiet" id="trip-edit-close">Close</button></div>
+      <form id="trip-edit-form"><fieldset id="trip-edit-fields">
+        <label>Recorded trip<select id="trip-edit-picker"></select></label>
+        <p id="trip-edit-original" class="small muted"></p>
+        <div class="manual-grid"><label>Actual start<input id="trip-edit-start" type="datetime-local" step="1" required></label><label>Actual end<input id="trip-edit-end" type="datetime-local" step="1" required></label></div>
+        <p id="trip-edit-preview" class="small" aria-live="polite"></p>
+        <p class="small muted">Trim time within the original recording. Logged catches are kept, and fishing/session totals are recalculated. The original watch upload remains unchanged.</p>
+        <details id="trip-edit-setup"><summary>Fishing setup (optional)</summary><p>Fishing type: <strong id="trip-edit-mode"></strong></p><div class="manual-grid"><label><span id="trip-edit-position-label">Boat movement</span><select id="trip-edit-position"></select></label><label>Tackle<select id="trip-edit-tackle"></select></label></div></details>
+        <p id="trip-edit-review" hidden><span id="trip-edit-review-text"></span></p><button type="button" id="trip-edit-skip-setup" class="quiet" hidden>Skip missing details and save</button>
+        <button type="submit">Save trip time</button>
+      </fieldset><p id="trip-edit-status" role="status" aria-live="polite"></p></form>
+    </dialog>
     <dialog id="manual-catch" aria-labelledby="manual-title">
       <div class="dialog-heading"><h2 id="manual-title">Add a fish</h2><button type="button" class="quiet" id="manual-close" aria-label="Close add fish">Close</button></div>
       <form id="manual-catch-form">
@@ -259,9 +272,10 @@
           <label>Use a recorded spot<select id="manual-spot"></select></label>
           <div id="manual-map" aria-label="Choose catch location" role="region"></div>
           <div id="manual-nearby" aria-live="polite"></div>
-          <details class="manual-coordinates"><summary>Location coordinates</summary><div class="manual-grid"><label>Latitude<input id="manual-latitude" type="number" step="any" min="-90" max="90"></label><label>Longitude<input id="manual-longitude" type="number" step="any" min="-180" max="180"></label></div></details>
-          <details><summary>Fishing setup (optional)</summary><div class="manual-grid"><label><span id="manual-position-label">Boat movement</span><select id="manual-position"></select></label><label>Tackle<select id="manual-tackle"></select></label></div></details>
+          <details class="manual-coordinates" hidden><summary>Location coordinates</summary><div class="manual-grid"><label>Latitude<input id="manual-latitude" type="number" step="any" min="-90" max="90"></label><label>Longitude<input id="manual-longitude" type="number" step="any" min="-180" max="180"></label></div></details>
+          <details id="manual-setup"><summary>Fishing setup (optional)</summary><div class="manual-grid"><label><span id="manual-position-label">Boat movement</span><select id="manual-position"></select></label><label>Tackle<select id="manual-tackle"></select></label></div></details>
           <p class="small muted">Added to your journal with the catch time you choose. The record will show it was added afterward. Linking a trip updates its catch totals without adding fishing time.</p>
+          <p id="manual-review" hidden><span id="manual-review-text"></span></p><button type="button" id="manual-skip-setup" class="quiet" hidden>Skip missing details and save</button>
           <button type="submit" id="manual-save">Save fish</button>
         </fieldset>
         <p id="manual-status" role="status" aria-live="polite"></p>
