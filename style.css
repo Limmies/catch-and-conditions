@@ -6329,3 +6329,32 @@ button.quiet,.text-action { min-height:44px; }
 @media(max-width:480px) { #trip-edit { padding:14px; } }
 
 #trip-edit-form[hidden],#trip-edit-missing[hidden] { display:none; }
+/* Completeness is shown with text as well as colour. */
+.day-summary .day-species-summary.is-complete { background:#e0eddb; color:#245034; border:1px solid #92ae83; }
+.day-summary .day-species-summary.is-incomplete { background:#f4e3dc; color:#8b3b2c; border:1px solid #c89587; }
+.catch-row.is-complete { border-left:3px solid #638c53; }
+.catch-row.is-incomplete { border-left:3px solid #b55e4b; }
+.fish-record-status { display:inline-block; font:11px/1.45 system-ui,sans-serif; white-space:normal; text-align:left; }
+.fish-record-status.is-complete { color:#285437; }
+.fish-record-status.is-incomplete { color:#963f2e; }
+.catch-row > .fish-record-status { flex-basis:100%; }
+.catch-edit-toolbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; }
+#fish-edit { width:min(620px,calc(100% - 24px)); max-height:calc(100dvh - 24px); padding:20px; overflow:auto; box-sizing:border-box; background:#fff8e5; }
+#fish-edit .dialog-heading { position:static; padding:0 0 12px; }
+#fish-edit-title { margin:0; font-size:24px; }
+#fish-edit fieldset { min-width:0; margin:0; padding:0; border:0; }
+#fish-edit label { display:flex; flex-direction:column; gap:5px; margin-bottom:12px; min-width:0; font:13px/1.5 system-ui,sans-serif; }
+#fish-edit input,#fish-edit select { width:100%; min-width:0; min-height:44px; box-sizing:border-box; font-size:16px; }
+#fish-edit-trip-note[hidden] { display:none; }
+@media(max-width:480px) { #fish-edit { padding:14px; } }
+.catch-row.is-complete,.catch-row.is-incomplete { flex-wrap:wrap; }
+#days .day-card-summary .day-catch-points { color:#285b47; }
+#days .day-catch-points b { font-weight:750; }
+#days .day-catch-points small { font:10px/1.4 system-ui,sans-serif; color:var(--muted); }
+.catch-points-method { margin:0 0 14px; }
+.catch-points-method > summary,.day-points-breakdown > summary { min-height:40px; padding:10px 0; cursor:pointer; font:13px/1.5 system-ui,sans-serif; }
+.catch-points-method table,.day-points-breakdown table { width:100%; font:12px/1.5 system-ui,sans-serif; }
+.catch-points-method th,.catch-points-method td,.day-points-breakdown th,.day-points-breakdown td { padding:7px 10px; }
+.day-points-breakdown { margin:8px 0 14px; }
+.day-points-breakdown .table-wrap { max-width:620px; }
+.catch-points-method .table-wrap { max-width:620px; max-height:320px; overflow:auto; }

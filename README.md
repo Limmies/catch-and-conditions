@@ -244,3 +244,44 @@ Shell v139 shows Adjust trip time on every day, including catch-only days.
 If a completed trip has not synced, the dialog explains the missing recording
 and offers Check for synced trip; it never manufactures effort from catches.
 Trips spanning midnight can be opened from either affected day.
+
+
+### Correct an individual fish
+
+In Days, select a species chip. One catch opens its details; several catches open
+a short time/length list. Choose a catch and **Edit fish** to correct species,
+length, fishing type, movement/terrain and tackle. A synced trip fixes its linked
+fishing type; the other fields remain editable. Date, GPS/location and collected
+weather stay unchanged. Unknown details can stay unrecorded.
+
+Green means length, explicit fishing type, valid movement/terrain and tackle are
+recorded. Red means details are missing; text identifies them. A species summary
+is green only when every catch is complete. Weather collection is separate.
+
+Shell v140 fish editing uses `20261111200445_catch_corrections.sql`, installed on 12 November 2026.
+Corrected values become the current archive values, while the first upload is
+retained in `original_raw_payload` with an owner-only revision history. Watch and
+manual-add retries compare that first upload and cannot revert a correction.
+Size/weight and session species products refresh without changing trip effort.
+Stale edits are rejected. Included in the shell v142 production release.
+
+
+### Catch Points
+
+Shell v142 adds Catch Points beside catch count and catches/fishing hour
+on each day. It totals personal species points, with a transparent per-day
+breakdown and full matrix in Days → Catch Points weights. Version 2 condenses the
+owner's offshore ranking: Black Musselcracker 30, Red Steenbras 28, Cape Yellowtail
+20, Miss Lucy 17, Geelbek 16, Kabeljou 15, Yellowbelly 14, Atlantic Bonito 11,
+Santer 10, Carpenter 7, Mackerel 6, Scotsman 5, Dageraad 4, Hake 3, Red Roman 2,
+Shark 1. Fifteen Red Roman equal one Black Musselcracker. High premium on the first two is deliberate; Santer stays above the
+lower-value group. Duplicate mention of Cape Yellowtail is one species.
+
+Points are summed per landed fish, not averaged or divided by effort. Fish length,
+size status, record completeness, weather and enjoyment ratings are separate.
+No-bite/setup records are excluded. Current style/species/date filters apply.
+Unranked shore species are shown as unweighted, never silently worth zero;
+partial totals state coverage. Totals recalculate from current corrected catches.
+This feature stores no score in Supabase and changes no catch/trip data.
+Tests: tests/phone_journal_catch_points_test.js (five numerical checks), plus
+real WebKit day/header/filter/breakdown and six-width editor checks.

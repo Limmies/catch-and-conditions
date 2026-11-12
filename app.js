@@ -222,6 +222,7 @@ function loginMessage(text, error = false) {
 function resetPrivateView() {
   resetManualCatch();
   resetTripEditor();
+  resetFishEditor();
   resetDayPhotos();
   $("spot-search").value = "";
   resetInsights();
@@ -378,7 +379,7 @@ async function refreshJournal() {
     const [catchResult, tripResult] = await Promise.allSettled([
       readRecords(
         "fishing_catches",
-        "archive_id,device_id,watch_trip_id,catch_id,species_id,recorded_label,caught_at,gps_at,latitude,longitude,gps_quality,position_method,tackle_method,received_at,fishing_mode,raw_payload",
+        "archive_id,device_id,watch_trip_id,catch_id,species_id,recorded_label,caught_at,gps_at,latitude,longitude,gps_quality,position_method,tackle_method,received_at,fishing_mode,raw_payload,journal_revision",
         "caught_at",
         "catch",
         owner,
@@ -2661,6 +2662,128 @@ async function saveTripAdjustment(event) {
   }
 }
 
+const fishEditState={fish:null,saving:false,generation:0,request:null};
+function fishRecordStatus(c) {
+  const raw=c.raw_payload||{},mode=recordFishingMode(c),missing=[];
+  if(!species[c.species_id])missing.push("species");
+  if(!Number.isInteger(raw.length_cm)||raw.length_cm<1||raw.length_cm>1000)missing.push("length");
+  if(!["offshore","shore"].includes(raw.fishing_mode))missing.push("fishing type");
+  if(!(mode==="shore"?["rocks","sand"]:["anchored","drifting"]).includes(c.position_method??raw.position_method))missing.push(mode==="shore"?"shore terrain":"boat movement");
+  if(!(mode==="shore"?["bait","spinning"]:["bait","jigging"]).includes(c.tackle_method??raw.tackle_method))missing.push("tackle");
+  return {complete:!missing.length,missing,label:missing.length?`Missing ${missing.join(", ")}`:"Record complete"};
+}
+function fishStatusHTML(c) {
+  const status=fishRecordStatus(c);
+  return `<span class="fish-record-status ${status.complete?"is-complete":"is-incomplete"}">${status.complete?"✓":"!"} ${esc(status.label)}</span>`;
+}
+function showDaySpeciesCatches(day,id) {
+  const rows=visible.filter(c=>dayKey(c.caught_at)===day&&c.species_id===id).sort((a,b)=>new Date(a.caught_at)-new Date(b.caught_at));
+  if(rows.length===1){showDetail(rows[0]);return;}
+  conditionsGeneration++;$("detail-label").textContent="Choose a fish";$("details").dataset.view="day-species";
+  $("detail-body").innerHTML=`<h2>${esc(species[id]?.[0]||id)}</h2><p class="small muted">${esc(dateLabel(day+"T00:00:00Z"))} · Select the individual catch to view or edit.</p><div class="day-species-catches">${rows.map((c,i)=>`<button type="button" class="catch-row ${fishRecordStatus(c).complete?"is-complete":"is-incomplete"}" data-day-catch-index="${i}"><span>${esc(timeLabel(c.caught_at))} · ${Number.isInteger(c.raw_payload?.length_cm)?esc(c.raw_payload.length_cm)+" cm":"Length unknown"}</span>${fishStatusHTML(c)}</button>`).join("")}</div>`;
+  $("detail-body").querySelectorAll("[data-day-catch-index]").forEach(button=>button.onclick=()=>showDetail(rows[Number(button.dataset.dayCatchIndex)]));
+  if(!$("details").open)$("details").showModal();$("details").scrollTop=0;
+}
+function resetFishEditor() {
+  fishEditState.generation++;fishEditState.fish=null;fishEditState.request=null;fishEditState.saving=false;
+  $("fish-edit").close();$("fish-edit-form").reset();$("fish-edit-fields").disabled=false;$("fish-edit-close").disabled=false;$("fish-edit-status").textContent="";
+}
+function updateFishEditOptions() {
+  const mode=$("fish-edit-mode").value,selected=$("fish-edit-species").value;
+  const ids=Object.keys(species).filter(id=>mode==="shore"?shoreOnlySpecies.has(id)||id==="red_roman":!shoreOnlySpecies.has(id));
+  $("fish-edit-species").replaceChildren(new Option("Choose a species",""));for(const id of ids)$("fish-edit-species").add(new Option(species[id][0],id));
+  if(ids.includes(selected))$("fish-edit-species").value=selected;
+  $("fish-edit-position-label").textContent=mode==="shore"?"Rocks / sand":"Boat movement";
+  for(const [key,options] of [["position",mode==="shore"?[["rocks","Rocks"],["sand","Sand"]]:[["drifting","Drifting"],["anchored","Anchored / stationary"]]],["tackle",mode==="shore"?[["bait","Bait fishing"],["spinning","Spinning"]]:[["bait","Bait fishing"],["jigging","Jigging"]]]]) {
+    const old=$("fish-edit-"+key).value;$("fish-edit-"+key).replaceChildren(new Option("Not recorded",""));for(const [value,label] of options)$("fish-edit-"+key).add(new Option(label,value));
+    if(options.some(([value])=>value===old))$("fish-edit-"+key).value=old;
+  }
+}
+function openFishEditor(c) {
+  if(!session||!c.archive_id)return;
+  resetFishEditor();fishEditState.fish=c;
+  $("fish-edit-title").textContent=`Edit ${nameOf(c)}`;$("fish-edit-context").textContent=`${dateLabel(c.caught_at)} · ${timeLabel(c.caught_at)}. Original uploaded values are retained in correction history.`;
+  $("fish-edit-mode").value=recordFishingMode(c);updateFishEditOptions();$("fish-edit-species").value=c.species_id;
+  $("fish-edit-length").value=Number.isInteger(c.raw_payload?.length_cm)?c.raw_payload.length_cm:"";
+  $("fish-edit-position").value=c.position_method??c.raw_payload?.position_method??"";$("fish-edit-tackle").value=c.tackle_method??c.raw_payload?.tackle_method??"";
+  const linked=trips.some(t=>t.device_id===c.device_id&&t.watch_trip_id===c.watch_trip_id);
+  $("fish-edit-mode").disabled=linked;$("fish-edit-trip-note").hidden=!linked;
+  $("details").close();$("fish-edit").showModal();
+}
+async function saveFishEdit(event) {
+  event.preventDefault();if(!session||fishEditState.saving||!$("fish-edit-form").reportValidity())return;
+  const c=fishEditState.fish;if(!c)return;
+  const length=$("fish-edit-length").value===""?null:Number($("fish-edit-length").value);
+  if(length!==null&&(!Number.isInteger(length)||length<1||length>1000)){$("fish-edit-status").textContent="Enter a length from 1 to 1000 cm, or leave it unknown.";return;}
+  const payload={p_catch_archive_id:c.archive_id,p_expected_revision:c.journal_revision||0,p_species:$("fish-edit-species").value,p_length_cm:length,p_fishing_mode:$("fish-edit-mode").value,p_position_method:$("fish-edit-position").value||null,p_tackle_method:$("fish-edit-tackle").value||null};
+  const signature=JSON.stringify(payload);if(fishEditState.request?.signature!==signature)fishEditState.request={signature,id:crypto.randomUUID()};payload.p_request_id=fishEditState.request.id;
+  const owner=session.user.id,generation=fishEditState.generation;
+  fishEditState.saving=true;$("fish-edit-fields").disabled=true;$("fish-edit-close").disabled=true;$("fish-edit-status").textContent="Saving correction…";
+  try {
+    const {data,error}=await client.rpc("correct_fishing_catch",payload);
+    if(generation!==fishEditState.generation||session?.user.id!==owner)return;
+    if(error)throw error;if(!data?.archive_id)throw Error("Save could not be confirmed.");
+    while($("refresh").disabled&&generation===fishEditState.generation&&session?.user.id===owner)await new Promise(resolve=>setTimeout(resolve,100));
+    if(generation!==fishEditState.generation||session?.user.id!==owner)return;
+    catches=catches.map(row=>row.archive_id===data.archive_id?data:row);
+    // Species totals change immediately; affected session products must refresh together.
+    trips=trips.map(t=>t.device_id===data.device_id&&t.watch_trip_id===data.watch_trip_id?{...t,fishing_sessions:[]}:t);
+    resetFishEditor();render();message("Fish corrected. Original uploaded values are retained.");void refreshJournal();
+  }catch(error){
+    if(generation!==fishEditState.generation||session?.user.id!==owner)return;
+    fishEditState.saving=false;$("fish-edit-fields").disabled=false;$("fish-edit-close").disabled=false;
+    $("fish-edit-status").textContent=["22023","40001","23505"].includes(error.code)?error.message:"Save could not be confirmed. Your changes are kept; retry safely when connected.";
+  }
+}
+
+// BEGIN CATCH POINTS CORE
+// Personal species preferences, condensed version 2: 15 Red Roman equal one Black Musselcracker.
+const catchPointsVersion = "catch-points-v2";
+const catchPointWeights = Object.freeze({
+  musselcracker:30,
+  red_steenbras:28,
+  yellowtail:20,
+  miss_lucy:17,
+  geelbek:16,
+  kabeljo:15,
+  yellowbelly:14,
+  atlantic_bonito:11,
+  santer:10,
+  carpenter:7,
+  mackerel:6,
+  scotsman:5,
+  dageraad:4,
+  hake:3,
+  red_roman:2,
+  haai:1,
+});
+function dayCatchPoints(rows,weights=catchPointWeights) {
+  const counts=new Map();
+  for(const c of rows) {
+    if(c.species_id==="no_bite"||(c.record_kind&&c.record_kind!=="catch"))continue;
+    counts.set(c.species_id,(counts.get(c.species_id)||0)+1);
+  }
+  let total=0,scored=0,count=0;
+  const breakdown=[...counts].map(([id,n])=>{
+    count+=n;
+    const weight=Object.hasOwn(weights,id)&&Number.isFinite(weights[id])&&weights[id]>=0?weights[id]:null;
+    if(weight!==null){scored+=n;total+=weight*n;}
+    return {id,count:n,weight,points:weight===null?null:weight*n};
+  }).sort((a,b)=>(b.points??-1)-(a.points??-1)||String(a.id).localeCompare(String(b.id)));
+  return {total:count===0||scored>0?total:null,count,scored,unrated:count-scored,complete:count===scored,breakdown,version:catchPointsVersion};
+}
+// END CATCH POINTS CORE
+function catchPointsHTML(score) {
+  const points=score.total===null?"—":score.total.toLocaleString("en-ZA");
+  return `<span class="day-catch-points" title="Personal species points, summed for the catches shown. ${score.unrated?`${score.unrated} catches have no species weight yet.`:"All shown catches are scored."}"><b>${esc(points)}</b> Catch Points${score.unrated?` <small>(${score.unrated} unweighted)</small>`:""}</span>`;
+}
+function catchPointsBreakdownHTML(score,key) {
+  return `<details class="day-points-breakdown" data-disclosure="day-points:${esc(key)}"><summary>Catch Points breakdown</summary><p class="small muted">${score.scored} of ${score.count} catches scored · ${score.version}. Each fish earns its species points. Size and fishing hours do not change these points. This follows the current filters.</p><div class="table-wrap"><table><caption class="sr-only">Catch Points by species for this day</caption><thead><tr><th scope="col">Species</th><th scope="col">Fish</th><th scope="col">Points each</th><th scope="col">Total</th></tr></thead><tbody>${score.breakdown.map(row=>`<tr><th scope="row">${esc(species[row.id]?.[0]||row.id)}</th><td>${row.count}</td><td>${row.weight===null?"Not rated":row.weight}</td><td>${row.points===null?"—":row.points}</td></tr>`).join("")}</tbody></table></div>${score.unrated?'<p class="small muted">Unweighted species are excluded from the points total, rather than treated as zero-value fish.</p>':""}</details>`;
+}
+function renderCatchPointsMatrix() {
+  $("catch-points-matrix").innerHTML=`<table><caption class="sr-only">Personal Catch Points per fish</caption><thead><tr><th scope="col">Species</th><th scope="col">Points per fish</th></tr></thead><tbody>${Object.entries(catchPointWeights).map(([id,value])=>`<tr><th scope="row">${esc(species[id]?.[0]||id)}</th><td>${value}</td></tr>`).join("")}</tbody></table>`;
+}
+
 function renderDays(tripRows = diaryTripRows()) {
   dayPhotoObserver?.disconnect();
   void loadDayPhotos();
@@ -2678,6 +2801,7 @@ function renderDays(tripRows = diaryTripRows()) {
   $("days").replaceChildren();
   for (const [key, rows] of [...groups].sort(([a], [b]) => b.localeCompare(a))) {
     const dayTrips = tripRows.filter(({ trip }) => dayKey(trip.started_at) === key);
+    const points=dayCatchPoints(rows);
     const fishing = dayTrips.reduce((sum, { metrics }) => sum + metrics.fishing, 0);
     const tripCatches = dayTrips.reduce((sum, { metrics }) => sum + metrics.count, 0);
     const productivity = fishing > 0 ? tripCatches * 3600 / fishing : null;
@@ -2695,11 +2819,11 @@ function renderDays(tripRows = diaryTripRows()) {
       dayRatingBadge(key, fishingMode)
     }</strong><span class="record-metrics"><span title="Based on completed trips starting on this date"><b>${
       productivity === null ? "—" : productivity.toFixed(1)
-    }</b> catches / fishing hour</span><span><b>${rows.length}</b> catches</span></span></summary><div class="day-record-body"><div class="day-summary">${
+    }</b> catches / fishing hour</span><span><b>${rows.length}</b> catches</span>${catchPointsHTML(points)}</span></summary><div class="day-record-body"><div class="day-summary">${
       [...totals].map(([name, count]) =>
-        `<button type="button" class="fish-name-link" data-profile="${
+        `<button type="button" class="fish-name-link day-species-summary ${rows.filter(c=>nameOf(c)===name).every(c=>fishRecordStatus(c).complete)?"is-complete":"is-incomplete"}" data-day-species="${
           esc(rows.find((c) => nameOf(c) === name)?.species_id || "")
-        }">${esc(name)} · ${count}</button>`
+        }" title="${esc(rows.filter(c=>nameOf(c)===name).every(c=>fishRecordStatus(c).complete)?"All records complete":"Some catches have missing details — select to review")}">${esc(name)} · ${count}<span class="sr-only"> · ${rows.filter(c=>nameOf(c)===name).every(c=>fishRecordStatus(c).complete)?"Records complete":"Missing catch details"}</span></button>`
       )
         .join("")
     }</div></div></details>`;
@@ -2708,6 +2832,7 @@ function renderDays(tripRows = diaryTripRows()) {
       event.stopPropagation();
       openDayPhoto(key);
     };
+    section.querySelectorAll("[data-day-species]").forEach(button=>button.onclick=()=>showDaySpeciesCatches(key,button.dataset.daySpecies));
     const body = section.querySelector(".day-record-body");
     const photoPanel = createDayPhotoPanel(key);
     section.append(photoPanel);
@@ -2738,6 +2863,7 @@ function renderDays(tripRows = diaryTripRows()) {
       durationLabel(fishing)
     } fishing · ${totals.size} species` : `Trip recording not synced · fishing time unavailable · ${totals.size} species`;
     body.append(effort);
+    const pointDetails=document.createElement("div");pointDetails.innerHTML=catchPointsBreakdownHTML(points,key);body.append(pointDetails.firstElementChild);
     if (dayTrips.length) {
       const records = document.createElement("div");
       records.className = "diary-trips";
@@ -2759,12 +2885,12 @@ function renderDays(tripRows = diaryTripRows()) {
     body.append(list);
     for (const c of rows) {
       const button = document.createElement("button");
-      button.className = "catch-row";
+      button.className = "catch-row "+(fishRecordStatus(c).complete?"is-complete":"is-incomplete");
       button.innerHTML = `<span>${fishImage(c.species_id)}<i class="dot" style="background:${
         species[c.species_id]?.[1] || "#11543e"
       }"></i>${esc(nameOf(c))}</span><time datetime="${esc(c.caught_at)}">${
         esc(timeLabel(c.caught_at))
-      }</time>`;
+      }</time>${fishStatusHTML(c)}`;
       button.onclick = () => showDetail(c);
       list.append(button);
     }
@@ -3622,7 +3748,7 @@ async function showDetail(c) {
     scientificCaption(c.species_id)
   }<p class="muted">${esc(dateLabel(c.caught_at))} · ${
     esc(timeLabel(c.caught_at))
-  }</p><dl class="detail-grid catch-primary">${
+  }</p><div class="catch-edit-toolbar">${fishStatusHTML(c)}<button type="button" id="edit-current-fish" class="quiet">Edit fish</button></div><dl class="detail-grid catch-primary">${
     field(
       "Fish length",
       Number.isInteger(c.raw_payload?.length_cm) ? `${c.raw_payload.length_cm} cm` : null,
@@ -3635,7 +3761,8 @@ async function showDetail(c) {
     field("Location source", c.raw_payload?.capture_source==="journal_manual"?"Added afterward · map-selected location":c.gps_quality===4?"Watch GPS · good":"Watch GPS · usable")
   }${field("Fix relative to catch", c.gps_at ? `${gpsDelay}s` : "No GPS fix recorded")}</dl><p class="record-id muted">Catch ID: ${
     esc(c.catch_id)
-  }</p></details><div id="conditions" class="condition"><h3>Conditions</h3><p class="muted">Checking saved conditions…</p></div>`;
+  }</p>${c.journal_revision?`<p class="small muted">Corrected in journal · revision ${esc(c.journal_revision)}. Original uploaded values retained.</p>`:""}</details><div id="conditions" class="condition"><h3>Conditions</h3><p class="muted">Checking saved conditions…</p></div>`;
+  $("edit-current-fish").onclick=()=>openFishEditor(c);
   upgradeFishPortrait(c.species_id);
   if (!$("details").open) $("details").showModal();
   $("details").scrollTop = 0;
@@ -4060,3 +4187,10 @@ $("trip-edit-check-sync").onclick=async()=>{
     if(!tripEditState.trip)$("trip-edit-missing-text").textContent="No completed trip has arrived for this day yet. End and sync the watch trip, then check again. Your saved catches are unchanged.";
   } finally {$("trip-edit-check-sync").disabled=false;}
 };
+
+$("fish-edit-form").addEventListener("submit",saveFishEdit);
+$("fish-edit-close").onclick=resetFishEditor;
+$("fish-edit").addEventListener("cancel",event=>{event.preventDefault();if(!fishEditState.saving)resetFishEditor();});
+$("fish-edit-mode").onchange=updateFishEditOptions;
+
+renderCatchPointsMatrix();

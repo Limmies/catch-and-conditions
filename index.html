@@ -19,15 +19,15 @@
     <link rel="stylesheet" href="vendor/leaflet.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.Default.css">
-    <link rel="stylesheet" href="style.css?v=139">
+    <link rel="stylesheet" href="style.css?v=142">
     <script defer src="vendor/supabase.js"></script>
     <script defer src="vendor/leaflet.js"></script>
     <script defer src="vendor/leaflet.markercluster.js"></script>
     <script defer src="config.js"></script>
-    <script defer src="density.js?v=139"></script>
-    <script defer src="insights.js?v=139"></script>
-    <script defer src="day-photos.js?v=139"></script>
-    <script defer src="app.js?v=139"></script>
+    <script defer src="density.js?v=142"></script>
+    <script defer src="insights.js?v=142"></script>
+    <script defer src="day-photos.js?v=142"></script>
+    <script defer src="app.js?v=142"></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
@@ -224,6 +224,8 @@
         <section id="diary-page" hidden aria-label="Fishing days">
           <div class="section-heading"><h2>Fishing days</h2><a href="#spots" class="text-action">Compare spots →</a></div>
           <p id="trip-status" role="status" class="muted"></p>
+          <details class="catch-points-method"><summary>Catch Points weights</summary><p class="small muted">Your personal catch-value scale. Add the points for every fish to compare the day's haul, separately from catches per fishing hour and your enjoyment rating. Black Musselcracker and Red Steenbras carry the strongest weighting on a compact 1–30 scale; 15 Red Roman equal one Black Musselcracker. Species without an agreed weight remain unweighted.</p><div id="catch-points-matrix" class="table-wrap"></div></details>
+          <p class="small muted fish-status-key">Green: length, fishing type, movement or terrain, and tackle recorded. Red: details missing—select the fish to review. Weather is shown separately.</p>
           <details class="diary-totals"><summary>Trip totals</summary><div id="trip-summary" class="trip-summary"></div></details>
           <div id="trip-rows"><div id="days"></div></div>
         </section>
@@ -240,6 +242,19 @@
       <div
         class="dialog-heading"><span id="detail-label" class="eyebrow">CATCH DETAILS</span><button id="close-detail" class="quiet" aria-label="Close details">Close</button></div>
       <div id="detail-body"></div>
+    </dialog>
+    <dialog id="fish-edit" aria-labelledby="fish-edit-title">
+      <div class="dialog-heading"><h2 id="fish-edit-title">Edit fish</h2><button type="button" class="quiet" id="fish-edit-close">Close</button></div>
+      <p id="fish-edit-context" class="small muted"></p>
+      <form id="fish-edit-form"><fieldset id="fish-edit-fields"><div class="manual-grid">
+        <label>Fishing type<select id="fish-edit-mode"><option value="offshore">Offshore</option><option value="shore">Shore</option></select></label>
+        <label>Species<select id="fish-edit-species" required></select></label>
+        <label>Length (cm)<input id="fish-edit-length" type="number" min="1" max="1000" step="1" inputmode="numeric" placeholder="Unknown"></label>
+        <label><span id="fish-edit-position-label">Boat movement</span><select id="fish-edit-position"></select></label>
+        <label>Tackle<select id="fish-edit-tackle"></select></label>
+      </div><p id="fish-edit-trip-note" class="small muted" hidden>Fishing type follows the linked trip. Length, species and fishing setup can still be corrected here.</p>
+      <p class="small muted">Missing details can stay “Not recorded”. The record stays red until its required details are filled in. Catch time, map location and collected weather remain unchanged.</p>
+      <button type="submit">Save fish correction</button></fieldset><p id="fish-edit-status" role="status" aria-live="polite"></p></form>
     </dialog>
     <dialog id="trip-edit" aria-labelledby="trip-edit-title">
       <div class="dialog-heading"><h2 id="trip-edit-title">Adjust trip time</h2><button type="button" class="quiet" id="trip-edit-close">Close</button></div>
