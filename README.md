@@ -288,3 +288,6 @@ real WebKit day/header/filter/breakdown and six-width editor checks.
 
 
 Shell v143: All fishing combines the recorded offshore and shore outing ratings. It reads and saves the same mode-specific Supabase history as the individual filters, with separate labelled statuses and editors for mixed days. It never creates an All fishing rating. Existing records remain unchanged. Regression: tests/phone_journal_rating_scopes_test.js.
+
+
+Shell v144: removes timer/focus/visibility/network-triggered journal refreshes so the reading view remains stationary. Refresh remains available explicitly and after edits. All routes open before data loading finishes. Session restoration has a 12-second recovery message with an in-page retry button. Service worker precache versions match the HTML and navigation serves the installed shell rather than replacing its HTML independently. Private API responses remain uncached. Stability and rating regression: tests/phone_journal_stability_test.js.

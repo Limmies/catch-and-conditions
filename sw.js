@@ -1,16 +1,16 @@
 // Cache the public app shell only. Never cache Auth, database requests or maps.
-const CACHE = 'catch-conditions-shell-v143';
+const CACHE = 'catch-conditions-shell-v144';
 const IMAGE_CACHE = 'catch-conditions-fish-mobile-v6';
 // Both styles keep their background illustrations with the public shell.
 const FILES = [
   './',
   './index.html',
-  './style.css?v=142',
-  './app.js?v=142',
-  './day-photos.js?v=142',
+  './style.css?v=144',
+  './app.js?v=144',
+  './day-photos.js?v=144',
   './config.js',
-  './density.js?v=142',
-  './insights.js?v=142',
+  './density.js?v=144',
+  './insights.js?v=144',
   './icon.svg',
   './icon-192.png',
   './icon-512.png',
@@ -52,21 +52,13 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   if (url.origin !== ROOT.origin) return;
   if (event.request.mode === 'navigate' && SHELL_PATHS.has(url.pathname)) {
-    // Open the saved public shell immediately; refresh it in the background.
-    const key = new URL(url.pathname, ROOT).href;
-    const update = (async () => {
-      const response = await fetch(event.request);
-      if (response.ok) {
-        const cache = await caches.open(CACHE).catch(() => null);
-        if (cache) await cache.put(key, response.clone()).catch(() => {});
-      }
-      return response;
-    })();
-    event.waitUntil(update.catch(() => {}));
+    // Serve one installed shell version. Mixing newly fetched HTML with an
+    // older worker's assets can leave an installed app unable to start.
     event.respondWith((async () => {
-      const cached = await caches.match(key).catch(() => null);
-      return cached || await update;
-    })().catch(() => new Response('Connect to the internet and reopen Catch and Conditions.', { status: 503 })));
+      const cache = await caches.open(CACHE).catch(() => null);
+      const cached = cache && (await cache.match(new URL('./index.html', ROOT).href));
+      return cached || await fetch(event.request);
+    })().catch(() => new Response('Connect to the internet and try again.', { status: 503 })));
     return;
   }
   if (

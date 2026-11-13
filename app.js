@@ -301,13 +301,12 @@ async function setSession(next) {
   $("login").hidden = true;
   $("app-loading").hidden = false;
   $("password").value = "";
-  // Home and the species guide can open while their catch totals refresh.
-  if (["home", "totals"].includes(selectedPages()[0])) {
-    $("app-loading").hidden = true;
-    $("journal").hidden = false;
-    $("signout").hidden = false;
-    route();
-  }
+  // Open every page immediately; slow data requests must not hide the app.
+  $("app-loading").hidden = true;
+  $("journal").hidden = false;
+  $("signout").hidden = false;
+  finishLoginRestore();
+  route();
   await refreshJournal();
   if (session?.user.id !== next.user.id) return;
   $("app-loading").hidden = true;
@@ -3940,18 +3939,8 @@ window.addEventListener("hashchange", () => {
   route();
   window.scrollTo({ top: 0, behavior: "instant" });
 });
-window.addEventListener("online", () => {
-  if (session) refreshJournal();
-});
-function refreshWhenVisible() {
-  if (
-    session && !document.hidden && !$("refresh").disabled &&
-    Date.now() - lastRefreshAt > 15000
-  ) refreshJournal();
-}
-window.addEventListener("focus", refreshWhenVisible);
-document.addEventListener("visibilitychange", refreshWhenVisible);
-setInterval(refreshWhenVisible, 60000);
+// Keep the displayed journal stable. Refresh is explicit, or follows a saved edit.
+// Focus, network changes and timers must not rebuild the page beneath the reader.
 $("signout").onclick = async () => {
   $("signout").disabled = true;
   try {
@@ -4065,8 +4054,19 @@ async function start() {
     },
   });
   const authClient = client;
+  const restoreTimeout = setTimeout(() => {
+    if (client !== authClient || session) return;
+    finishLoginRestore();
+    loginMessage("Restoring your session is taking longer than expected. You can retry here or sign in.", true);
+    const retry = document.createElement("button");
+    retry.type = "button";
+    retry.textContent = "Retry opening journal";
+    retry.onclick = () => location.reload();
+    $("login-status").append(" ", retry);
+  }, 12000);
   authClient.auth.onAuthStateChange((event, next) => {
     if (client !== authClient) return;
+    clearTimeout(restoreTimeout);
     // Leave the auth callback before making further Supabase requests.
     if (["SIGNED_IN", "SIGNED_OUT", "INITIAL_SESSION"].includes(event)) {
       setTimeout(() => {
