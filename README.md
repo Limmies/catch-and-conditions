@@ -285,3 +285,6 @@ partial totals state coverage. Totals recalculate from current corrected catches
 This feature stores no score in Supabase and changes no catch/trip data.
 Tests: tests/phone_journal_catch_points_test.js (five numerical checks), plus
 real WebKit day/header/filter/breakdown and six-width editor checks.
+
+
+Shell v143: All fishing combines the recorded offshore and shore outing ratings. It reads and saves the same mode-specific Supabase history as the individual filters, with separate labelled statuses and editors for mixed days. It never creates an All fishing rating. Existing records remain unchanged. Regression: tests/phone_journal_rating_scopes_test.js.

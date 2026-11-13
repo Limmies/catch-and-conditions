@@ -2989,7 +2989,15 @@ let dayRatingVersion = 0;
 function dayRatingKey(date, mode) {
   return `${date}:${mode}`;
 }
+// All fishing is a union of recorded outings, never a third rating scope.
+function dayRatingModes(date) {
+  const modes = new Set();
+  for (const c of catches) if (dayKey(c.caught_at) === date) modes.add(recordFishingMode(c));
+  for (const t of trips) if (dayKey(t.started_at) === date) modes.add(recordFishingMode(t));
+  return ["offshore", "shore"].filter(mode => modes.has(mode));
+}
 function dayRatingBadge(date, mode) {
+  if (mode === "all") return dayRatingModes(date).map(scope => dayRatingBadge(date, scope)).join(" ");
   const cached = dayRatingRows.get(dayRatingKey(date, mode));
   const row = cached?._missing ? null : cached;
   const count = row
@@ -3020,7 +3028,7 @@ function dayRatingBadge(date, mode) {
   }" data-rating-mode="${esc(mode)}" title="${
     esc(fishingModeLabels[mode])
   }: ${count} of ${dayFeelMetrics.length} scores saved"><svg viewBox="0 0 16 16" aria-hidden="true">${icon}</svg>${
-    esc(label)
+    esc((fishingMode === "all" ? fishingModeLabels[mode] + " · " : "") + label)
   }</span>`;
 }
 function paintDayRatingBadges() {
@@ -3087,12 +3095,20 @@ function dayObservationFormHTML(c, mode) {
     ).join("")
   }<label class="day-notes-label">Anything else about the day?<textarea name="notes" rows="3" maxlength="1000" placeholder="Water changed after lunch, lots of birds, bait worked better…"></textarea></label><button type="submit" class="primary" id="save-day-observations">Save day ratings</button></fieldset><p id="day-observation-status" class="small muted" role="status">Loading your saved day observations…</p></form></section>`;
 }
-async function showDayObservations(c) {
+async function showDayObservations(c, selectedMode) {
   $("detail-label").textContent = "Day notes & ratings";
   $("details").dataset.view = "day-notes";
-  const generation = ++conditionsGeneration, mode = fishingMode, date = dayKey(c.caught_at);
+  const date = dayKey(c.caught_at);
+  const modes = dayRatingModes(date);
+  const mode = ["offshore", "shore"].includes(selectedMode) ? selectedMode
+    : fishingMode === "all" ? (modes[0] || recordFishingMode(c)) : fishingMode;
+  const generation = ++conditionsGeneration;
   const ratingEpoch = dayRatingEpoch, ratingOwner = session?.user.id;
-  $("detail-body").innerHTML = dayObservationFormHTML(c, mode);
+  $("detail-body").innerHTML = (fishingMode === "all" && modes.length > 1
+    ? `<div class="actions" aria-label="Outing rating">${modes.map(scope => `<button type="button" data-rating-scope="${scope}" aria-pressed="${scope === mode}">${fishingModeLabels[scope]}</button>`).join("")}</div>` : "") + dayObservationFormHTML(c, mode);
+  document.querySelectorAll("[data-rating-scope]").forEach(button => {
+    button.onclick = () => showDayObservations(c, button.dataset.ratingScope);
+  });
   if (!$("details").open) $("details").showModal();
   $("details").scrollTop = 0;
   const form = $("day-observation-form"),
@@ -3209,7 +3225,7 @@ async function showDayObservations(c) {
       status.innerHTML =
         'Saved ratings could not be loaded. <button type="button" id="retry-day-observations" class="quiet">Try again</button>';
     }
-    if (current()) $("retry-day-observations").onclick = () => showDayObservations(c);
+    if (current()) $("retry-day-observations").onclick = () => showDayObservations(c, mode);
   }
 }
 // Saved setup is explicit; never infer it from GPS or other nearby catches.
