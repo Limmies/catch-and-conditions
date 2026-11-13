@@ -2675,11 +2675,46 @@ function fishStatusHTML(c) {
   const status=fishRecordStatus(c);
   return `<span class="fish-record-status ${status.complete?"is-complete":"is-incomplete"}">${status.complete?"✓":"!"} ${esc(status.label)}</span>`;
 }
+// BEGIN FISH AGE CORE
+// Lengths entered in the journal are treated as total length (TL), in cm.
+// Growth inputs use mm and years. Parameters are not inferred from longevity.
+const fishAgeVersion = "length-age-v1";
+const ageProfileSource = "https://www.oritag.org.za/Content/UserContent/documents/Southern_African_Marine_Linefish_Species_Profiles.pdf";
+const fishAgeModels = Object.freeze({
+  red_steenbras: { linf:1236, k:0.072, t0:-1.44, maxAge:55, minCm:21, toGrowth:mm=>(mm-2.8579)/1.0935, conversion:"FL = (TL − 2.8579) / 1.0935", reference:"Andrews et al. (2018), revised growth; Smale (1988), length conversion", source:"https://astrofish.me/download/andrews-et-al-2018b-red-steenbras-c14-longevity-w-smv2.pdf", page:6 },
+  red_roman: { linf:504.07, k:0.091, t0:-1.50, maxAge:19, minCm:15, toGrowth:mm=>(mm+2.855)/1.1144, conversion:"FL = (TL + 2.855) / 1.1144", reference:"Götz et al. (2008), Goukamma protected-area curve; Buxton (1993), conversion", source:"https://www.int-res.com/articles/meps2008/362/m362p245.pdf", page:8 },
+  carpenter: { linf:684, k:0.06, t0:-3.6, maxAge:30, minCm:20, toGrowth:mm=>0.8455*Math.pow(mm,1.0143), conversion:"FL = 0.8455 × TL^1.0143", reference:"Brouwer & Griffiths (2005), Tsitsikamma", source:ageProfileSource, page:220 },
+  miss_lucy: { linf:429.85, k:0.113, t0:-3.799, maxAge:48, minCm:20, toGrowth:mm=>0.8735*mm-2.7426, conversion:"FL = 0.8735 × TL − 2.7426", reference:"van Zyl (2013), Agulhas Bank", source:ageProfileSource, page:231 },
+  santer: { linf:954, k:0.0654, t0:-2.6177, maxAge:22, minCm:20, toGrowth:mm=>mm, conversion:"TL (no conversion)", reference:"Coetzee & Baird (1981), Eastern Cape", source:ageProfileSource, page:224 },
+  dageraad: { linf:654.7, k:0.081, t0:-2.35, maxAge:22, minCm:20, toGrowth:mm=>(mm+3.6024)/1.1432, conversion:"FL = (TL + 3.6024) / 1.1432", reference:"Buxton (1993), Eastern Cape", source:ageProfileSource, page:229 },
+});
+function estimateFishAge(c) {
+  const model=fishAgeModels[c.species_id], cm=c.raw_payload?.length_cm;
+  if(!Number.isFinite(cm)||cm<=0)return {years:null,reason:"Length needed"};
+  if(!model)return {years:null,reason:"No supported age model"};
+  const length=model.toGrowth(cm*10);
+  if(cm<model.minCm||!Number.isFinite(length)||length<=0||length>=model.linf)return {years:null,reason:"Outside model range"};
+  const years=model.t0-Math.log1p(-length/model.linf)/model.k;
+  if(!Number.isFinite(years)||years<0||years>model.maxAge)return {years:null,reason:"Outside model range"};
+  return {years,reason:null};
+}
+function fishAgeLabel(c) {
+  const age=estimateFishAge(c);
+  return age.years===null ? `Estimated age: unavailable · ${age.reason}`
+    : `Estimated age: ${age.years<1?"under 1 year":`about ${Math.round(age.years)} ${Math.round(age.years)===1?"year":"years"}`}`;
+}
+// END FISH AGE CORE
+function fishAgeHTML(c) { return `<span class="fish-age small muted">${esc(fishAgeLabel(c))}</span>`; }
+function fishAgeGuideHTML(id) {
+  const model=fishAgeModels[id];
+  return `<details class="record-details fish-age-guide"><summary>How age is estimated${model?" · size–age guide":""}</summary><p class="small muted">A ballpark from a population growth curve, not the measured age of this fish. Assumes your centimetres are total length (snout to tail tip). Individuals, sexes and regions vary; older fish can differ greatly at the same length. No age is inferred from maximum lifespan. Estimates update when you edit the species or length and are not stored as measured catch data.</p>${model?`<div class="table-wrap"><table><caption>Approximate age by total length</caption><thead><tr><th>Length</th><th>Model estimate</th></tr></thead><tbody>${[20,30,40,50,60,70,80,90,100,110,120].map(cm=>({cm,age:estimateFishAge({species_id:id,raw_payload:{length_cm:cm}})})).filter(row=>row.age.years!==null).map(row=>`<tr><td>${row.cm} cm</td><td>${row.age.years<1?"Under 1 year":`About ${Math.round(row.age.years)} years`}</td></tr>`).join("")}</tbody></table></div><p class="small"><a href="${esc(model.source)}#page=${model.page}" target="_blank" rel="noopener">${esc(model.reference)}</a> · <a href="${ageProfileSource}" target="_blank" rel="noopener">ORI profiles and length conversions</a></p><p class="small muted">Length-to-age model: t = t₀ − ln(1 − L/L∞) / K. L∞ = ${model.linf} mm; K = ${model.k}/year; t₀ = ${model.t0} years. ${esc(model.conversion)} (all lengths in mm). Outside the model limits, age is unavailable.</p>`:'<p class="small muted">A usable species-specific length–age relationship has not been verified here yet.</p>'}</details>`;
+}
+
 function showDaySpeciesCatches(day,id) {
   const rows=visible.filter(c=>dayKey(c.caught_at)===day&&c.species_id===id).sort((a,b)=>new Date(a.caught_at)-new Date(b.caught_at));
   if(rows.length===1){showDetail(rows[0]);return;}
   conditionsGeneration++;$("detail-label").textContent="Choose a fish";$("details").dataset.view="day-species";
-  $("detail-body").innerHTML=`<h2>${esc(species[id]?.[0]||id)}</h2><p class="small muted">${esc(dateLabel(day+"T00:00:00Z"))} · Select the individual catch to view or edit.</p><div class="day-species-catches">${rows.map((c,i)=>`<button type="button" class="catch-row ${fishRecordStatus(c).complete?"is-complete":"is-incomplete"}" data-day-catch-index="${i}"><span>${esc(timeLabel(c.caught_at))} · ${Number.isInteger(c.raw_payload?.length_cm)?esc(c.raw_payload.length_cm)+" cm":"Length unknown"}</span>${fishStatusHTML(c)}</button>`).join("")}</div>`;
+  $("detail-body").innerHTML=`<h2>${esc(species[id]?.[0]||id)}</h2><p class="small muted">${esc(dateLabel(day+"T00:00:00Z"))} · Select the individual catch to view or edit.</p><div class="day-species-catches">${rows.map((c,i)=>`<button type="button" class="catch-row ${fishRecordStatus(c).complete?"is-complete":"is-incomplete"}" data-day-catch-index="${i}"><span>${esc(timeLabel(c.caught_at))} · ${Number.isInteger(c.raw_payload?.length_cm)?esc(c.raw_payload.length_cm)+" cm":"Length unknown"}</span>${fishAgeHTML(c)}${fishStatusHTML(c)}</button>`).join("")}</div>${fishAgeGuideHTML(id)}`;
   $("detail-body").querySelectorAll("[data-day-catch-index]").forEach(button=>button.onclick=()=>showDetail(rows[Number(button.dataset.dayCatchIndex)]));
   if(!$("details").open)$("details").showModal();$("details").scrollTop=0;
 }
@@ -3768,9 +3803,9 @@ async function showDetail(c) {
       "Fish length",
       Number.isInteger(c.raw_payload?.length_cm) ? `${c.raw_payload.length_cm} cm` : null,
     )
-  }${field("Fishing style", setup.style)}${field(recordFishingMode(c)==="shore"?"Shore terrain":"Boat movement", setup.position)}${
+  }${field("Estimated age", fishAgeLabel(c).replace("Estimated age: ",""))}${field("Fishing style", setup.style)}${field(recordFishingMode(c)==="shore"?"Shore terrain":"Boat movement", setup.position)}${
     field("Tackle", setup.tackle)
-  }</dl><details class="record-details"><summary>Location &amp; GPS record</summary><dl class="detail-grid">${
+  }</dl>${fishAgeGuideHTML(c.species_id)}<details class="record-details"><summary>Location &amp; GPS record</summary><dl class="detail-grid">${
     field("Latitude", c.latitude.toFixed(6))
   }${field("Longitude", c.longitude.toFixed(6))}${
     field("Location source", c.raw_payload?.capture_source==="journal_manual"?"Added afterward · map-selected location":c.gps_quality===4?"Watch GPS · good":"Watch GPS · usable")

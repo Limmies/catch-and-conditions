@@ -291,3 +291,7 @@ Shell v143: All fishing combines the recorded offshore and shore outing ratings.
 
 
 Shell v144: removes timer/focus/visibility/network-triggered journal refreshes so the reading view remains stationary. Refresh remains available explicitly and after edits. All routes open before data loading finishes. Session restoration has a 12-second recovery message with an in-page retry button. Service worker precache versions match the HTML and navigation serves the installed shell rather than replacing its HTML independently. Private API responses remain uncached. Stability and rating regression: tests/phone_journal_stability_test.js.
+
+Shell v145: Days fish chooser and catch details show ballpark estimated age for Red Steenbras, Red Roman, Carpenter, Miss Lucy, Santer and Dageraad, using documented population growth curves and total/fork-length conversions. Expand How age is estimated for a size–age matrix and sources. Unsupported species and lengths show unavailable. Estimates recalculate after edits and never modify recorded data. See docs/FISH_AGE_ESTIMATES.md in the source repository for methodology and tests.
+
+Shell v146 aligns species catch-history length values with the Length heading. Includes the v145 estimated-age feature.

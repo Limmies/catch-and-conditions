@@ -6294,7 +6294,7 @@ button.quiet,.text-action { min-height:44px; }
 #totals-page .species-catch-table th,#totals-page .species-catch-table td { width:auto; padding:8px 5px; text-align:left; white-space:nowrap; border-bottom:1px solid #ded5c0; background:transparent; }
 #totals-page .species-catch-table th { position:sticky; top:0; background:#eee9d8; font-size:11px; }
 #totals-page .species-catch-table td { font-variant-numeric:tabular-nums; }
-#totals-page .species-catch-table td:nth-child(3) { text-align:right; }
+#totals-page .species-catch-table th:nth-child(3),#totals-page .species-catch-table td:nth-child(3) { text-align:left; }
 
 /* A practical catch entry sheet; map references stay secondary to the form. */
 #manual-catch { width:min(680px,calc(100% - 24px)); max-height:calc(100dvh - 24px); padding:20px; border:1px solid #b9b29a; border-radius:10px; background:#fff8e5; color:var(--ink); overflow:auto; box-sizing:border-box; }
@@ -6358,3 +6358,6 @@ button.quiet,.text-action { min-height:44px; }
 .day-points-breakdown { margin:8px 0 14px; }
 .day-points-breakdown .table-wrap { max-width:620px; }
 .catch-points-method .table-wrap { max-width:620px; max-height:320px; overflow:auto; }
+
+.day-species-catches .fish-age { display:block; white-space:normal; }
+.fish-age-guide table { width:100%; }
