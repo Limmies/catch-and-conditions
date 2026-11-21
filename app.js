@@ -2977,7 +2977,7 @@ function renderDays(tripRows = diaryTripRows()) {
     }
     section.innerHTML = `<details class="day-record" data-disclosure="day-card:${
       esc(key)
-    }"><summary class="day-card-summary"><button type="button" class="day-photo-open" aria-label="View photo from ${esc(dateLabel(reference.caught_at))}" hidden><img class="day-photo-thumb" alt="" width="48" height="48" hidden></button><strong>${esc(dateLabel(reference.caught_at))}${
+    }"><summary class="day-card-summary"><button type="button" class="day-photo-open" aria-label="View photo from ${esc(dateLabel(reference.caught_at))}" hidden><img class="day-photo-thumb" alt="" width="64" height="64" hidden></button><strong>${esc(dateLabel(reference.caught_at))}${
       dayRatingBadge(key, fishingMode)
     }</strong><span class="record-metrics"><span title="Based on completed trips starting on this date"><b>${
       productivity === null ? "—" : productivity.toFixed(1)

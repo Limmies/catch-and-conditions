@@ -1,16 +1,16 @@
 // Cache the public app shell only. Never cache Auth, database requests or maps.
-const CACHE = 'catch-conditions-shell-v150';
+const CACHE = 'catch-conditions-shell-v151';
 const IMAGE_CACHE = 'catch-conditions-fish-mobile-v6';
 // Both styles keep their background illustrations with the public shell.
 const FILES = [
   './',
   './index.html',
-  './style.css?v=150',
-  './app.js?v=150',
-  './day-photos.js?v=150',
+  './style.css?v=151',
+  './app.js?v=151',
+  './day-photos.js?v=151',
   './config.js',
-  './density.js?v=150',
-  './insights.js?v=150',
+  './density.js?v=151',
+  './insights.js?v=151',
   './icon.svg',
   './icon-192.png',
   './icon-512.png',
