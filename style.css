@@ -6361,3 +6361,14 @@ button.quiet,.text-action { min-height:44px; }
 
 .day-species-catches .fish-age { display:block; white-space:normal; }
 .fish-age-guide table { width:100%; }
+
+#days .day-competition-points { color:#71501d; }
+#days .day-competition-points small { font:10px/1.4 system-ui,sans-serif; }
+.competition-breakdown input[type=number] { display:block; width:110px; max-width:100%; margin:6px 0; padding:10px; box-sizing:border-box; }
+.competition-breakdown th,.competition-breakdown td { padding:8px; text-align:left; }
+
+#manual-trip-section { margin-top:18px; border-top:1px dashed #c9bea0; padding-top:14px; }
+#manual-trip-section > summary { cursor:pointer; font-weight:650; padding:8px 0; }
+#manual-trip-fields { border:0; padding:12px 0 0; margin:0; min-width:0; }
+#manual-trip-fields > label { display:block; margin:12px 0; }
+#manual-trip-fields input[type=checkbox] { width:auto; }

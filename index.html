@@ -19,15 +19,15 @@
     <link rel="stylesheet" href="vendor/leaflet.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.Default.css">
-    <link rel="stylesheet" href="style.css?v=148">
+    <link rel="stylesheet" href="style.css?v=150">
     <script defer src="vendor/supabase.js"></script>
     <script defer src="vendor/leaflet.js"></script>
     <script defer src="vendor/leaflet.markercluster.js"></script>
     <script defer src="config.js"></script>
-    <script defer src="density.js?v=148"></script>
-    <script defer src="insights.js?v=148"></script>
-    <script defer src="day-photos.js?v=148"></script>
-    <script defer src="app.js?v=148"></script>
+    <script defer src="density.js?v=150"></script>
+    <script defer src="insights.js?v=150"></script>
+    <script defer src="day-photos.js?v=150"></script>
+    <script defer src="app.js?v=150"></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
@@ -258,13 +258,24 @@
     </dialog>
     <dialog id="trip-edit" aria-labelledby="trip-edit-title">
       <div class="dialog-heading"><h2 id="trip-edit-title">Adjust trip time</h2><button type="button" class="quiet" id="trip-edit-close">Close</button></div>
-      <div id="trip-edit-missing" hidden><p id="trip-edit-missing-text" class="small"></p><button type="button" id="trip-edit-check-sync">Check for synced trip</button></div>
+      <div id="trip-edit-missing" hidden><p id="trip-edit-missing-text" class="small"></p><button type="button" id="trip-edit-check-sync">Check for synced trip</button>
+        <details id="manual-trip-section"><summary>Add trip manually</summary>
+          <p class="small">Use this if you forgot to record the trip. Enter the times you remember. Check for a synced trip first if a watch recording is still pending.</p>
+          <form id="manual-trip-form"><fieldset id="manual-trip-fields">
+            <div class="manual-grid"><label>Fishing type<select id="manual-trip-mode"><option value="offshore">Offshore</option><option value="shore">Shore</option></select></label><label>Start time<input id="manual-trip-start" type="time" required></label><label>End time<input id="manual-trip-end" type="time" required></label><label>Anglers<input id="manual-trip-anglers" type="number" min="1" max="50" step="1" required></label><label>Active rods<input id="manual-trip-lines" type="number" min="1" max="100" step="1" required></label></div>
+            <label><input id="manual-trip-next-day" type="checkbox"> End time is the following day</label>
+            <label>These times cover<select id="manual-trip-activity"><option value="unclassified">Full outing — fishing/travel split unknown</option><option value="fishing">Fishing time only</option></select></label>
+            <label><input id="manual-trip-link" type="checkbox" checked> Link catches without a trip within these times</label>
+            <p id="manual-trip-preview" class="small" aria-live="polite"></p>
+            <button type="submit">Save manual trip</button>
+          </fieldset><p id="manual-trip-status" class="small" role="status" aria-live="polite"></p></form>
+        </details></div>
       <form id="trip-edit-form"><fieldset id="trip-edit-fields">
         <label>Recorded trip<select id="trip-edit-picker"></select></label>
         <p id="trip-edit-original" class="small muted"></p>
         <div class="manual-grid"><label>Actual start<input id="trip-edit-start" type="datetime-local" step="1" required></label><label>Actual end<input id="trip-edit-end" type="datetime-local" step="1" required></label></div>
         <p id="trip-edit-preview" class="small" aria-live="polite"></p>
-        <p class="small muted">Trim time within the original recording. Logged catches are kept, and fishing/session totals are recalculated. The original watch upload remains unchanged.</p>
+        <p id="trip-edit-guidance" class="small muted">Trim time within the original recording. Logged catches are kept, and fishing/session totals are recalculated. The original watch upload remains unchanged.</p>
         <details id="trip-edit-setup"><summary>Fishing setup (optional)</summary><p>Fishing type: <strong id="trip-edit-mode"></strong></p><div class="manual-grid"><label><span id="trip-edit-position-label">Boat movement</span><select id="trip-edit-position"></select></label><label>Tackle<select id="trip-edit-tackle"></select></label></div></details>
         <p id="trip-edit-review" hidden><span id="trip-edit-review-text"></span></p><button type="button" id="trip-edit-skip-setup" class="quiet" hidden>Skip missing details and save</button>
         <button type="submit">Save trip time</button>

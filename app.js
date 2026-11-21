@@ -1142,7 +1142,7 @@ function tripCardHTML(t, m) {
     durationLabel(m.fishing)
   }</b> fishing</span></span></summary><p class="record-total"><strong>${
     durationLabel(m.total)
-  }</strong> total trip</p>
+  }</strong> total trip${t.raw_payload?.capture_source==="journal_manual"?" · Added manually":""}</p>
     <dl class="trip-at-a-glance"><div><dt>Fishing estimate</dt><dd>${
     durationLabel(m.fishing)
   }</dd></div><div><dt>Travelling</dt><dd>${
@@ -2601,12 +2601,14 @@ function resetTripEditor() {
   tripEditState.generation++;tripEditState.saving=false;tripEditState.request=null;tripEditState.trip=null;tripEditState.skipSetup=false;
   $("trip-edit").close();$("trip-edit-form").hidden=false;$("trip-edit-missing").hidden=true;$("trip-edit-fields").disabled=false;$("trip-edit-close").disabled=false;
   $("trip-edit-status").textContent="";$("trip-edit-review").hidden=true;$("trip-edit-skip-setup").hidden=true;
+  $("manual-trip-form").reset();$("manual-trip-section").open=false;$("manual-trip-fields").disabled=false;$("trip-edit-check-sync").disabled=false;$("manual-trip-status").textContent="";$("manual-trip-preview").textContent="";
 }
 function loadTripEditor() {
   const t=trips.find(t=>t.archive_id===$("trip-edit-picker").value);if(!t)return;
   tripEditState.trip=t;tripEditState.skipSetup=false;tripEditState.request=null;
   $("trip-edit-start").value=localTripDateTime(t.started_at);$("trip-edit-end").value=localTripDateTime(t.ended_at);
-  $("trip-edit-original").textContent=`Original recording: ${dateLabel(t.recorded_started_at||t.started_at)} ${timeLabel(t.recorded_started_at||t.started_at)} – ${dateLabel(t.recorded_ended_at||t.ended_at)} ${timeLabel(t.recorded_ended_at||t.ended_at)}. Times in ${config.timezone.replaceAll("_"," ")}.`;
+  $("trip-edit-guidance").textContent=t.raw_payload?.capture_source==="journal_manual"?"Trim time within your original manual entry. Logged catches are kept, and fishing/session totals are recalculated.":"Trim time within the original recording. Logged catches are kept, and fishing/session totals are recalculated. The original watch upload remains unchanged.";
+  $("trip-edit-original").textContent=`${t.raw_payload?.capture_source==="journal_manual"?"Original manual entry":"Original recording"}: ${dateLabel(t.recorded_started_at||t.started_at)} ${timeLabel(t.recorded_started_at||t.started_at)} – ${dateLabel(t.recorded_ended_at||t.ended_at)} ${timeLabel(t.recorded_ended_at||t.ended_at)}. Times in ${config.timezone.replaceAll("_"," ")}.`;
   const shore=recordFishingMode(t)==="shore";$("trip-edit-mode").textContent=fishingModeLabels[recordFishingMode(t)];$("trip-edit-position-label").textContent=shore?"Rocks / sand":"Boat movement";
   for(const [id,options] of [["position",shore?[["rocks","Rocks"],["sand","Sand"]]:[["drifting","Drifting"],["anchored","Anchored"]]],["tackle",shore?[["bait","Bait fishing"],["spinning","Spinning"]]:[["bait","Bait fishing"],["jigging","Jigging"]]]]) {
     $("trip-edit-"+id).replaceChildren(new Option("Not recorded / skip",""));for(const [value,label] of options)$("trip-edit-"+id).add(new Option(label,value));
@@ -2625,9 +2627,48 @@ function openTripEditor(day) {
   if(available)loadTripEditor();
   else {
     $("trip-edit-start").value="";$("trip-edit-end").value="";
-    $("trip-edit-missing-text").textContent="Catches for this day are saved, but no completed trip recording is available yet. End the trip on your watch and use UP/MENU → Sync data. Then check again here. Fishing and travelling time cannot be reconstructed accurately from catches alone.";
+    $("trip-edit-missing-text").textContent="Catches for this day are saved, but no completed trip recording is available yet. End the trip on your watch and use UP/MENU → Sync data. Then check again here. You can also add the trip manually below using the times you remember.";
   }
+  const dayModes=[...new Set(catches.filter(c=>dayKey(c.caught_at)===day).map(recordFishingMode))];
+  $("manual-trip-mode").value=fishingMode==="all"?(dayModes.length===1?dayModes[0]:"offshore"):fishingMode;
   $("trip-edit").showModal();
+}
+function manualTripPayload() {
+  const day=tripEditState.day;
+  const nextDay=dayKey(new Date(new Date(day+"T12:00:00Z").getTime()+86400000));
+  const start=manualCatchTime(day,$("manual-trip-start").value);
+  const end=manualCatchTime($("manual-trip-next-day").checked?nextDay:day,$("manual-trip-end").value);
+  const seconds=(new Date(end)-new Date(start))/1000;
+  if(seconds<=0||seconds>86400)throw Error("End must follow start, with duration at most 24 hours. Use following day for an overnight trip.");
+  const mode=$("manual-trip-mode").value;
+  if(trips.some(t=>recordFishingMode(t)===mode&&new Date(t.started_at)<new Date(end)&&new Date(t.ended_at)>new Date(start)))throw Error("A trip already covers these times. Check for a synced trip and adjust it instead.");
+  return {p_started_at:start,p_ended_at:end,p_fishing_mode:mode,p_anglers:Number($("manual-trip-anglers").value),p_active_lines:Number($("manual-trip-lines").value),p_activity:$("manual-trip-activity").value,p_link_catches:$("manual-trip-link").checked};
+}
+function previewManualTrip() {
+  try {const p=manualTripPayload(),count=catches.filter(c=>!c.watch_trip_id&&recordFishingMode(c)===p.p_fishing_mode&&new Date(c.caught_at)>=new Date(p.p_started_at)&&new Date(c.caught_at)<=new Date(p.p_ended_at)).length;
+    $("manual-trip-preview").textContent=`${durationLabel((new Date(p.p_ended_at)-new Date(p.p_started_at))/1000)} · ${p.p_activity==="fishing"?"entered as fishing time":"fishing/travel split stays unknown"} · ${p.p_link_catches?count:"No"} unlinked catches available. Times in ${config.timezone.replaceAll("_"," ")}.`;
+  } catch(error){$("manual-trip-preview").textContent=error.message;}
+}
+async function saveManualTrip(event) {
+  event.preventDefault();if(!session||tripEditState.saving||!$("manual-trip-form").reportValidity())return;
+  let payload;try{payload=manualTripPayload();}catch(error){$("manual-trip-status").textContent=error.message;return;}
+  const signature=JSON.stringify(payload);if(tripEditState.request?.signature!==signature)tripEditState.request={signature,id:crypto.randomUUID()};payload.p_request_id=tripEditState.request.id;
+  const owner=session.user.id,generation=tripEditState.generation;tripEditState.saving=true;$("manual-trip-fields").disabled=true;$("trip-edit-close").disabled=true;$("trip-edit-check-sync").disabled=true;$("manual-trip-status").textContent="Saving manual trip…";
+  try {
+    const {data,error}=await client.rpc("add_manual_fishing_trip",payload);
+    if(generation!==tripEditState.generation||session?.user.id!==owner)return;
+    if(error)throw error;if(!data?.archive_id)throw Error("Save could not be confirmed.");
+    trips=[...trips.filter(t=>t.archive_id!==data.archive_id),data];
+    const linked=new Set(data.raw_payload?.manually_linked_catch_ids||[]);
+    catches=catches.map(c=>linked.has(c.archive_id)?{...c,watch_trip_id:data.watch_trip_id}:c);
+    render();await refreshJournal();
+    if(generation!==tripEditState.generation||session?.user.id!==owner)return;
+    resetTripEditor();message("Manual trip saved.");
+  } catch(error) {
+    if(generation!==tripEditState.generation||session?.user.id!==owner)return;
+    tripEditState.saving=false;$("manual-trip-fields").disabled=false;$("trip-edit-close").disabled=false;
+    $("manual-trip-status").textContent=["22023","23505","42501"].includes(error.code)?error.message:"Could not confirm the save. Your entries are kept; retry safely when connected.";
+  } finally {if(generation===tripEditState.generation)$("trip-edit-check-sync").disabled=false;}
 }
 function tripAdjustmentTimes() {
   const read=id=>{const [date,time]=$(id).value.split("T");if(!/^\d{2}:\d{2}(:\d{2})?$/.test(time||""))throw Error("Choose a valid start and end time.");const seconds=Number(time.split(":")[2]||0);if(seconds>59)throw Error("Choose valid seconds.");const at=new Date(new Date(manualCatchTime(date,time.slice(0,5))).getTime()+seconds*1000);if(at.getTime()>Date.now())throw Error("Trip times cannot be in the future.");return at.toISOString();};
@@ -2827,6 +2868,82 @@ function renderCatchPointsMatrix() {
   $("catch-points-matrix").innerHTML=`<table><caption class="sr-only">Personal Catch Points per fish</caption><thead><tr><th scope="col">Species</th><th scope="col">Points per fish</th></tr></thead><tbody>${Object.entries(catchPointWeights).map(([id,value])=>`<tr><th scope="row">${esc(species[id]?.[0]||id)}</th><td>${value}</td></tr>`).join("")}</tbody></table>`;
 }
 
+// BEGIN COMPETITION CORE
+// W(g) = a * L^b. Logged lengths are total length (TL), in cm.
+// Each conversion below produces the exact length convention/unit of its source.
+const fishWeightVersion = "length-weight-v1";
+const weightProfileSource = "https://www.oritag.org.za/Content/UserContent/documents/Southern_African_Marine_Linefish_Species_Profiles.pdf";
+const fishWeightModels = Object.freeze({
+  kabeljo: {a:0.000006,b:3.07,length:cm=>cm*10,page:164},
+  red_roman: {a:0.000012,b:3.154,length:cm=>(cm*10+2.855)/1.1144,page:233},
+  red_steenbras: {a:0.000027,b:2.9519,length:cm=>(cm*10-2.8579)/1.0935,page:264},
+  miss_lucy: {a:0.0000949,b:2.802,length:cm=>0.8735*cm*10-2.7426,page:231},
+  geelbek: {a:0.00000842,b:3.01,length:cm=>(cm*10+0.757)/1.06,page:171},
+  carpenter: {a:0.00004,b:2.8553,length:cm=>0.8455*Math.pow(cm*10,1.0143),page:220},
+  santer: {a:0.00005,b:2.7831,length:cm=>cm*10,page:224},
+  yellowbelly: {a:0.0000125,b:3.055,length:cm=>cm*10,page:209},
+  musselcracker: {a:0.00002236,b:3.0355,length:cm=>(cm*10+1.2376)/1.1252,page:240},
+  hake: {a:0.0057,b:3.073,length:cm=>cm,page:134},
+  yellowtail: {a:0.0331,b:2.7566,length:cm=>cm/1.116,page:35},
+  scotsman: {a:0.0000589,b:2.81,length:cm=>(cm*10-5.02)/1.14,page:269},
+  mackerel: {a:0.0049,b:3.3112,length:cm=>(cm-0.8807)/1.1925,page:185},
+  blacktail: {a:0.00016,b:2.613,length:cm=>cm*10,page:242},
+  belman: {a:0.000006025,b:3.1,length:cm=>cm*10,page:177},
+  galjoen: {a:0.00000903,b:3.12,length:cm=>cm*10,page:73},
+  shad: {a:0.000015,b:2.98,length:cm=>(cm*10-30.6)/1.0306,page:155},
+  dusky_kob: {a:0.000008,b:3.0397,length:cm=>cm*10,page:166},
+  spotted_grunter: {a:0.00002,b:2.891,length:cm=>cm*10,page:90},
+  white_steenbras: {a:0.02282,b:2.8562,length:cm=>(cm*10-5.5671)/1.0927/10,page:252},
+  garrick: {a:0.00001124,b:3.015,length:cm=>(cm*10+6.762)/1.204,page:29},
+  zebra: {a:0.0000127,b:3.141,length:cm=>(cm*10-2.628)/1.1607,page:245},
+  white_musselcracker: {a:0.000018,b:3.037,length:cm=>Math.pow(cm*10/1.127,1/0.999),page:287},
+  // FishBase's own Bayesian TL models; ORI's Dageraad coefficient is inconsistent.
+  dageraad: {a:0.01698,b:2.99,length:cm=>cm,source:"https://www.fishbase.se/summary/Chrysoblephus-cristiceps"},
+  atlantic_bonito: {a:0.00851,b:3.06,length:cm=>cm,source:"https://www.fishbase.se/country/CountrySpeciesSummary.php?c_code=620&genusname=Sarda&speciesname=sarda"},
+});
+function estimateFishWeight(c) {
+  const cm=c.raw_payload?.length_cm,model=fishWeightModels[c.species_id];
+  if(!Number.isFinite(cm)||cm<=0)return {kg:null,reason:"Length needed"};
+  if(!model)return {kg:null,reason:"No verified weight model"};
+  const length=model.length(cm),kg=model.a*Math.pow(length,model.b)/1000;
+  return Number.isFinite(kg)&&kg>0&&length>0 ? {kg,reason:null} : {kg:null,reason:"Outside model range"};
+}
+function dayCompetitionPoints(rows,anglers,sizeOnly=true) {
+  const validAnglers=Number.isInteger(anglers)&&anglers>=1&&anglers<=50;
+  const groups=new Map();let missing=0,undersized=0;
+  for(const c of rows) {
+    if(c.species_id==="no_bite"||c.record_kind==="no_bite")continue;
+    const length=c.raw_payload?.length_cm;
+    if(sizeOnly&&Number.isFinite(length)&&Number.isFinite(oriMinimumLengthsCm[c.species_id])&&length<oriMinimumLengthsCm[c.species_id]){undersized++;continue;}
+    const weight=estimateFishWeight(c);
+    if(weight.kg===null){missing++;continue;}
+    if(!groups.has(c.species_id))groups.set(c.species_id,[]);
+    groups.get(c.species_id).push({catch:c,kg:weight.kg});
+  }
+  const breakdown=[...groups].sort(([a],[b])=>a.localeCompare(b)).map(([id,fish])=>{
+    fish.sort((a,b)=>b.kg-a.kg || String(a.catch.archive_id||"").localeCompare(String(b.catch.archive_id||"")));
+    const chosen=validAnglers?fish.slice(0,2*anglers):[];
+    return {id,eligible:fish.length,chosen,kg:chosen.reduce((sum,f)=>sum+f.kg,0)};
+  });
+  const kg=breakdown.reduce((sum,g)=>sum+g.kg,0),speciesCount=breakdown.filter(g=>g.chosen.length).length;
+  return {points:validAnglers?kg*speciesCount/anglers:null,kg,speciesCount,anglers:validAnglers?anglers:null,missing,undersized,breakdown};
+}
+// END COMPETITION CORE
+const competitionPreferences=new Map();
+function competitionDaySettings(date,dayTrips) {
+  const key=`competition-v1:${session?.user.id||config.ownerId}:${fishingMode}:${date}`;
+  let saved=competitionPreferences.get(key);
+  if(!saved){try{saved=JSON.parse(localStorage.getItem(key)||"null");}catch{}}
+  const counts=[...new Set(dayTrips.flatMap(({trip})=>(trip.raw_payload?.effort_settings||[]).map(s=>s.anglers)).filter(n=>Number.isInteger(n)&&n>=1&&n<=50))];
+  return {key,anglers:saved?.anglers||(counts.length===1?counts[0]:null),override:!!saved?.anglers};
+}
+function competitionPointsHTML(score) {
+  return `<span class="day-competition-points" title="Estimated selected kg × selected species ÷ anglers"><b>${score.points===null?"—":score.points.toFixed(2)}</b> Competition Points${score.missing?' <small>(partial)</small>':""}</span>`;
+}
+function competitionBreakdownHTML(score,settings,date) {
+  return `<details class="day-points-breakdown competition-breakdown" data-disclosure="competition:${esc(date)}"><summary>Competition Points breakdown</summary><p>Biggest ${score.anglers?2*score.anglers:"2 × anglers"} fish per species across the group. Selected weight × represented species ÷ anglers. This follows the current filters.</p><label>Competition anglers <input data-competition-anglers type="number" min="1" max="50" step="1" value="${score.anglers||""}" placeholder="Enter anglers"></label><p class="small muted">${settings.override?"Using your competition count, saved on this browser.":score.anglers?"Using the recorded trip angler count. You can correct it here; changes are saved on this browser.":"Enter the number of anglers; trip effort is missing or varies. Saved on this browser."}</p><p class="small muted">Your two-fish competition cap replaces bag limits for this score. Size benchmarks do not check seasons, areas or whether a fish may legally be kept.</p>${score.points===null?'<p>Set the angler count to calculate points.</p>':`<p><strong>${score.kg.toFixed(2)} kg × ${score.speciesCount} species ÷ ${score.anglers} anglers = ${score.points.toFixed(2)} points</strong></p>`}<div class="table-wrap"><table><thead><tr><th>Species</th><th>Fish selected</th><th>Estimated kg</th></tr></thead><tbody>${score.breakdown.map(g=>`<tr><th scope="row">${esc(species[g.id]?.[0]||g.id)}</th><td>${g.chosen.length} / ${g.eligible}</td><td>${g.kg.toFixed(2)}</td></tr>`).join("")}</tbody></table></div>${score.breakdown.filter(g=>g.chosen.length).map(g=>`<p class="small">${esc(species[g.id]?.[0]||g.id)}: ${g.chosen.map(f=>`${f.catch.raw_payload.length_cm} cm ≈ ${f.kg.toFixed(2)} kg`).join("; ")}</p>`).join("")}<p class="small muted">${score.undersized} undersized fish excluded. ${score.missing} fish lack a length or supported weight estimate${score.missing?"; score is provisional and may change when details are added":""}. Weights assume total length (snout to tail tip), and are estimates, never measured weights.</p><details><summary>Weight estimate sources</summary><p class="small"><a href="${weightProfileSource}" target="_blank" rel="noopener">ORI linefish research profiles</a>; <a href="${fishWeightModels.dageraad.source}" target="_blank" rel="noopener">FishBase Dageraad model</a>; <a href="${esc(fishWeightModels.atlantic_bonito.source)}" target="_blank" rel="noopener">FishBase Atlantic Bonito model</a>. Shark identity and See Baber total-to-fork conversion are insufficient for reliable estimates. ${fishWeightVersion}.</p></details></details>`;
+}
+
 function renderDays(tripRows = diaryTripRows()) {
   dayPhotoObserver?.disconnect();
   void loadDayPhotos();
@@ -2845,6 +2962,8 @@ function renderDays(tripRows = diaryTripRows()) {
   for (const [key, rows] of [...groups].sort(([a], [b]) => b.localeCompare(a))) {
     const dayTrips = tripRows.filter(({ trip }) => dayKey(trip.started_at) === key);
     const points=dayCatchPoints(rows);
+    const competitionSettings=competitionDaySettings(key,dayTrips);
+    const competition=dayCompetitionPoints(rows,competitionSettings.anglers);
     const fishing = dayTrips.reduce((sum, { metrics }) => sum + metrics.fishing, 0);
     const tripCatches = dayTrips.reduce((sum, { metrics }) => sum + metrics.count, 0);
     const productivity = fishing > 0 ? tripCatches * 3600 / fishing : null;
@@ -2862,7 +2981,7 @@ function renderDays(tripRows = diaryTripRows()) {
       dayRatingBadge(key, fishingMode)
     }</strong><span class="record-metrics"><span title="Based on completed trips starting on this date"><b>${
       productivity === null ? "—" : productivity.toFixed(1)
-    }</b> catches / fishing hour</span><span><b>${rows.length}</b> catches</span>${catchPointsHTML(points)}</span></summary><div class="day-record-body"><div class="day-summary">${
+    }</b> catches / fishing hour</span><span><b>${rows.length}</b> catches</span>${catchPointsHTML(points)}${competitionPointsHTML(competition)}</span></summary><div class="day-record-body"><div class="day-summary">${
       [...totals].map(([name, count]) =>
         `<button type="button" class="fish-name-link day-species-summary ${rows.filter(c=>nameOf(c)===name).every(c=>fishRecordStatus(c).complete)?"is-complete":"is-incomplete"}" data-day-species="${
           esc(rows.find((c) => nameOf(c) === name)?.species_id || "")
@@ -2907,6 +3026,18 @@ function renderDays(tripRows = diaryTripRows()) {
     } fishing · ${totals.size} species` : `Trip recording not synced · fishing time unavailable · ${totals.size} species`;
     body.append(effort);
     const pointDetails=document.createElement("div");pointDetails.innerHTML=catchPointsBreakdownHTML(points,key);body.append(pointDetails.firstElementChild);
+    const competitionDetails=document.createElement("div");
+    competitionDetails.innerHTML=competitionBreakdownHTML(competition,competitionSettings,key);
+    body.append(competitionDetails.firstElementChild);
+    const saveCompetitionSettings=()=>{
+      const input=body.querySelector("[data-competition-anglers]");
+      if(!input.reportValidity())return;
+      const value={anglers:input.value?Number(input.value):null,sizeOnly:true};
+      competitionPreferences.set(competitionSettings.key,value);
+      try{localStorage.setItem(competitionSettings.key,JSON.stringify(value));}catch{}
+      renderDays(tripRows);
+    };
+    body.querySelector("[data-competition-anglers]").onchange=saveCompetitionSettings;
     if (dayTrips.length) {
       const records = document.createElement("div");
       records.className = "diary-trips";
@@ -3832,7 +3963,7 @@ async function showDetail(c) {
       "Fish length",
       Number.isInteger(c.raw_payload?.length_cm) ? `${c.raw_payload.length_cm} cm` : null,
     )
-  }${field("Estimated age", fishAgeLabel(c).replace("Estimated age: ",""))}${field("Fishing style", setup.style)}${field(recordFishingMode(c)==="shore"?"Shore terrain":"Boat movement", setup.position)}${
+  }${field("Estimated weight", estimateFishWeight(c).kg===null?estimateFishWeight(c).reason:`About ${estimateFishWeight(c).kg.toFixed(2)} kg`)}${field("Estimated age", fishAgeLabel(c).replace("Estimated age: ",""))}${field("Fishing style", setup.style)}${field(recordFishingMode(c)==="shore"?"Shore terrain":"Boat movement", setup.position)}${
     field("Tackle", setup.tackle)
   }</dl>${fishAgeGuideHTML(c.species_id)}<details class="record-details"><summary>Location &amp; GPS record</summary><dl class="detail-grid">${
     field("Latitude", c.latitude.toFixed(6))
@@ -4275,3 +4406,6 @@ $("fish-edit").addEventListener("cancel",event=>{event.preventDefault();if(!fish
 $("fish-edit-mode").onchange=updateFishEditOptions;
 
 renderCatchPointsMatrix();
+
+$("manual-trip-form").onsubmit=saveManualTrip;
+for(const id of ["manual-trip-mode","manual-trip-start","manual-trip-end","manual-trip-next-day","manual-trip-anglers","manual-trip-lines","manual-trip-activity","manual-trip-link"])$(id).addEventListener("change",previewManualTrip);
