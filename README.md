@@ -295,3 +295,5 @@ Shell v144: removes timer/focus/visibility/network-triggered journal refreshes s
 Shell v145: Days fish chooser and catch details show ballpark estimated age for Red Steenbras, Red Roman, Carpenter, Miss Lucy, Santer and Dageraad, using documented population growth curves and total/fork-length conversions. Expand How age is estimated for a size–age matrix and sources. Unsupported species and lengths show unavailable. Estimates recalculate after edits and never modify recorded data. See docs/FISH_AGE_ESTIMATES.md in the source repository for methodology and tests.
 
 Shell v146 aligns species catch-history length values with the Length heading. Includes the v145 estimated-age feature.
+
+Shell v148: Manual catch entry can reuse locations from all recorded days or a chosen previous day using the map or spot dropdown. The catch date stays fixed; time suggestions and nearby catches remain scoped to that catch date and fishing type. Saved session spots are available on the map as well as in the dropdown.

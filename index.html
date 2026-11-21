@@ -19,15 +19,15 @@
     <link rel="stylesheet" href="vendor/leaflet.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.css">
     <link rel="stylesheet" href="vendor/MarkerCluster.Default.css">
-    <link rel="stylesheet" href="style.css?v=146">
+    <link rel="stylesheet" href="style.css?v=148">
     <script defer src="vendor/supabase.js"></script>
     <script defer src="vendor/leaflet.js"></script>
     <script defer src="vendor/leaflet.markercluster.js"></script>
     <script defer src="config.js"></script>
-    <script defer src="density.js?v=146"></script>
-    <script defer src="insights.js?v=146"></script>
-    <script defer src="day-photos.js?v=146"></script>
-    <script defer src="app.js?v=146"></script>
+    <script defer src="density.js?v=148"></script>
+    <script defer src="insights.js?v=148"></script>
+    <script defer src="day-photos.js?v=148"></script>
+    <script defer src="app.js?v=148"></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
@@ -284,7 +284,8 @@
           </div>
           <p id="manual-timezone" class="small muted"></p>
           <p id="manual-time-hint" class="small" aria-live="polite"></p>
-          <p class="small">Tap the map, drag the pin, or choose a recorded spot. Only catches from this date appear on the map. Selecting a spot suggests a time from its catches. Leave length blank if unknown.</p>
+          <p class="small">Tap the map, drag the pin, or choose a recorded spot. Browse spots from any recorded day. Choosing a past spot keeps this catch’s date; enter the time you remember. Time suggestions use catches on the catch day only. Leave length blank if unknown.</p>
+          <label>Show spots from<select id="manual-spot-day"><option value="all">All recorded days</option></select></label>
           <label>Use a recorded spot<select id="manual-spot"></select></label>
           <div id="manual-map" aria-label="Choose catch location" role="region"></div>
           <div id="manual-nearby" aria-live="polite"></div>

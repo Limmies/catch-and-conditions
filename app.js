@@ -2485,21 +2485,30 @@ function updateManualCatchOptions() {
 function updateManualCatchContext() {
   updateManualCatchTrips();
   const picker=$("manual-spot");picker.replaceChildren(new Option("Choose a recorded spot or tap the map",""));
-  const rows=manualCatchRows(),day=$("manual-date").value;
-  const sameDay=rows.filter(c=>dayKey(c.caught_at)===day).sort((a,b)=>new Date(a.caught_at)-new Date(b.caught_at));
-  for(const c of sameDay)picker.add(new Option(`${timeLabel(c.caught_at)} · ${nameOf(c)} · this day's catch`,`${c.latitude},${c.longitude}`));
+  const day=$("manual-date").value;
+  const history=catches.filter(c=>recordFishingMode(c)===manualCatchMode() && Number.isFinite(c.latitude) && Number.isFinite(c.longitude));
+  const source=$("manual-spot-day"),selectedSource=source.value;
+  const dates=[...new Set([...history.map(c=>dayKey(c.caught_at)),...trips.filter(t=>recordFishingMode(t)===manualCatchMode()).flatMap(t=>(t.fishing_sessions||[]).map(s=>dayKey(s.started_at)))])].sort().reverse();
+  source.replaceChildren(new Option("All recorded days","all"),new Option("Catch day only","catch-day"));
+  for(const date of dates)source.add(new Option(dateLabel(date+"T12:00:00Z"),date));
+  source.value=selectedSource==="catch-day"||dates.includes(selectedSource)?selectedSource:"all";
+  const sourceDay=source.value==="all"?null:source.value==="catch-day"?day:source.value;
+  const rows=history.filter(c=>!sourceDay||dayKey(c.caught_at)===sourceDay).sort((a,b)=>new Date(b.caught_at)-new Date(a.caught_at));
+  for(const c of rows)picker.add(new Option(`${dateLabel(c.caught_at)} · ${timeLabel(c.caught_at)} · ${nameOf(c)}`,`${c.latitude},${c.longitude}`));
   const spots=new Map();
   for(const t of trips.filter(t=>recordFishingMode(t)===manualCatchMode()))for(const s of t.fishing_sessions||[]) {
-    if(dayKey(s.started_at)>day || dayKey(s.ended_at)<day)continue;
+    if(sourceDay && (dayKey(s.started_at)>sourceDay || dayKey(s.ended_at)<sourceDay))continue;
     const spot=s.fishing_spots;
     if(spot && Number.isFinite(spot.latitude)&&Number.isFinite(spot.longitude))spots.set(spot.archive_id,spot);
   }
   for(const [i,spot] of [...spots.values()].entries())picker.add(new Option(spot.name||`Saved spot ${i+1}`,`${spot.latitude},${spot.longitude}`));
   const m=manualCatchState.map;
   if(m) {
+    const chooseSpot=(lat,lon)=>event=>{L.DomEvent.stopPropagation(event);setManualCatchLocation(lat,lon);};
     manualCatchState.points.clearLayers();
-    for(const c of rows)L.circleMarker([c.latitude,c.longitude],{radius:dayKey(c.caught_at)===day?6:4,color:dayKey(c.caught_at)===day?"#176a47":"#777b6d",weight:2,fillOpacity:.6}).bindTooltip(esc(`${dateLabel(c.caught_at)} ${timeLabel(c.caught_at)} · ${nameOf(c)}`)).on("click",()=>setManualCatchLocation(c.latitude,c.longitude)).addTo(manualCatchState.points);
-    const focus=sameDay.length?sameDay:rows;
+    for(const c of rows)L.circleMarker([c.latitude,c.longitude],{radius:dayKey(c.caught_at)===day?6:4,color:dayKey(c.caught_at)===day?"#176a47":"#777b6d",weight:2,fillOpacity:.6}).bindTooltip(esc(`${dateLabel(c.caught_at)} ${timeLabel(c.caught_at)} · ${nameOf(c)}`)).on("click",chooseSpot(c.latitude,c.longitude)).addTo(manualCatchState.points);
+    for(const spot of spots.values())L.circleMarker([spot.latitude,spot.longitude],{radius:8,color:"#946d26",weight:2,fillOpacity:.5}).bindTooltip(esc(spot.name||"Saved spot")).on("click",chooseSpot(spot.latitude,spot.longitude)).addTo(manualCatchState.points);
+    const focus=[...rows,...spots.values()];
     if(focus.length)m.fitBounds(L.latLngBounds(focus.map(c=>[c.latitude,c.longitude])),{padding:[24,24],maxZoom:15});
   }
   if($("manual-latitude").value!==""&&$("manual-longitude").value!=="")setManualCatchLocation(+$("manual-latitude").value,+$("manual-longitude").value,false,false);
@@ -2986,6 +2995,24 @@ const dayFeelMetrics = [
     note: "Baitfish you noticed at the surface or on the fish finder. Unseen does not mean absent.",
   },
 ];
+// Keep stored sea_comfort scores consistent (10 = calm) across both styles.
+// Shore presents the inverse as roughness (10 = rough).
+function dayFeelMetricsForMode(mode) {
+  if (mode !== "shore") return dayFeelMetrics;
+  return dayFeelMetrics.filter(m => !["current_strength", "bait_presence"].includes(m.key)).map(m =>
+    m.key === "sea_comfort" ? {
+      ...m,
+      label: "Sea roughness",
+      low: "Calm water",
+      high: "Very rough surf",
+      words: ["Calm water", "Gentle movement", "Moderate surf", "Rough surf", "Very rough surf"],
+      note: "Wave action and water movement you could see from shore; not a measured current or wave height.",
+    } : m
+  );
+}
+function dayFeelScore(mode, key, value) {
+  return mode === "shore" && key === "sea_comfort" && Number.isInteger(value) ? 10 - value : value;
+}
 function journalArt(key) {
   const fish =
     '<path d="M5 12c7-9 18-9 25 0-7 9-18 9-25 0Zm25 0 8-6v12l-8-6Z"/><circle cx="12" cy="10" r="1" fill="currentColor" stroke="none"/>';
@@ -3032,14 +3059,15 @@ function dayRatingModes(date) {
 }
 function dayRatingBadge(date, mode) {
   if (mode === "all") return dayRatingModes(date).map(scope => dayRatingBadge(date, scope)).join(" ");
+  const metrics = dayFeelMetricsForMode(mode);
   const cached = dayRatingRows.get(dayRatingKey(date, mode));
   const row = cached?._missing ? null : cached;
   const count = row
-    ? dayFeelMetrics.filter((metric) =>
+    ? metrics.filter((metric) =>
       Number.isInteger(row[metric.key]) && row[metric.key] >= 0 && row[metric.key] <= 10
     ).length
     : 0;
-  const complete = count === dayFeelMetrics.length;
+  const complete = count === metrics.length;
   const state = complete
     ? "done"
     : row
@@ -3050,7 +3078,7 @@ function dayRatingBadge(date, mode) {
   const label = complete
     ? "Rating done"
     : row
-    ? `Partly rated · ${count}/${dayFeelMetrics.length}`
+    ? `Partly rated · ${count}/${metrics.length}`
     : state === "pending"
     ? "Not rated yet"
     : state === "error"
@@ -3061,7 +3089,7 @@ function dayRatingBadge(date, mode) {
     esc(date)
   }" data-rating-mode="${esc(mode)}" title="${
     esc(fishingModeLabels[mode])
-  }: ${count} of ${dayFeelMetrics.length} scores saved"><svg viewBox="0 0 16 16" aria-hidden="true">${icon}</svg>${
+  }: ${count} of ${metrics.length} scores saved"><svg viewBox="0 0 16 16" aria-hidden="true">${icon}</svg>${
     esc((fishingMode === "all" ? fishingModeLabels[mode] + " · " : "") + label)
   }</span>`;
 }
@@ -3122,7 +3150,7 @@ function dayObservationFormHTML(c, mode) {
   }</h2><p class="muted">${
     esc(fishingModeLabels[mode])
   }</p><form id="day-observation-form"><fieldset id="day-observation-fields" disabled>${
-    dayFeelMetrics.map((m) =>
+    dayFeelMetricsForMode(mode).map((m) =>
       `<section class="day-feel-card is-unrated" data-feel-card="${m.key}"><div class="day-feel-heading"><span class="day-feel-icon" aria-hidden="true">${
         journalArt(m.key)
       }</span><label for="day-feel-${m.key}">${m.label}</label><output for="day-feel-${m.key}" id="day-feel-value-${m.key}" aria-live="polite">Not rated</output></div><input type="range" min="0" max="10" step="1" value="5" id="day-feel-${m.key}" name="${m.key}" data-rated="false" aria-describedby="day-feel-note-${m.key}" aria-valuetext="Not rated"><div class="day-feel-ends"><span>${m.low}</span><span>${m.high}</span></div><div class="day-feel-bottom"><p id="day-feel-note-${m.key}" class="sr-only">${m.note}</p><button type="button" class="feel-clear" data-clear-feel="${m.key}" disabled>Clear rating</button></div></section>`
@@ -3136,6 +3164,7 @@ async function showDayObservations(c, selectedMode) {
   const modes = dayRatingModes(date);
   const mode = ["offshore", "shore"].includes(selectedMode) ? selectedMode
     : fishingMode === "all" ? (modes[0] || recordFishingMode(c)) : fishingMode;
+  const metrics = dayFeelMetricsForMode(mode);
   const generation = ++conditionsGeneration;
   const ratingEpoch = dayRatingEpoch, ratingOwner = session?.user.id;
   $("detail-body").innerHTML = (fishingMode === "all" && modes.length > 1
@@ -3165,7 +3194,7 @@ async function showDayObservations(c, selectedMode) {
     $("day-feel-value-" + metric.key).textContent = rated ? `${value}/10 · ${word}` : "Not rated";
     form.querySelector(`[data-clear-feel="${metric.key}"]`).disabled = !rated;
   };
-  for (const metric of dayFeelMetrics) {
+  for (const metric of metrics) {
     form.elements[metric.key].oninput = (event) => paint(metric, Number(event.currentTarget.value));
     // Tapping the existing midpoint should record 5 even without moving the thumb.
     form.elements[metric.key].onclick = (event) => paint(metric, Number(event.currentTarget.value));
@@ -3180,9 +3209,9 @@ async function showDayObservations(c, selectedMode) {
       scale_version: "day-feel-v1",
       notes: form.elements.notes.value.trim() || null,
     };
-    for (const m of dayFeelMetrics) {
+    for (const m of metrics) {
       payload[m.key] = form.elements[m.key].dataset.rated === "true"
-        ? Number(form.elements[m.key].value)
+        ? dayFeelScore(mode, m.key, Number(form.elements[m.key].value))
         : null;
     }
     return payload;
@@ -3191,7 +3220,7 @@ async function showDayObservations(c, selectedMode) {
     event.preventDefault();
     if (!current() || fields.disabled) return;
     const payload = readPayload();
-    if (!dayFeelMetrics.some((m) => payload[m.key] !== null) && !payload.notes) {
+    if (!metrics.some((m) => payload[m.key] !== null) && !payload.notes) {
       status.textContent = "Move at least one slider or add a note before saving.";
       return;
     }
@@ -3242,8 +3271,8 @@ async function showDayObservations(c, selectedMode) {
     if (error) throw error;
     const saved = data?.[0];
     rememberDayRating(saved, date, mode);
-    for (const m of dayFeelMetrics) {
-      paint(m, Number.isInteger(saved?.[m.key]) ? saved[m.key] : null);
+    for (const m of metrics) {
+      paint(m, Number.isInteger(saved?.[m.key]) ? dayFeelScore(mode, m.key, saved[m.key]) : null);
     }
     form.elements.notes.value = saved?.notes || "";
     if (saved) {
@@ -4215,6 +4244,7 @@ $("manual-date").onchange=()=>{
   updateManualCatchContext();
 };
 $("manual-time").onchange=()=>{manualCatchState.suggestedTime=null;$("manual-time-hint").textContent="";updateManualCatchTrips();};
+$("manual-spot-day").onchange=updateManualCatchContext;
 $("manual-spot").onchange=()=>{const value=$("manual-spot").value;if(value){const [lat,lon]=value.split(",").map(Number);setManualCatchLocation(lat,lon);}};
 for(const id of ["manual-latitude","manual-longitude"])$(id).onchange=()=>{if($("manual-latitude").value!==""&&$("manual-longitude").value!=="")setManualCatchLocation(+$("manual-latitude").value,+$("manual-longitude").value);};
 
