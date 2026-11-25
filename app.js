@@ -221,6 +221,7 @@ function loginMessage(text, error = false) {
 }
 function resetPrivateView() {
   resetManualCatch();
+  manualCatchDefaults.clear();
   resetTripEditor();
   resetFishEditor();
   resetDayPhotos();
@@ -478,14 +479,42 @@ function catchDistance(a, b) {
       Math.sin(radians(b.longitude - a.longitude) / 2) ** 2;
   return 6371 * 2 * Math.asin(Math.sqrt(Math.min(1, Math.max(0, angle))));
 }
+// Estimates are display-only: keep archived activity and spot/session rates intact.
+function tripTimeBreakdown(t) {
+  const total = Math.max(0, (Date.parse(t.ended_at) - Date.parse(t.started_at)) / 1000);
+  const intervals = tripIntervals(t);
+  const seconds = mode => intervals.filter(s => s.mode === mode)
+    .reduce((sum, s) => sum + s.ended_at - s.started_at, 0);
+  const hasSegments = intervals.some(s => s.mode !== "unclassified");
+  const fishing = hasSegments ? seconds("fishing") : Number(t.fishing_seconds || 0);
+  const travelling = hasSegments ? seconds("travelling") : Number(t.travelling_seconds || 0);
+  if (fishing > 0 || travelling > 0 || t.raw_payload?.capture_source !== "journal_manual") {
+    return {fishing, travelling, unclassified: Math.max(0, total - fishing - travelling), estimate: null};
+  }
+  const previous = trips.filter(p => p.archive_id !== t.archive_id &&
+    recordFishingMode(p) === recordFishingMode(t) && Date.parse(p.ended_at) <= Date.parse(t.started_at) &&
+    Number(p.fishing_seconds) > 0 && Number(p.travelling_seconds) >= 0 &&
+    Number(p.fishing_seconds) + Number(p.travelling_seconds) >=
+      (Date.parse(p.ended_at) - Date.parse(p.started_at)) / 1000 * .9
+  ).sort((a, b) => Date.parse(b.ended_at) - Date.parse(a.ended_at))[0];
+  const share = previous ? Number(previous.fishing_seconds) /
+    (Number(previous.fishing_seconds) + Number(previous.travelling_seconds)) :
+    recordFishingMode(t) === "shore" ? 1 : .8;
+  const estimatedFishing = Math.round(total * share);
+  const basis = previous ? `Based on the fishing/travel proportions of ${dateLabel(previous.started_at)}.` :
+    recordFishingMode(t) === "shore" ? "Assumes the shore trip was spent fishing; no comparable previous trip is available." :
+    "Assumes 80% fishing and 20% travelling; no comparable previous trip is available.";
+  return {fishing: estimatedFishing, travelling: total - estimatedFishing, unclassified: 0,
+    estimate: `Estimated split and catch rate. ${basis} Exact fishing stops are unknown. Original activity stays unclassified.`};
+}
 function tripMetrics(t) {
   const total = Math.max(
     0,
     (new Date(t.ended_at) - new Date(t.started_at)) / 1000,
   );
   const segments = tripIntervals(t);
-  const fishing = t.fishing_seconds ?? 0;
-  const travelling = t.travelling_seconds ?? 0;
+  const breakdown = tripTimeBreakdown(t);
+  const {fishing, travelling} = breakdown;
   const all = catches.filter((c) =>
     c.device_id === t.device_id && c.watch_trip_id === t.watch_trip_id &&
     recordFishingMode(c) === recordFishingMode(t)
@@ -496,13 +525,14 @@ function tripMetrics(t) {
   const selected = all.filter((c) => !$("species").value || c.species_id === $("species").value);
   const fishingCatches =
     selected.filter((c) =>
-      segments.some((s) =>
+      (breakdown.estimate ? new Date(c.caught_at) >= new Date(t.started_at) &&
+        new Date(c.caught_at) <= new Date(t.ended_at) : segments.some((s) =>
         s.mode === "fishing" && new Date(c.caught_at) / 1000 >= s.started_at &&
         (new Date(c.caught_at) / 1000 < s.ended_at ||
           (s.ended_at === new Date(t.ended_at) / 1000 &&
             new Date(c.caught_at) / 1000 === s.ended_at))
       )
-    ).length;
+    )).length;
   let sessions = 0, lastFishingEnd = null, anglerHours = 0, lineHours = 0, knownEffort = true;
   const settings = [...(t.raw_payload?.effort_settings || [])].sort((a, b) => a.at - b.at);
   for (const segment of segments) {
@@ -539,8 +569,8 @@ function tripMetrics(t) {
     total,
     fishing,
     travelling,
-    unclassified: t.unclassified_seconds ??
-      Math.max(0, total - fishing - travelling),
+    unclassified: breakdown.unclassified,
+    estimate: breakdown.estimate,
     count: selected.length,
     fishingCatches,
     sessions,
@@ -602,6 +632,7 @@ function tripIntervals(t) {
   return result;
 }
 function tripVisuals(t, m) {
+  if (m.estimate) return `<p class="small muted">No recorded activity timeline is available for this estimated split.</p>`;
   const intervals = tripIntervals(t), reasons = {};
   const label = (mode) =>
     mode === "fishing" ? "Fishing estimate" : mode === "travelling" ? "Travelling" : "Unclassified";
@@ -1138,11 +1169,12 @@ function tripCardHTML(t, m) {
     esc(timeLabel(t.started_at))
   }–${esc(timeLabel(t.ended_at))}</span></span><span class="record-metrics"><span><b>${
     m.rate === null ? "—" : m.rate.toFixed(1)
-  }</b> catches / fishing hour</span><span><b>${
+  }</b> ${m.estimate ? "estimated " : ""}catches / fishing hour</span><span><b>${
     durationLabel(m.fishing)
   }</b> fishing</span></span></summary><p class="record-total"><strong>${
     durationLabel(m.total)
   }</strong> total trip${t.raw_payload?.capture_source==="journal_manual"?" · Added manually":""}</p>
+    ${m.estimate ? `<p class="small muted">${esc(m.estimate)}</p>` : ""}
     <dl class="trip-at-a-glance"><div><dt>Fishing estimate</dt><dd>${
     durationLabel(m.fishing)
   }</dd></div><div><dt>Travelling</dt><dd>${
@@ -2408,7 +2440,22 @@ function diaryTripRows(filterSpecies = true) {
         (!filterSpecies || !$("species").value || metrics.count > 0);
     });
 }
-const manualCatchState = { map:null, marker:null, points:null, saving:false, generation:0, request:null, fixedDate:null, suggestedTime:null, skipSetup:false };
+const manualCatchDefaults = new Map();
+const manualCatchState = { inheritedSetup:null, confirmedSetup:null, map:null, marker:null, points:null, saving:false, generation:0, request:null, fixedDate:null, suggestedTime:null, skipSetup:false };
+function manualSetupSignature() {
+  return JSON.stringify([manualCatchMode(),$("manual-position").value,$("manual-tackle").value]);
+}
+function restoreManualCatchDefaults() {
+  const remembered=manualCatchDefaults.get(session?.user.id+":"+manualCatchMode());
+  manualCatchState.inheritedSetup=null;manualCatchState.confirmedSetup=null;
+  if(!remembered)return;
+  $("manual-species").value=remembered.species;
+  $("manual-length").value=remembered.length ?? "";
+  $("manual-position").value=remembered.position || "";
+  $("manual-tackle").value=remembered.tackle || "";
+  setManualCatchLocation(remembered.latitude,remembered.longitude,true,false);
+  manualCatchState.inheritedSetup=manualSetupSignature();
+}
 function manualCatchTime(date, time) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(time)) throw Error("Choose the catch date and time.");
   const [year,month,day,hour,minute] = (date + "-" + time.replace(":","-")).split("-").map(Number);
@@ -2514,6 +2561,7 @@ function updateManualCatchContext() {
   if($("manual-latitude").value!==""&&$("manual-longitude").value!=="")setManualCatchLocation(+$("manual-latitude").value,+$("manual-longitude").value,false,false);
 }
 function resetManualCatch() {
+  manualCatchState.inheritedSetup=null;manualCatchState.confirmedSetup=null;$("manual-confirm-setup").hidden=true;
   manualCatchState.skipSetup=false;$("manual-review").hidden=true;$("manual-skip-setup").hidden=true;
   manualCatchState.generation++;manualCatchState.saving=false;manualCatchState.request=null;manualCatchState.fixedDate=null;manualCatchState.suggestedTime=null;
   $("manual-date").readOnly=false;$("manual-date-field").hidden=false;$("manual-time-hint").textContent="";
@@ -2530,6 +2578,7 @@ function openManualCatch(date=dayKey(new Date())) {
   $("manual-date-field").hidden=!!manualCatchState.fixedDate;
   $("manual-title").textContent=manualCatchState.fixedDate?`Add a fish · ${dateLabel(date+"T00:00:00Z")}`:"Add a fish";
   $("manual-date").value=date;$("manual-date").max=dayKey(new Date());
+  $("manual-spot-day").replaceChildren(new Option("Catch day only","catch-day"));
   const dayModes=[...new Set([...catches.filter(c=>dayKey(c.caught_at)===date),...trips.filter(t=>dayKey(t.started_at)<=date&&dayKey(t.ended_at)>=date)].map(recordFishingMode))];
   $("manual-mode").value=fishingMode==="all"?(dayModes.length===1?dayModes[0]:"offshore"):fishingMode;
   $("manual-timezone").textContent=`Time in ${config.timezone.replaceAll("_"," ")}. Select when you caught the fish.`;
@@ -2539,6 +2588,7 @@ function openManualCatch(date=dayKey(new Date())) {
   manualCatchState.points=L.layerGroup().addTo(manualCatchState.map);
   manualCatchState.map.on("click",event=>setManualCatchLocation(event.latlng.lat,event.latlng.lng));
   updateManualCatchOptions();
+  restoreManualCatchDefaults();
   requestAnimationFrame(()=>manualCatchState.map?.invalidateSize({pan:false}));
 }
 async function saveManualCatch(event) {
@@ -2558,7 +2608,14 @@ async function saveManualCatch(event) {
     if(trip&&(new Date(at)<new Date(trip.started_at)||new Date(at)>new Date(trip.ended_at)))throw Error("Catch time must fall within the selected trip, or choose not linked.");
     payload={p_species:$("manual-species").value,p_caught_at:at,p_latitude:latitude,p_longitude:longitude,p_length_cm:length,p_trip_archive_id:trip?.archive_id||null,p_fishing_mode:manualCatchMode(),p_position_method:$("manual-position").value||null,p_tackle_method:$("manual-tackle").value||null};
   } catch(error) {manualCatchStatus(error.message,true);return;}
+  $("manual-confirm-setup").hidden=true;
   if(!manualCatchState.skipSetup&&setupReviewNeeded("manual"))return;
+  const setupSignature=manualSetupSignature();
+  if(manualCatchState.inheritedSetup===setupSignature && manualCatchState.confirmedSetup!==setupSignature) {
+    $("manual-setup").open=true;$("manual-review").hidden=false;
+    $("manual-review-text").textContent=`Use the previous setup: ${$("manual-position").selectedOptions[0].textContent}, ${$("manual-tackle").selectedOptions[0].textContent}? Change it above or confirm to save this fish.`;
+    $("manual-confirm-setup").hidden=false;return;
+  }
   const signature=JSON.stringify(payload);
   if(manualCatchState.request?.signature!==signature)manualCatchState.request={signature,id:crypto.randomUUID()};
   payload.p_request_id=manualCatchState.request.id;
@@ -2570,6 +2627,10 @@ async function saveManualCatch(event) {
     if(generation!==manualCatchState.generation||session?.user.id!==owner)return;
     if(error)throw error;
     if(!data?.archive_id)throw Error("The save could not be confirmed. Retry to check the same catch safely.");
+    manualCatchDefaults.set(owner+":"+payload.p_fishing_mode,{
+      species:payload.p_species,length:payload.p_length_cm,latitude:payload.p_latitude,longitude:payload.p_longitude,
+      position:payload.p_position_method,tackle:payload.p_tackle_method
+    });
     catches=uniqueRecords([data,...catches]);catchesLoaded=true;
     resetManualCatch();render();
     message("Fish added. Conditions will be collected for its recorded time and location.");
@@ -2680,7 +2741,12 @@ function tripAdjustmentTimes() {
   return {start,end};
 }
 function previewTripAdjustment() {
-  try {const {start,end}=tripAdjustmentTimes();const t={...tripEditState.trip,started_at:start,ended_at:end};const intervals=tripIntervals(t);const fishing=intervals.filter(s=>s.mode==="fishing").reduce((sum,s)=>sum+s.ended_at-s.started_at,0);$("trip-edit-preview").textContent=`Corrected duration: ${durationLabel((new Date(end)-new Date(start))/1000)} · ${durationLabel(fishing)} recorded fishing. Catches remain saved.`;}
+  try {
+    const {start,end}=tripAdjustmentTimes();
+    const t={...tripEditState.trip,started_at:start,ended_at:end};
+    const m=tripMetrics(t);
+    $("trip-edit-preview").textContent=`Corrected duration: ${durationLabel(m.total)} · ${durationLabel(m.fishing)} fishing · ${durationLabel(m.travelling)} travelling · ${durationLabel(m.unclassified)} unclassified · ${m.rate === null ? "Fishing time needed for catch rate" : m.rate.toFixed(1)+" catches / fishing hour"}. ${m.estimate || "Based on recorded activity."} Catches remain saved.`;
+  }
   catch(error){$("trip-edit-preview").textContent=error.message;}
 }
 async function saveTripAdjustment(event) {
@@ -4363,7 +4429,7 @@ if ("serviceWorker" in navigator && location.protocol !== "file:") {
 $("manual-close").onclick=$("manual-cancel").onclick=()=>resetManualCatch();
 $("manual-catch").addEventListener("cancel",event=>{event.preventDefault();if(!manualCatchState.saving)resetManualCatch();});
 $("manual-catch-form").addEventListener("submit",saveManualCatch);
-$("manual-mode").onchange=updateManualCatchOptions;
+$("manual-mode").onchange=()=>{updateManualCatchOptions();restoreManualCatchDefaults();};
 $("manual-date").onchange=()=>{
   if(manualCatchState.fixedDate)$("manual-date").value=manualCatchState.fixedDate;
   else {
@@ -4379,6 +4445,7 @@ $("manual-spot-day").onchange=updateManualCatchContext;
 $("manual-spot").onchange=()=>{const value=$("manual-spot").value;if(value){const [lat,lon]=value.split(",").map(Number);setManualCatchLocation(lat,lon);}};
 for(const id of ["manual-latitude","manual-longitude"])$(id).onchange=()=>{if($("manual-latitude").value!==""&&$("manual-longitude").value!=="")setManualCatchLocation(+$("manual-latitude").value,+$("manual-longitude").value);};
 
+$("manual-confirm-setup").onclick=()=>{manualCatchState.confirmedSetup=manualSetupSignature();$("manual-catch-form").requestSubmit();};
 $("manual-skip-setup").onclick=()=>{manualCatchState.skipSetup=true;$("manual-catch-form").requestSubmit();};
 $("trip-edit-picker").onchange=loadTripEditor;
 $("trip-edit-close").onclick=resetTripEditor;
